@@ -1,0 +1,3324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="タスクシュート" />
+  <meta name="theme-color" content="#fff5f8" />
+  <link id="appleTouchIconLink" rel="apple-touch-icon" sizes="180x180" href="" />
+  <link id="faviconLink" rel="icon" href="" />
+  <link id="manifestLink" rel="manifest" href="" />
+  <title>🌸 うめちゃんのタスクシュート 🌸</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* iPhone Safariで入力欄・ドラムピッカータップ時の勝手な拡大を完全防止（16px必須） */
+    input, textarea, select {
+      font-size: 16px !important;
+      line-height: 1.4;
+    }
+
+    /* iOS標準のtimeドラムピッカーを押しやすく整形 */
+    input[type="time"] {
+      -webkit-appearance: none;
+      appearance: none;
+      min-height: 38px;
+      cursor: pointer;
+    }
+
+    body {
+      font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #fff5f8 0%, #f6f0ff 100%);
+      color: #3b2838;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: contain;
+    }
+
+    .app-shell {
+      max-width: 480px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      background-color: #fffbfc;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(190, 24, 93, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* スワイプ削除コンテナ：スワイプ中以外は赤い背景を完全に隠す */
+    .swipe-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.5rem;
+      transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .swipe-delete-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #f43f5e 0%, #be123c 100%);
+      display: none;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 1.25rem;
+      border-radius: 1.5rem;
+      z-index: 1;
+    }
+
+    .swipe-wrapper.is-swiping-active .swipe-delete-bg {
+      display: flex;
+    }
+
+    /* カード基本スタイル & 3色分け（白・淡ピンク・薄紫） */
+    .task-card {
+      position: relative;
+      z-index: 2;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, box-shadow 0.2s ease;
+      user-select: none;
+    }
+
+    .task-card.swiping {
+      transition: none !important;
+    }
+
+    .card-type-routine {
+      background-color: #ffffff;
+      border: 1.5px solid #f3e8ff;
+    }
+
+    .card-type-single {
+      background-color: #fdf2f8;
+      border: 1.5px solid #fbcfe8;
+    }
+
+    .card-type-carryover {
+      background-color: #f3e8ff;
+      border: 1.5px solid #ddd6fe;
+    }
+
+    .task-card.is-running {
+      box-shadow: 0 6px 20px rgba(219, 39, 119, 0.18);
+      border-width: 2px;
+      border-color: #ec4899;
+    }
+
+    /* 完了カードは元の色のまま綺麗に半透明にして主張を抑える */
+    .task-card.is-completed {
+      opacity: 0.58;
+      box-shadow: none;
+    }
+
+    /* コメント一覧からのジャンプ時のハイライト演出 */
+    .swipe-wrapper.jump-highlight {
+      box-shadow: 0 0 0 3px #ec4899, 0 10px 25px rgba(236, 72, 153, 0.25);
+    }
+    .swipe-wrapper.jump-highlight .task-card.is-completed {
+      opacity: 0.94;
+    }
+
+    /* 長押しドラッグ中 */
+    .swipe-wrapper.is-dragging,
+    .routine-item-card.is-dragging {
+      opacity: 0.94;
+      transform: scale(1.03);
+      z-index: 40;
+      box-shadow: 0 14px 28px rgba(131, 24, 67, 0.22);
+      border-color: #c084fc !important;
+      background-color: #fdf4ff !important;
+    }
+
+    .swipe-wrapper.drag-over-target,
+    .routine-item-card.drag-over-target {
+      border-top: 3px solid #ec4899 !important;
+      padding-top: 6px;
+    }
+
+    @keyframes crimsonPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.5); transform: scale(1); }
+      50% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); transform: scale(1.05); }
+    }
+
+    .danger-play-btn {
+      animation: crimsonPulse 1.5s infinite;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f9a8d4;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app">
+  <!-- トップヘッダー（グリーン・水色ゼロ、ローズ＆ラベンダー統一） -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-pink-100 px-3 pt-3 pb-2.5 shadow-2xs">
+    <div class="flex items-center justify-between mb-2 gap-1">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 via-rose-400 to-purple-400 text-white shadow-xs text-base shrink-0">
+          🌸
+        </span>
+        <h1 class="text-xs sm:text-sm font-extrabold tracking-tight bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 bg-clip-text text-transparent truncate">
+          うめちゃんのタスクシュート
+        </h1>
+      </div>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <button type="button" onclick="openCommentLogModal()" aria-label="コメント一覧" class="w-8 h-8 rounded-2xl bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200/80 flex items-center justify-center active:scale-90 transition">
+          <i data-lucide="message-square-heart" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onclick="testAlarmSound()" aria-label="音テスト" class="w-8 h-8 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 flex items-center justify-center active:scale-90 transition">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onclick="openRoutineModal()" aria-label="ルーチン管理" class="px-2.5 h-8 rounded-2xl bg-gradient-to-r from-pink-50 to-purple-50 hover:from-pink-100 hover:to-purple-100 text-purple-700 border border-purple-200/80 text-xs font-extrabold flex items-center gap-1 active:scale-90 transition">
+          <span>✨</span>
+          <span>ルーチン</span>
+        </button>
+        <button type="button" onclick="openSettingsModal()" aria-label="設定" class="w-8 h-8 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center active:scale-90 transition">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 日付ナビゲーション（シングルタップ＝カレンダー / ダブルタップ＝今日に戻る） -->
+    <div class="flex items-center justify-between bg-gradient-to-r from-pink-50/90 via-fuchsia-50/70 to-purple-50/90 border border-pink-100 rounded-2xl p-1 mb-2">
+      <button type="button" onclick="changeDate(-1)" aria-label="前日" class="w-8 h-7 rounded-xl bg-white text-pink-600 font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
+        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+      </button>
+
+      <button
+        type="button"
+        id="dateHeaderTapTarget"
+        onclick="handleDateAreaTap(event)"
+        title="タップでカレンダー・ダブルタップで今日に戻る"
+        class="flex-1 mx-1.5 py-1 px-2.5 rounded-xl hover:bg-white/70 active:bg-white transition flex items-center justify-center gap-1.5 select-none"
+      >
+        <i data-lucide="calendar" class="w-3.5 h-3.5 text-pink-500 shrink-0"></i>
+        <span id="currentDateLabel" class="text-xs sm:text-sm font-extrabold text-stone-800 tracking-tight">2026年11月20日 (金)</span>
+      </button>
+
+      <button type="button" onclick="changeDate(1)" aria-label="翌日" class="w-8 h-7 rounded-xl bg-white text-purple-600 font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
+        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- サマリーバー -->
+    <div class="grid grid-cols-4 gap-1 bg-gradient-to-r from-[#34192c] via-[#3f1d38] to-[#2e1a36] text-white rounded-2xl px-2.5 py-2 text-center shadow-inner">
+      <div>
+        <div class="text-[9px] text-pink-200/80 font-bold">現在</div>
+        <div id="liveClock" class="text-xs sm:text-sm font-black tabular-nums text-white">--:--</div>
+      </div>
+      <div class="border-l border-white/10">
+        <div class="text-[9px] text-purple-200/80 font-bold">予定</div>
+        <div id="totalEstLabel" class="text-xs sm:text-sm font-black tabular-nums text-purple-100">0分</div>
+      </div>
+      <div class="border-l border-white/10">
+        <div class="text-[9px] text-rose-200/80 font-bold">実績</div>
+        <div id="totalActualLabel" class="text-xs sm:text-sm font-black tabular-nums text-pink-300">0分</div>
+      </div>
+      <div class="border-l border-white/10">
+        <div class="text-[9px] text-amber-200/80 font-bold">終了予定</div>
+        <div id="finalEndTime" class="text-xs sm:text-sm font-black tabular-nums text-amber-200">--:--</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインタイムライン -->
+  <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-36 space-y-2.5 overflow-y-auto"></main>
+
+  <!-- 下部固定クイック入力ドック（2行のスリム設計） -->
+  <div class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
+    <div class="max-w-[480px] mx-auto px-3 pt-2.5 pb-4 bg-white/95 backdrop-blur-md border-t border-pink-100 shadow-[0_-8px_28px_rgba(190,24,93,0.09)] rounded-t-3xl pointer-events-auto space-y-2">
+      <!-- 1行目：タスク名入力 & すぐ開始 & 追加 -->
+      <div class="flex items-center gap-1.5">
+        <input
+          type="text"
+          id="quickTaskTitleInput"
+          placeholder="タスク名（空欄で開始もOK）"
+          onkeypress="if(event.key==='Enter') quickAddOnly()"
+          class="flex-1 min-w-0 px-3.5 py-2 rounded-2xl bg-pink-50/50 border border-pink-200/80 focus:bg-white focus:border-pink-400 outline-none font-bold text-stone-800 placeholder:text-stone-400 placeholder:font-normal transition"
+        />
+        <button
+          type="button"
+          onclick="quickAddAndStart()"
+          aria-label="すぐ開始"
+          class="px-3 py-2 rounded-2xl text-white font-extrabold text-xs shadow-xs flex items-center gap-1 shrink-0 active:scale-95 transition"
+          style="background-image: linear-gradient(90deg, #f43f5e, #ec4899);"
+        >
+          <span>▶</span>
+          <span>開始</span>
+        </button>
+        <button
+          type="button"
+          onclick="quickAddOnly()"
+          aria-label="追加"
+          class="px-3 py-2 rounded-2xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-extrabold text-xs shadow-xs flex items-center gap-0.5 shrink-0 active:scale-95 transition"
+        >
+          <span>＋</span>
+          <span>追加</span>
+        </button>
+      </div>
+
+      <!-- 2行目：見積もり時間クイック調整ピル & 種別切替 -->
+      <div class="flex items-center justify-between gap-1 overflow-x-auto">
+        <div class="flex items-center gap-1 shrink-0">
+          <span id="quickDurationDisplay" class="text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-1 rounded-xl border border-purple-200 tabular-nums">15分</span>
+          <button type="button" onclick="addQuickDuration(5)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+5</button>
+          <button type="button" onclick="addQuickDuration(10)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+10</button>
+          <button type="button" onclick="addQuickDuration(15)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+15</button>
+          <button type="button" onclick="addQuickDuration(30)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+30</button>
+          <button type="button" onclick="resetQuickDuration()" class="px-2 py-1 bg-rose-100 rounded-xl text-[11px] font-extrabold text-rose-700 active:scale-90">↺</button>
+        </div>
+
+        <button
+          type="button"
+          id="quickTaskTypeToggle"
+          onclick="cycleQuickTaskType()"
+          class="px-2.5 py-1 rounded-xl bg-fdf2f8 border border-pink-200 text-[10px] font-extrabold text-pink-700 shrink-0 active:scale-95 transition"
+        >
+          🌸 単発
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toastBox" class="fixed top-28 left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
+    <div class="bg-[#34192c]/95 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap border border-pink-400/30">
+      <span>🌸</span>
+      <span id="toastText">保存しました</span>
+    </div>
+  </div>
+
+  <!-- 💬 コメント・写真ログ一覧モーダル -->
+  <div id="commentLogModal" onclick="if(event.target===this) closeCommentLogModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-pink-400">
+      <div class="flex items-center justify-between mb-2 shrink-0">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">💬</span>
+          <h2 class="text-sm font-extrabold text-stone-800">コメント・写真ログ一覧</h2>
+        </div>
+        <button type="button" onclick="closeCommentLogModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="text-[11px] font-bold text-stone-400 mb-2.5 shrink-0">
+        タップするとその日のタスク詳細画面へジャンプするよ🌸
+      </div>
+      <div id="commentLogListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 pb-2"></div>
+    </div>
+  </div>
+
+  <!-- 📅 カレンダーモーダル（日付シングルタップで開閉） -->
+  <div id="calendarModal" onclick="if(event.target===this) closeCalendarModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-[380px] rounded-3xl shadow-2xl border-t-4 border-pink-400 overflow-hidden">
+      <div class="px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">📅</span>
+          <h2 class="text-sm font-extrabold text-stone-800">日付を選ぶ</h2>
+        </div>
+        <button type="button" onclick="closeCalendarModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <div class="flex items-center justify-between bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-1.5 border border-pink-100">
+          <button type="button" onclick="shiftCalendarMonth(-1)" aria-label="前の月" class="w-8 h-8 rounded-xl bg-white text-pink-600 flex items-center justify-center shadow-2xs active:scale-90 transition">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <span id="calendarMonthLabel" class="text-sm font-extrabold text-stone-800">2026年11月</span>
+          <button type="button" onclick="shiftCalendarMonth(1)" aria-label="次の月" class="w-8 h-8 rounded-xl bg-white text-purple-600 flex items-center justify-center shadow-2xs active:scale-90 transition">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-7 text-center text-[11px] font-extrabold">
+          <span class="text-rose-500">日</span>
+          <span class="text-stone-500">月</span>
+          <span class="text-stone-500">火</span>
+          <span class="text-stone-500">水</span>
+          <span class="text-stone-500">木</span>
+          <span class="text-stone-500">金</span>
+          <span class="text-purple-500">土</span>
+        </div>
+
+        <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1"></div>
+
+        <div class="pt-1 flex items-center justify-between gap-2">
+          <span class="text-[10px] font-bold text-stone-400">💡 日付をダブルタップでも今日に戻るよ</span>
+          <button type="button" onclick="selectCalendarDate(getTodayStr())" class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-extrabold shadow-2xs active:scale-95 transition shrink-0">
+            今日へ移動
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌸 タスク詳細・編集モーダル（開始・終了時刻ドラム入力 ＆ 直前の終了時刻から開始ボタン付き） -->
+  <div id="taskModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between shrink-0">
+        <h2 id="taskModalTitle" class="text-sm font-extrabold text-stone-800">🌸 タスク詳細・編集</h2>
+        <button type="button" onclick="closeTaskModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="taskForm" onsubmit="event.preventDefault(); submitTaskModal(false);" class="p-5 pt-3.5 overflow-y-auto space-y-3">
+        <input type="hidden" id="editTaskId" />
+
+        <div>
+          <label class="block text-[11px] font-extrabold text-stone-500 mb-1">タスク名</label>
+          <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="w-full px-3.5 py-2 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none font-bold" />
+        </div>
+
+        <!-- ⏱ 開始時刻・終了時刻のドラム入力セクション -->
+        <div id="editTimeRangeSection" class="bg-gradient-to-r from-pink-50/80 via-fuchsia-50/60 to-purple-50/80 p-3 rounded-2xl border border-pink-200/80 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold text-pink-800 flex items-center gap-1">
+              <span>⏱</span>
+              <span>開始・終了時刻（ドラム入力）</span>
+            </span>
+            <span id="editTaskStatusBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white text-purple-700 border border-purple-200">
+              完了済み
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-extrabold text-stone-500 mb-1">開始時刻</label>
+              <input
+                type="time"
+                id="taskStartTimeInput"
+                onchange="handleStartOrEndTimeChange()"
+                class="w-full px-2.5 py-1.5 rounded-xl border border-pink-200 bg-white font-black text-center text-stone-800 outline-none focus:border-pink-400"
+              />
+            </div>
+            <div id="taskEndTimeCol">
+              <label class="block text-[10px] font-extrabold text-stone-500 mb-1">終了時刻</label>
+              <input
+                type="time"
+                id="taskEndTimeInput"
+                onchange="handleStartOrEndTimeChange()"
+                class="w-full px-2.5 py-1.5 rounded-xl border border-purple-200 bg-white font-black text-center text-stone-800 outline-none focus:border-purple-400"
+              />
+            </div>
+          </div>
+
+          <!-- スタート押し忘れ救済：直前のタスクの終了時刻から開始ボタン -->
+          <div id="snapPrevEndWrap" class="hidden pt-0.5">
+            <button
+              type="button"
+              id="snapPrevEndBtn"
+              onclick="applyPrevTaskEndTimeInModal()"
+              class="w-full py-2 px-3 rounded-xl bg-white hover:bg-pink-50 text-pink-700 border border-pink-300 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition"
+            >
+              <span>⏪</span>
+              <span id="snapPrevEndBtnLabel">直前の終了 (08:00) から開始にする</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-pink-50/70 p-3 rounded-2xl border border-pink-100">
+            <label class="block text-[10px] font-extrabold text-pink-700 mb-1">見積もり (分)</label>
+            <input type="number" id="taskDurationInput" min="0" max="600" value="15" class="w-full px-2 py-1 rounded-xl border border-pink-200 bg-white font-black text-center text-purple-700 outline-none" />
+          </div>
+          <div id="editActualWrap" class="bg-purple-50/70 p-3 rounded-2xl border border-purple-100">
+            <label class="block text-[10px] font-extrabold text-purple-700 mb-1">実績 (分)</label>
+            <input
+              type="number"
+              id="taskActualInput"
+              min="0"
+              max="600"
+              value="0"
+              oninput="handleActualMinutesManualChange()"
+              class="w-full px-2 py-1 rounded-xl border border-purple-200 bg-white font-black text-center text-pink-700 outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="flex gap-1">
+          <button type="button" onclick="addModalDuration(5)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+5</button>
+          <button type="button" onclick="addModalDuration(10)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+10</button>
+          <button type="button" onclick="addModalDuration(15)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+15</button>
+          <button type="button" onclick="addModalDuration(60)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+1h</button>
+          <button type="button" onclick="document.getElementById('taskDurationInput').value=0" class="px-3 py-1.5 bg-rose-100 rounded-xl text-[11px] font-extrabold text-rose-700">0</button>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-extrabold text-stone-500 mb-1">🎯 目標時刻（ドラム入力）</label>
+          <div class="flex items-center gap-2">
+            <input type="time" id="taskDeadlineInput" class="flex-1 min-w-0 px-3 py-1.5 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none font-bold bg-white" />
+            <button type="button" onclick="document.getElementById('taskDeadlineInput').value=''" class="px-2.5 py-2 rounded-xl bg-stone-100 text-stone-500 text-xs font-bold shrink-0">クリア</button>
+            <label class="flex items-center gap-1 cursor-pointer bg-rose-50 border border-rose-200 px-3 py-2 rounded-2xl shrink-0">
+              <input type="checkbox" id="taskAlarmInput" class="w-4 h-4 rounded text-pink-600" />
+              <span class="text-xs font-bold text-rose-700">🔔</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-extrabold text-stone-500 mb-1">💬 メモ</label>
+          <textarea id="taskCommentInput" rows="2" placeholder="ひとことメモ..." class="w-full px-3.5 py-2 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none"></textarea>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-3">
+            <label class="px-3.5 py-2 rounded-xl bg-pink-50 text-pink-700 border border-pink-200 text-xs font-bold cursor-pointer flex items-center gap-1.5">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+              <span>写真</span>
+              <input type="file" id="taskImageFile" accept="image/*" onchange="handleModalImageUpload(event)" class="hidden" />
+            </label>
+            <button type="button" id="removeModalImageBtn" onclick="clearModalImage()" class="hidden text-xs text-rose-500 font-bold">削除</button>
+          </div>
+          <div id="modalImagePreviewWrap" class="hidden mt-2 rounded-2xl overflow-hidden border border-pink-200 max-h-36">
+            <img id="modalImagePreview" src="" alt="プレビュー" class="w-full h-36 object-cover" />
+          </div>
+        </div>
+
+        <div id="modalNewButtons" class="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" onclick="submitTaskModal(true)" class="py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-extrabold text-xs shadow-sm">
+            ▶ すぐ開始
+          </button>
+          <button type="button" onclick="submitTaskModal(false)" class="py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-extrabold text-xs shadow-sm">
+            ＋ 追加
+          </button>
+        </div>
+
+        <div id="modalEditButtons" class="hidden flex items-center gap-2 pt-1">
+          <button type="button" onclick="deleteCurrentEditingTask()" class="px-4 py-3 rounded-2xl bg-rose-50 text-rose-600 font-extrabold text-xs">
+            削除
+          </button>
+          <button type="button" onclick="submitTaskModal(false)" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-sm">
+            保存する
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✨ その場でルーチン化モーダル -->
+  <div id="taskToRoutineModal" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-[460px] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t-4 border-purple-400 max-h-[85dvh] flex flex-col overflow-hidden">
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-purple-100 flex items-center justify-between shrink-0">
+        <h3 class="text-sm font-extrabold text-stone-800">✨ ルーチンに登録</h3>
+        <button type="button" onclick="closeTaskToRoutineModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-5 pt-3.5 overflow-y-auto space-y-3.5">
+        <input type="hidden" id="t2rSourceTaskId" />
+
+        <div class="space-y-3 bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100">
+          <div>
+            <label class="block text-[11px] font-extrabold text-stone-500 mb-1">ルーチン名</label>
+            <input type="text" id="t2rTitleInput" class="w-full px-3 py-1.5 rounded-xl border border-purple-200 bg-white font-bold text-stone-800 outline-none" />
+          </div>
+
+          <div id="t2rTimeChoiceWrap" class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="setT2RDurationMode('est')" class="p-2 rounded-xl border border-purple-300 bg-white text-purple-800 text-xs font-extrabold text-center active:bg-purple-100">
+              見積 (<span id="t2rEstVal">30</span>分)
+            </button>
+            <button type="button" onclick="setT2RDurationMode('actual')" class="p-2 rounded-xl border border-pink-300 bg-white text-pink-800 text-xs font-extrabold text-center active:bg-pink-100">
+              実績 (<span id="t2rActualVal">25</span>分)
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-extrabold text-stone-600">見積:</span>
+              <input type="number" id="t2rDurationInput" min="1" max="600" value="15" class="w-16 px-2 py-1 rounded-xl border border-purple-200 bg-white font-black text-center text-purple-700" />
+              <span class="text-xs font-bold text-stone-500">分</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-extrabold text-stone-600">🎯</span>
+              <input type="time" id="t2rDeadlineInput" class="px-2 py-1 rounded-xl border border-purple-200 bg-white font-bold" />
+            </div>
+          </div>
+
+          <div>
+            <span class="block text-[11px] font-extrabold text-stone-500 mb-1.5">繰り返しパターン</span>
+            <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl border border-purple-200/80" id="t2rRepeatTypeTabs">
+              <button type="button" data-rtype="weekly" onclick="setT2RRepeatType('weekly')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">曜日指定</button>
+              <button type="button" data-rtype="nthWeekday" onclick="setT2RRepeatType('nthWeekday')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">第〇曜日</button>
+              <button type="button" data-rtype="monthlyDate" onclick="setT2RRepeatType('monthlyDate')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">毎月〇日</button>
+              <button type="button" data-rtype="afterDays" onclick="setT2RRepeatType('afterDays')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">完了後〇日</button>
+            </div>
+          </div>
+
+          <div id="t2rPanelWeekly" class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-stone-500">繰り返す曜日</span>
+              <button type="button" onclick="toggleAllT2RDays()" class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-extrabold">毎日</button>
+            </div>
+            <div class="grid grid-cols-7 gap-1" id="t2rDayCheckboxes"></div>
+          </div>
+
+          <div id="t2rPanelNthWeekday" class="hidden space-y-2">
+            <div>
+              <span class="block text-[10px] font-bold text-stone-500 mb-1">第何週（複数選択OK）</span>
+              <div class="grid grid-cols-5 gap-1" id="t2rNthCheckboxes"></div>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold text-stone-500 mb-1">曜日（複数選択OK）</span>
+              <div class="grid grid-cols-7 gap-1" id="t2rNthDayCheckboxes"></div>
+            </div>
+          </div>
+
+          <div id="t2rPanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-purple-200">
+            <span class="text-xs font-extrabold text-stone-600">毎月</span>
+            <input type="number" id="t2rMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg border border-purple-200 font-black text-center text-purple-700" />
+            <span class="text-xs font-extrabold text-stone-600">日</span>
+          </div>
+
+          <div id="t2rPanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-purple-200">
+            <span class="text-xs font-extrabold text-stone-600">完了してから</span>
+            <input type="number" id="t2rIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg border border-purple-200 font-black text-center text-pink-600" />
+            <span class="text-xs font-extrabold text-stone-600">日後に自動出現</span>
+          </div>
+        </div>
+
+        <button type="button" onclick="saveTaskToRoutine()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-md active:scale-95 transition">
+          ✨ 保存する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✨ ルーチン一覧＆編集モーダル（連番なし・実績回数＆平均時間表示付き） -->
+  <div id="routineModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-purple-400">
+      <div class="flex items-center justify-between mb-2.5 shrink-0">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-extrabold text-stone-800">✨ ルーチン一覧・流れ</h2>
+          <span class="text-[10px] font-bold text-stone-400">長押しで順番入替</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button type="button" id="dedupeRoutinesBtn" onclick="deduplicateRoutines()" class="hidden px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-extrabold active:scale-90 transition">
+            🧹 重複を整理
+          </button>
+          <button type="button" onclick="closeRoutineModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 上部アクションバー -->
+      <div class="grid grid-cols-2 gap-1.5 mb-2.5 shrink-0">
+        <button type="button" id="routineToggleNewBtn" onclick="toggleRoutineFormDrawer()" class="py-2 px-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-xs shadow-2xs flex items-center justify-center gap-1 active:scale-95 transition">
+          <span>＋</span>
+          <span>新しいルーチンを追加</span>
+        </button>
+        <button type="button" id="routineTabImportBtn" onclick="toggleRoutineImportView()" class="py-2 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition">
+          <span>📥</span>
+          <span>今日のタスクから</span>
+        </button>
+      </div>
+
+      <!-- 折りたたみ式：新規・編集フォーム -->
+      <form id="routineFormBox" onsubmit="saveRoutineForm(event)" class="hidden bg-gradient-to-r from-pink-50/90 to-purple-50/90 p-3 rounded-2xl border border-pink-200 mb-2.5 space-y-2.5 shrink-0 max-h-[56dvh] overflow-y-auto">
+        <input type="hidden" id="editingRoutineId" value="" />
+
+        <div class="flex items-center justify-between">
+          <span id="routineFormModeLabel" class="text-[11px] font-extrabold text-purple-700">＋ 新しいルーチン</span>
+          <button type="button" id="cancelRoutineEditBtn" onclick="closeRoutineFormDrawer()" class="text-[10px] font-extrabold text-rose-600 bg-white px-2.5 py-0.5 rounded-lg border border-rose-200 active:scale-90 transition">
+            閉じる
+          </button>
+        </div>
+
+        <!-- 編集中のルーチンの過去実績統計バナー -->
+        <div id="routineEditStatsBanner" class="hidden flex items-center justify-between bg-white/90 border border-purple-200 rounded-xl px-3 py-1.5 text-[11px]">
+          <span id="routineEditStatsText" class="font-extrabold text-purple-800">📊 これまで 0回 実施</span>
+          <button type="button" id="applyAvgDurationBtn" onclick="applyAverageDurationToRoutine()" class="px-2 py-0.5 rounded-lg bg-pink-100 text-pink-700 font-extrabold text-[10px] active:scale-90 transition">
+            平均を反映
+          </button>
+        </div>
+
+        <div class="flex gap-1.5">
+          <input type="text" id="routineTitleInput" required placeholder="ルーチン名（例：資源ごみ出し）" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-pink-200 font-bold bg-white outline-none" />
+          <div class="flex items-center gap-1 bg-white border border-pink-200 rounded-xl px-2 shrink-0">
+            <input type="number" id="routineDurationInput" value="20" min="1" max="480" required class="w-12 py-1 font-black text-purple-700 text-center outline-none" />
+            <span class="text-[11px] font-bold text-stone-400">分</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] font-bold text-stone-500">🎯</span>
+            <input type="time" id="routineDeadlineInput" class="px-2 py-1 rounded-lg border border-pink-200 font-bold bg-white" />
+            <button type="button" onclick="document.getElementById('routineDeadlineInput').value=''" class="text-[10px] text-stone-400 font-bold px-1.5 py-0.5 bg-white rounded border border-stone-200">×</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl border border-pink-200/80" id="routineRepeatTypeTabs">
+          <button type="button" data-rtype="weekly" onclick="setRoutineRepeatType('weekly')" class="py-1 rounded-lg text-[10px] font-extrabold transition">曜日指定</button>
+          <button type="button" data-rtype="nthWeekday" onclick="setRoutineRepeatType('nthWeekday')" class="py-1 rounded-lg text-[10px] font-extrabold transition">第〇曜日</button>
+          <button type="button" data-rtype="monthlyDate" onclick="setRoutineRepeatType('monthlyDate')" class="py-1 rounded-lg text-[10px] font-extrabold transition">毎月〇日</button>
+          <button type="button" data-rtype="afterDays" onclick="setRoutineRepeatType('afterDays')" class="py-1 rounded-lg text-[10px] font-extrabold transition">完了後〇日</button>
+        </div>
+
+        <div id="routinePanelWeekly" class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-stone-500">曜日を選択</span>
+            <button type="button" onclick="toggleAllRoutineDays()" class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-extrabold active:scale-95 transition">毎日</button>
+          </div>
+          <div class="grid grid-cols-7 gap-1" id="routineDayCheckboxes"></div>
+        </div>
+
+        <div id="routinePanelNthWeekday" class="hidden space-y-1.5">
+          <div class="grid grid-cols-5 gap-1" id="routineNthCheckboxes"></div>
+          <div class="grid grid-cols-7 gap-1" id="routineNthDayCheckboxes"></div>
+        </div>
+
+        <div id="routinePanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-pink-200">
+          <span class="text-xs font-extrabold text-stone-600">毎月</span>
+          <input type="number" id="routineMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg border border-pink-200 font-black text-center text-purple-700" />
+          <span class="text-xs font-extrabold text-stone-600">日に実行</span>
+        </div>
+
+        <div id="routinePanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-pink-200">
+          <span class="text-xs font-extrabold text-stone-600">完了してから</span>
+          <input type="number" id="routineIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg border border-pink-200 font-black text-center text-pink-600" />
+          <span class="text-xs font-extrabold text-stone-600">日後に自動出現</span>
+        </div>
+
+        <button type="submit" id="routineSubmitBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-xs shadow-xs active:scale-95 transition">
+          保存する
+        </button>
+      </form>
+
+      <div id="routineListContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-2"></div>
+      <div id="routineImportSection" class="hidden flex-1 overflow-y-auto space-y-2 pr-1 pb-2"></div>
+    </div>
+  </div>
+
+  <!-- 設定＆バックアップモーダル -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3 border-t-4 border-pink-400">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-extrabold text-stone-800">⚙️ 設定・バックアップ</h2>
+        <button type="button" onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-1.5 text-xs">
+        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-white border border-purple-100">
+          <span class="w-3.5 h-3.5 rounded-full bg-white border-2 border-purple-300 shrink-0"></span>
+          <span class="font-extrabold text-stone-700">白：ルーチンタスク</span>
+        </div>
+        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-[#fdf2f8] border border-pink-200">
+          <span class="w-3.5 h-3.5 rounded-full bg-pink-400 shrink-0"></span>
+          <span class="font-extrabold text-pink-900">淡ピンク：単発（未完了は翌朝持ち越し）</span>
+        </div>
+        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-[#f3e8ff] border border-purple-200">
+          <span class="w-3.5 h-3.5 rounded-full bg-purple-400 shrink-0"></span>
+          <span class="font-extrabold text-purple-900">薄紫：前日からの持ち越しタスク</span>
+        </div>
+      </div>
+
+      <button type="button" onclick="reloadRoutinesForToday()" class="w-full py-2.5 rounded-2xl bg-purple-50 text-purple-700 font-extrabold text-xs">
+        ✨ 今日のルーチンを再同期する
+      </button>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="exportBackupJson()" class="py-2.5 px-2 rounded-2xl bg-pink-50 text-pink-700 font-extrabold text-xs border border-pink-200">
+          📤 バックアップ保存
+        </button>
+        <label class="py-2.5 px-2 rounded-2xl bg-purple-50 text-purple-700 font-extrabold text-xs border border-purple-200 text-center cursor-pointer">
+          📥 バックアップ復元
+          <input type="file" accept=".json,application/json" onchange="importBackupJson(event)" class="hidden" />
+        </label>
+      </div>
+
+      <button type="button" onclick="resetToSampleData()" class="w-full py-2.5 rounded-2xl bg-rose-50 text-rose-600 font-extrabold text-xs">
+        ↺ 初期サンプルデータに戻す
+      </button>
+    </div>
+  </div>
+
+  <!-- クイックメモ・写真モーダル -->
+  <div id="quickNoteModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between shrink-0">
+        <h3 id="quickNoteTitle" class="text-sm font-extrabold text-stone-800 truncate pr-2">💬 メモ・写真</h3>
+        <button type="button" onclick="closeQuickNoteModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-5 pt-3.5 overflow-y-auto space-y-3">
+        <textarea id="quickNoteTextarea" rows="3" placeholder="メモを入力..." class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none"></textarea>
+        <div class="flex items-center justify-between">
+          <label class="px-3.5 py-2 rounded-xl bg-pink-50 text-pink-700 border border-pink-200 text-xs font-bold cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="image-plus" class="w-4 h-4"></i>
+            <span>写真</span>
+            <input type="file" accept="image/*" onchange="handleQuickNoteImage(event)" class="hidden" />
+          </label>
+          <button type="button" id="quickNoteRemoveImgBtn" onclick="removeQuickNoteImage()" class="hidden text-xs text-rose-500 font-bold">削除</button>
+        </div>
+        <div id="quickNoteImgPreviewWrap" class="hidden rounded-2xl overflow-hidden border border-pink-200">
+          <img id="quickNoteImgPreview" src="" alt="プレビュー" class="w-full h-40 object-cover" />
+        </div>
+        <button type="button" onclick="saveQuickNote()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-sm">
+          保存する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================================
+  // 0. ホーム画面用カスタムアイコン（🌸）＆ PWAマニフェストの自動生成
+  // ============================================================================
+  function generateSakuraAppIconAndManifest() {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 180;
+      canvas.height = 180;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 180, 180);
+      grad.addColorStop(0, '#ff85b3');
+      grad.addColorStop(0.5, '#f472b6');
+      grad.addColorStop(1, '#c084fc');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 180, 180);
+
+      ctx.beginPath();
+      ctx.arc(90, 90, 66, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.fill();
+
+      ctx.font = '96px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌸', 90, 96);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const appleLink = document.getElementById('appleTouchIconLink');
+      const favLink = document.getElementById('faviconLink');
+      if (appleLink) appleLink.href = dataUrl;
+      if (favLink) favLink.href = dataUrl;
+
+      const manifestObj = {
+        name: 'うめちゃんのタスクシュート',
+        short_name: 'タスクシュート',
+        start_url: '.',
+        display: 'standalone',
+        background_color: '#fff5f8',
+        theme_color: '#fff5f8',
+        icons: [{ src: dataUrl, sizes: '180x180', type: 'image/png' }]
+      };
+      const mBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+      const mLink = document.getElementById('manifestLink');
+      if (mLink) mLink.href = URL.createObjectURL(mBlob);
+    } catch (e) {}
+  }
+
+  // ============================================================================
+  // 1. 状態管理・ユーティリティ・サンプルデータ
+  // ============================================================================
+  const STORAGE_KEY_TASKS = 'ume_taskchute_v9_tasks';
+  const STORAGE_KEY_ROUTINES = 'ume_taskchute_v9_routines';
+  const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
+  const NTH_OPTIONS = [
+    { val: 1, label: '第1' },
+    { val: 2, label: '第2' },
+    { val: 3, label: '第3' },
+    { val: 4, label: '第4' },
+    { val: 5, label: '最終' }
+  ];
+
+  let tasksByDate = {};
+  let routines = [];
+  let currentDate = getTodayStr();
+  let quickDurationValue = 15;
+  let quickTaskType = 'single'; // 'single' | 'carryover'
+  let modalImageBase64 = '';
+  let quickNoteTargetId = null;
+  let quickNoteImgBase64 = '';
+  let currentEditingRoutineAvgMin = null;
+  let modalPrevEndTimeMs = null;
+  let isSavingRoutineLock = false;
+
+  let calendarViewYear = new Date().getFullYear();
+  let calendarViewMonth = new Date().getMonth();
+  let dateTapTimer = null;
+  let lastDateTapMs = 0;
+
+  let routineRepeatType = 'weekly';
+  let selectedRoutineDays = [0, 1, 2, 3, 4, 5, 6];
+  let selectedRoutineNths = [2, 4];
+  let selectedRoutineNthDays = [3];
+
+  let t2rRepeatType = 'weekly';
+  let selectedT2RDays = [0, 1, 2, 3, 4, 5, 6];
+  let selectedT2RNths = [2, 4];
+  let selectedT2RNthDays = [3];
+  let t2rEstMinutes = 15;
+  let t2rActualMinutes = 15;
+
+  function getTodayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function parseDateKey(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function addDays(dateStr, diff) {
+    const d = parseDateKey(dateStr);
+    d.setDate(d.getDate() + diff);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function formatHHMM(dateOrMs) {
+    const d = dateOrMs instanceof Date ? dateOrMs : new Date(dateOrMs);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function combineDateAndHHMM(dateStr, hhmm) {
+    if (!hhmm || !hhmm.includes(':')) return null;
+    const [h, m] = hhmm.split(':').map(Number);
+    const dt = parseDateKey(dateStr);
+    dt.setHours(h, m, 0, 0);
+    return dt.getTime();
+  }
+
+  function formatMMSS(sec) {
+    const s = Math.max(0, Math.floor(sec));
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+  }
+
+  function saveTasks() {
+    try {
+      localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasksByDate));
+    } catch (e) {}
+  }
+
+  function saveRoutines() {
+    try {
+      localStorage.setItem(STORAGE_KEY_ROUTINES, JSON.stringify(routines));
+    } catch (e) {}
+  }
+
+  function getDefaultRoutines() {
+    return [
+      { id: 'r_1', title: '起床・白湯＆身支度', duration: 20, deadline: '07:00', alarm: false, repeatType: 'weekly', days: [0, 1, 2, 3, 4, 5, 6] },
+      { id: 'r_2', title: '朝食＆コーヒータイム', duration: 25, deadline: '08:00', alarm: false, repeatType: 'weekly', days: [0, 1, 2, 3, 4, 5, 6] },
+      { id: 'r_3', title: '資源ごみ出し', duration: 10, deadline: '08:30', alarm: false, repeatType: 'nthWeekday', nthWeeks: [2, 4], nthDays: [3] },
+      { id: 'r_4', title: '洗濯槽クリーナー', duration: 15, deadline: '', alarm: false, repeatType: 'afterDays', intervalDays: 45, nextDueDate: addDays(getTodayStr(), 45) }
+    ];
+  }
+
+  function createSampleData(todayStr) {
+    const now = Date.now();
+    const yesterdayStr = addDays(todayStr, -1);
+    const twoDaysAgoStr = addDays(todayStr, -2);
+
+    return {
+      [twoDaysAgoStr]: [
+        {
+          id: `t_${twoDaysAgoStr}_1`,
+          taskType: 'routine',
+          routineId: 'r_1',
+          groupId: null,
+          originalEst: 20,
+          title: '起床・白湯＆身支度',
+          duration: 20,
+          deadline: '07:00',
+          alarm: false,
+          status: 'completed',
+          actualStart: now - 172800 * 1000,
+          actualEnd: now - 172800 * 1000 + 1320 * 1000,
+          elapsedSeconds: 1320,
+          comment: 'お気に入りのハーブティーを飲んだらスッキリ起きた🌿',
+          image: ''
+        },
+        {
+          id: `t_${twoDaysAgoStr}_2`,
+          taskType: 'routine',
+          routineId: 'r_2',
+          groupId: null,
+          originalEst: 25,
+          title: '朝食＆コーヒータイム',
+          duration: 25,
+          deadline: '08:00',
+          alarm: false,
+          status: 'completed',
+          actualStart: now - 172800 * 1000 + 1500 * 1000,
+          actualEnd: now - 172800 * 1000 + 3180 * 1000,
+          elapsedSeconds: 1680,
+          comment: '',
+          image: ''
+        }
+      ],
+      [yesterdayStr]: [
+        {
+          id: `t_${yesterdayStr}_1`,
+          taskType: 'routine',
+          routineId: 'r_1',
+          groupId: null,
+          originalEst: 20,
+          title: '起床・白湯＆身支度',
+          duration: 20,
+          deadline: '07:00',
+          alarm: false,
+          status: 'completed',
+          actualStart: now - 86400 * 1000,
+          actualEnd: now - 86400 * 1000 + 1140 * 1000,
+          elapsedSeconds: 1140,
+          comment: '',
+          image: ''
+        },
+        {
+          id: `t_${yesterdayStr}_2`,
+          taskType: 'routine',
+          routineId: 'r_2',
+          groupId: null,
+          originalEst: 25,
+          title: '朝食＆コーヒータイム',
+          duration: 25,
+          deadline: '08:00',
+          alarm: false,
+          status: 'completed',
+          actualStart: now - 86400 * 1000 + 1400 * 1000,
+          actualEnd: now - 86400 * 1000 + 3200 * 1000,
+          elapsedSeconds: 1800,
+          comment: '豆を挽くところからやると30分くらいかかるな〜☕',
+          image: ''
+        }
+      ],
+      [todayStr]: [
+        {
+          id: `t_${todayStr}_1`,
+          taskType: 'routine',
+          routineId: 'r_1',
+          groupId: null,
+          originalEst: 20,
+          title: '起床・白湯＆身支度',
+          duration: 20,
+          deadline: '07:00',
+          alarm: false,
+          status: 'completed',
+          actualStart: now - 7200 * 1000,
+          actualEnd: now - 6000 * 1000,
+          elapsedSeconds: 1200,
+          comment: '',
+          image: ''
+        },
+        {
+          id: `t_${todayStr}_2`,
+          taskType: 'single',
+          routineId: null,
+          groupId: null,
+          originalEst: 15,
+          title: '観葉植物に水やり',
+          duration: 15,
+          deadline: '',
+          alarm: false,
+          status: 'completed',
+          actualStart: now - 5400 * 1000,
+          actualEnd: now - 4500 * 1000,
+          elapsedSeconds: 900,
+          comment: 'モンステラの新芽が出てた！🌱',
+          image: ''
+        },
+        {
+          id: `t_${todayStr}_3`,
+          taskType: 'carryover',
+          routineId: null,
+          groupId: null,
+          originalEst: 20,
+          title: 'ネットスーパーの注文確定',
+          duration: 20,
+          deadline: '',
+          alarm: false,
+          status: 'running',
+          actualStart: now - 480 * 1000,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '',
+          image: ''
+        },
+        {
+          id: `t_${todayStr}_4`,
+          taskType: 'single',
+          routineId: null,
+          groupId: null,
+          originalEst: 60,
+          title: '1週間分のお弁当を作る',
+          duration: 60,
+          deadline: '20:30',
+          alarm: false,
+          status: 'pending',
+          actualStart: null,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '卵とブロッコリー茹でる🥦',
+          image: ''
+        },
+        {
+          id: `t_${todayStr}_5`,
+          taskType: 'routine',
+          routineId: 'r_2',
+          groupId: null,
+          originalEst: 25,
+          title: '朝食＆コーヒータイム',
+          duration: 25,
+          deadline: '09:00',
+          alarm: false,
+          status: 'pending',
+          actualStart: null,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '',
+          image: ''
+        }
+      ]
+    };
+  }
+
+  function initData() {
+    try {
+      const savedR = localStorage.getItem(STORAGE_KEY_ROUTINES);
+      routines = savedR ? JSON.parse(savedR) : getDefaultRoutines();
+      if (!savedR) saveRoutines();
+
+      const savedT = localStorage.getItem(STORAGE_KEY_TASKS);
+      tasksByDate = savedT ? JSON.parse(savedT) : {};
+      if (!savedT || Object.keys(tasksByDate).length === 0) {
+        tasksByDate = createSampleData(getTodayStr());
+        saveTasks();
+      }
+    } catch (e) {
+      routines = getDefaultRoutines();
+      tasksByDate = createSampleData(getTodayStr());
+    }
+    ensureTasksForDate(currentDate);
+  }
+
+  function getRoutineHistoryStats(routine) {
+    let count = 0;
+    let totalSeconds = 0;
+
+    Object.values(tasksByDate).forEach(dayList => {
+      if (!Array.isArray(dayList)) return;
+      dayList.forEach(t => {
+        if (t.status === 'completed' && (t.routineId === routine.id || t.title === routine.title)) {
+          const sec = getTaskElapsedSeconds(t);
+          if (sec > 0) {
+            count += 1;
+            totalSeconds += sec;
+          }
+        }
+      });
+    });
+
+    const avgMin = count > 0 ? Math.max(1, Math.round(totalSeconds / count / 60)) : null;
+    return { count, avgMin };
+  }
+
+  function doesRoutineMatchDate(routine, dateStr) {
+    const dt = parseDateKey(dateStr);
+    const dow = dt.getDay();
+    const dayOfMonth = dt.getDate();
+    const rType = routine.repeatType || 'weekly';
+
+    if (rType === 'weekly') {
+      return (routine.days || []).includes(dow);
+    }
+
+    if (rType === 'nthWeekday') {
+      const targetDays = routine.nthDays || [];
+      const targetWeeks = routine.nthWeeks || [];
+      if (!targetDays.includes(dow)) return false;
+
+      const nthOfMonth = Math.ceil(dayOfMonth / 7);
+      const nextWeekDt = new Date(dt.getFullYear(), dt.getMonth(), dayOfMonth + 7);
+      const isLastOfMonth = nextWeekDt.getMonth() !== dt.getMonth();
+
+      if (targetWeeks.includes(nthOfMonth)) return true;
+      if (targetWeeks.includes(5) && isLastOfMonth) return true;
+      return false;
+    }
+
+    if (rType === 'monthlyDate') {
+      return dayOfMonth === Number(routine.monthDay || 1);
+    }
+
+    if (rType === 'afterDays') {
+      return routine.nextDueDate === dateStr;
+    }
+
+    return false;
+  }
+
+  function formatRoutineScheduleLabel(routine) {
+    const rType = routine.repeatType || 'weekly';
+    if (rType === 'weekly') {
+      const days = routine.days || [];
+      if (days.length === 7) return '毎日';
+      if (days.length === 0) return '曜日未設定';
+      return '毎週 ' + days.map(d => DAY_NAMES[d]).join('・');
+    }
+    if (rType === 'nthWeekday') {
+      const wLabels = (routine.nthWeeks || []).map(w => w === 5 ? '最終' : `第${w}`).join('・');
+      const dLabels = (routine.nthDays || []).map(d => DAY_NAMES[d]).join('・');
+      return `毎月 ${wLabels || '第1'} ${dLabels || '水'}曜`;
+    }
+    if (rType === 'monthlyDate') {
+      return `毎月 ${routine.monthDay || 1}日`;
+    }
+    if (rType === 'afterDays') {
+      const nextStr = routine.nextDueDate ? routine.nextDueDate.replace(/-/g, '/') : '未定';
+      return `完了後${routine.intervalDays || 45}日ごと (次回: ${nextStr})`;
+    }
+    return '';
+  }
+
+  function ensureTasksForDate(dateStr) {
+    if (tasksByDate[dateStr]) return tasksByDate[dateStr];
+
+    const list = [];
+    const todayStr = getTodayStr();
+
+    if (dateStr === todayStr) {
+      for (let i = 1; i <= 7; i++) {
+        const prevKey = addDays(dateStr, -i);
+        if (tasksByDate[prevKey]) {
+          const uncompletedSingles = tasksByDate[prevKey].filter(
+            t => t.status !== 'completed' && (t.taskType === 'single' || t.taskType === 'carryover')
+          );
+          uncompletedSingles.forEach((t, idx) => {
+            list.push({
+              ...t,
+              id: `t_${dateStr}_carry_${Date.now()}_${idx}`,
+              taskType: 'carryover',
+              status: 'pending',
+              actualStart: null,
+              actualEnd: null,
+              elapsedSeconds: 0
+            });
+          });
+          break;
+        }
+      }
+    }
+
+    routines.filter(r => doesRoutineMatchDate(r, dateStr)).forEach((r, idx) => {
+      list.push({
+        id: `t_${dateStr}_r_${Date.now()}_${idx}`,
+        taskType: 'routine',
+        routineId: r.id,
+        groupId: null,
+        originalEst: r.duration,
+        title: r.title,
+        duration: r.duration,
+        deadline: r.deadline || '',
+        alarm: !!r.alarm,
+        status: 'pending',
+        actualStart: null,
+        actualEnd: null,
+        elapsedSeconds: 0,
+        comment: '',
+        image: ''
+      });
+    });
+
+    tasksByDate[dateStr] = list;
+    saveTasks();
+    return list;
+  }
+
+  // ============================================================================
+  // 2. 経過時間・直前の終了時刻取得・引き継ぎ中断・スケジュール計算
+  // ============================================================================
+  function getTaskElapsedSeconds(task, nowMs = Date.now()) {
+    if (task.status === 'running' && task.actualStart) {
+      return (task.elapsedSeconds || 0) + Math.max(0, Math.floor((nowMs - task.actualStart) / 1000));
+    }
+    return task.elapsedSeconds || 0;
+  }
+
+  function findPreviousCompletedEndTime(tasks, targetTaskId) {
+    const idx = tasks.findIndex(t => t.id === targetTaskId);
+    const searchLimit = idx === -1 ? tasks.length : idx;
+    for (let i = searchLimit - 1; i >= 0; i--) {
+      if (tasks[i].status === 'completed' && tasks[i].actualEnd) {
+        return tasks[i].actualEnd;
+      }
+    }
+    let latestEnd = null;
+    tasks.forEach(t => {
+      if (t.id !== targetTaskId && t.status === 'completed' && t.actualEnd) {
+        if (!latestEnd || t.actualEnd > latestEnd) {
+          latestEnd = t.actualEnd;
+        }
+      }
+    });
+    return latestEnd;
+  }
+
+  function getGroupStats(tasks, groupId, nowMs = Date.now()) {
+    if (!groupId) return null;
+    const members = tasks.filter(t => t.groupId === groupId);
+    if (members.length <= 1) return null;
+
+    const origEstMin = members[0].originalEst || members[0].duration || 15;
+    let totalSec = 0;
+    members.forEach(m => {
+      totalSec += getTaskElapsedSeconds(m, nowMs);
+    });
+    const totalMin = Math.round(totalSec / 60);
+    const remSec = Math.max(0, origEstMin * 60 - totalSec);
+    const remMin = Math.max(0, origEstMin - totalMin);
+    const diffMin = totalMin - origEstMin;
+
+    return { origEstMin, totalSec, totalMin, remSec, remMin, diffMin };
+  }
+
+  function syncSplitGroups(tasks) {
+    const groups = new Set(tasks.filter(t => t.groupId).map(t => t.groupId));
+    groups.forEach(gid => {
+      const members = tasks.filter(t => t.groupId === gid);
+      if (members.length === 0) return;
+      const origEst = members[0].originalEst || 15;
+      let doneSec = 0;
+      members.forEach(m => {
+        if (m.status === 'completed') doneSec += getTaskElapsedSeconds(m);
+      });
+      const remMin = Math.max(1, origEst - Math.round(doneSec / 60));
+      members.forEach(m => {
+        if (m.status !== 'completed') {
+          m.duration = remMin;
+        }
+      });
+    });
+  }
+
+  function splitAndPauseRunningTask(runningTask, insertAfterTaskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const now = Date.now();
+    const elapsedSec = getTaskElapsedSeconds(runningTask, now);
+
+    if (!runningTask.groupId) {
+      runningTask.groupId = `grp_${now}`;
+      runningTask.originalEst = runningTask.duration || 15;
+    }
+
+    runningTask.elapsedSeconds = elapsedSec;
+    runningTask.actualEnd = now;
+    runningTask.status = 'completed';
+
+    const members = tasks.filter(t => t.groupId === runningTask.groupId);
+    let totalDoneSec = 0;
+    members.forEach(m => { totalDoneSec += getTaskElapsedSeconds(m, now); });
+    const remMin = Math.max(1, (runningTask.originalEst || 15) - Math.round(totalDoneSec / 60));
+
+    const continuation = {
+      id: `t_${currentDate}_cont_${now}`,
+      taskType: runningTask.taskType || 'single',
+      routineId: runningTask.routineId || null,
+      groupId: runningTask.groupId,
+      originalEst: runningTask.originalEst,
+      title: runningTask.title,
+      duration: remMin,
+      deadline: runningTask.deadline || '',
+      alarm: !!runningTask.alarm,
+      status: 'pending',
+      actualStart: null,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment: '',
+      image: ''
+    };
+
+    const anchorIdx = tasks.findIndex(t => t.id === (insertAfterTaskId || runningTask.id));
+    tasks.splice(anchorIdx + 1, 0, continuation);
+    return continuation;
+  }
+
+  function calculateSchedule(tasks) {
+    const now = new Date();
+    const nowMs = now.getTime();
+    let cursorMs = nowMs;
+    const todayStr = getTodayStr();
+
+    if (currentDate !== todayStr) {
+      const d = parseDateKey(currentDate);
+      d.setHours(8, 0, 0, 0);
+      cursorMs = d.getTime();
+    }
+
+    return tasks.map(task => {
+      let displayStart = cursorMs;
+      let displayEnd = cursorMs + (task.duration || 0) * 60000;
+
+      if (task.status === 'completed') {
+        const start = task.actualStart || cursorMs;
+        const end = task.actualEnd || (start + getTaskElapsedSeconds(task, nowMs) * 1000);
+        displayStart = start;
+        displayEnd = end;
+      } else if (task.status === 'running') {
+        const start = task.actualStart || nowMs;
+        const elapsedSec = getTaskElapsedSeconds(task, nowMs);
+        const estSec = (task.duration || 0) * 60;
+        const remSec = Math.max(0, estSec - elapsedSec);
+        displayStart = start;
+        displayEnd = nowMs + remSec * 1000;
+        cursorMs = displayEnd;
+      } else {
+        displayStart = cursorMs;
+        displayEnd = cursorMs + (task.duration || 0) * 60000;
+        cursorMs = displayEnd;
+      }
+
+      let isOverdue = false;
+      if (task.deadline && task.status === 'pending' && currentDate === todayStr) {
+        const [dh, dm] = task.deadline.split(':').map(Number);
+        const dlDate = new Date();
+        dlDate.setHours(dh, dm, 0, 0);
+        if (nowMs > dlDate.getTime()) {
+          isOverdue = true;
+        }
+      }
+
+      return { task, displayStart, displayEnd, isOverdue };
+    });
+  }
+
+  function updateQuickDurationDisplay() {
+    const el = document.getElementById('quickDurationDisplay');
+    if (el) el.textContent = `${quickDurationValue}分`;
+  }
+
+  function addQuickDuration(min) {
+    quickDurationValue += min;
+    updateQuickDurationDisplay();
+  }
+
+  function resetQuickDuration() {
+    quickDurationValue = 0;
+    updateQuickDurationDisplay();
+  }
+
+  function cycleQuickTaskType() {
+    const btn = document.getElementById('quickTaskTypeToggle');
+    if (quickTaskType === 'single') {
+      quickTaskType = 'carryover';
+      btn.textContent = '💜 持ち越し';
+      btn.className = 'px-2.5 py-1 rounded-xl bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-700 shrink-0 active:scale-95 transition';
+    } else {
+      quickTaskType = 'single';
+      btn.textContent = '🌸 単発';
+      btn.className = 'px-2.5 py-1 rounded-xl bg-pink-50 border border-pink-200 text-[10px] font-extrabold text-pink-700 shrink-0 active:scale-95 transition';
+    }
+  }
+
+  function addModalDuration(min) {
+    const el = document.getElementById('taskDurationInput');
+    el.value = (Number(el.value) || 0) + min;
+  }
+
+  // ============================================================================
+  // 3. タスク操作（▶開始 / ■完了 / ⏸引き継ぎ中断 / 完了時▶複製開始）
+  // ============================================================================
+  function startOrCompleteTask(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const target = tasks.find(t => t.id === taskId);
+    if (!target) return;
+    const now = Date.now();
+
+    if (target.status === 'completed') {
+      repeatTaskImmediate(taskId);
+      return;
+    }
+
+    if (target.status === 'running') {
+      target.elapsedSeconds = getTaskElapsedSeconds(target, now);
+      target.actualEnd = now;
+      target.status = 'completed';
+
+      if (target.routineId) {
+        const linkedR = routines.find(r => r.id === target.routineId);
+        if (linkedR && linkedR.repeatType === 'afterDays') {
+          const interval = Math.max(1, Number(linkedR.intervalDays) || 45);
+          const nextDate = addDays(currentDate, interval);
+          linkedR.nextDueDate = nextDate;
+          saveRoutines();
+          if (tasksByDate[nextDate] && !tasksByDate[nextDate].some(x => x.routineId === linkedR.id)) {
+            tasksByDate[nextDate].push({
+              id: `t_${nextDate}_r_${now}`,
+              taskType: 'routine',
+              routineId: linkedR.id,
+              groupId: null,
+              originalEst: linkedR.duration,
+              title: linkedR.title,
+              duration: linkedR.duration,
+              deadline: linkedR.deadline || '',
+              alarm: !!linkedR.alarm,
+              status: 'pending',
+              actualStart: null,
+              actualEnd: null,
+              elapsedSeconds: 0,
+              comment: '',
+              image: ''
+            });
+          }
+          showToast(`次回を${interval}日後 (${nextDate.replace(/-/g, '/')}) に予約🌸`);
+        }
+      }
+
+      syncSplitGroups(tasks);
+      saveTasks();
+      renderAll();
+      return;
+    }
+
+    const runningTask = tasks.find(t => t.status === 'running' && t.id !== taskId);
+    if (runningTask) {
+      const cont = splitAndPauseRunningTask(runningTask, target.id);
+      showToast(`中断 → 残り${cont.duration}分の続きを作成⏸`);
+    }
+
+    target.status = 'running';
+    target.actualStart = now;
+    target.actualEnd = null;
+
+    syncSplitGroups(tasks);
+    saveTasks();
+    renderAll();
+  }
+
+  function pauseRunningTask(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const target = tasks.find(t => t.id === taskId);
+    if (!target || target.status !== 'running') return;
+
+    const cont = splitAndPauseRunningTask(target, target.id);
+    saveTasks();
+    renderAll();
+    showToast(`中断 → 残り${cont.duration}分を引き継ぎ⏸`);
+  }
+
+  function repeatTaskImmediate(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const source = tasks.find(t => t.id === taskId);
+    if (!source) return;
+
+    const now = Date.now();
+    const runningTask = tasks.find(t => t.status === 'running');
+
+    const est = source.originalEst || source.duration || 15;
+    const duplicated = {
+      id: `t_${currentDate}_${now}`,
+      taskType: source.taskType || 'single',
+      routineId: source.routineId || null,
+      groupId: null,
+      originalEst: est,
+      title: source.title || '無題',
+      duration: est,
+      deadline: source.deadline || '',
+      alarm: !!source.alarm,
+      status: 'running',
+      actualStart: now,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment: '',
+      image: ''
+    };
+
+    const idx = tasks.findIndex(t => t.id === taskId);
+    tasks.splice(idx + 1, 0, duplicated);
+
+    if (runningTask) {
+      splitAndPauseRunningTask(runningTask, duplicated.id);
+    }
+
+    saveTasks();
+    renderAll();
+    showToast(`複製して開始しました ▶`);
+  }
+
+  function deleteTaskById(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    tasksByDate[currentDate] = tasks.filter(t => t.id !== taskId);
+    syncSplitGroups(tasksByDate[currentDate]);
+    saveTasks();
+    renderAll();
+    showToast('削除しました');
+  }
+
+  function quickAddAndStart() {
+    const input = document.getElementById('quickTaskTitleInput');
+    const title = input.value.trim();
+    const duration = quickDurationValue > 0 ? quickDurationValue : 15;
+    const tasks = ensureTasksForDate(currentDate);
+    const now = Date.now();
+    const runningTask = tasks.find(t => t.status === 'running');
+
+    const newTask = {
+      id: `t_${currentDate}_${now}`,
+      taskType: quickTaskType,
+      routineId: null,
+      groupId: null,
+      originalEst: duration,
+      title: title,
+      duration: duration,
+      deadline: '',
+      alarm: false,
+      status: 'running',
+      actualStart: now,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment: '',
+      image: ''
+    };
+
+    if (runningTask) {
+      const rIdx = tasks.findIndex(t => t.id === runningTask.id);
+      tasks.splice(rIdx + 1, 0, newTask);
+      splitAndPauseRunningTask(runningTask, newTask.id);
+    } else {
+      let lastDoneIdx = -1;
+      tasks.forEach((t, i) => { if (t.status === 'completed') lastDoneIdx = i; });
+      tasks.splice(lastDoneIdx + 1, 0, newTask);
+    }
+
+    input.value = '';
+    quickDurationValue = 15;
+    updateQuickDurationDisplay();
+    saveTasks();
+    renderAll();
+  }
+
+  function quickAddOnly() {
+    const input = document.getElementById('quickTaskTitleInput');
+    const title = input.value.trim() || '単発タスク';
+    const duration = quickDurationValue > 0 ? quickDurationValue : 15;
+    const tasks = ensureTasksForDate(currentDate);
+
+    tasks.push({
+      id: `t_${currentDate}_${Date.now()}`,
+      taskType: quickTaskType,
+      routineId: null,
+      groupId: null,
+      originalEst: duration,
+      title: title,
+      duration: duration,
+      deadline: '',
+      alarm: false,
+      status: 'pending',
+      actualStart: null,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment: '',
+      image: ''
+    });
+
+    input.value = '';
+    quickDurationValue = 15;
+    updateQuickDurationDisplay();
+    saveTasks();
+    renderAll();
+  }
+
+  // ============================================================================
+  // 4. 描画（renderAll）＆スワイプ削除・長押しドラッグ並び替え
+  // ============================================================================
+  function renderAll() {
+    const tasks = ensureTasksForDate(currentDate);
+    const now = new Date();
+    const nowMs = now.getTime();
+    const todayStr = getTodayStr();
+
+    const dt = parseDateKey(currentDate);
+    const dateLabelEl = document.getElementById('currentDateLabel');
+    dateLabelEl.textContent = `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 (${DAY_NAMES[dt.getDay()]})`;
+    dateLabelEl.className = currentDate === todayStr
+      ? 'text-xs sm:text-sm font-extrabold text-pink-700 tracking-tight'
+      : 'text-xs sm:text-sm font-extrabold text-stone-700 tracking-tight';
+
+    const scheduled = calculateSchedule(tasks);
+    document.getElementById('liveClock').textContent = formatHHMM(now);
+
+    let remainingEstMin = 0;
+    let completedActualMin = 0;
+    let lastEndMs = nowMs;
+
+    scheduled.forEach(({ task, displayEnd }) => {
+      if (task.status === 'completed') {
+        completedActualMin += Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
+      } else if (task.status === 'running') {
+        const elapsedMin = Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
+        completedActualMin += elapsedMin;
+        remainingEstMin += Math.max(0, (task.duration || 0) - elapsedMin);
+        lastEndMs = displayEnd;
+      } else {
+        remainingEstMin += (task.duration || 0);
+        lastEndMs = displayEnd;
+      }
+    });
+
+    document.getElementById('totalEstLabel').textContent = `${remainingEstMin}分`;
+    document.getElementById('totalActualLabel').textContent = `${completedActualMin}分`;
+    document.getElementById('finalEndTime').textContent =
+      tasks.some(t => t.status !== 'completed') ? formatHHMM(lastEndMs) : '完了✨';
+
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML = '';
+
+    if (scheduled.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-12 px-4 rounded-3xl bg-white/70 border border-dashed border-pink-200 space-y-1.5">
+          <div class="text-2xl">🌸</div>
+          <div class="text-xs font-extrabold text-stone-500">タスクがありません</div>
+          <div class="text-[11px] text-stone-400">下の入力欄または「✨ ルーチン」から追加してね</div>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    scheduled.forEach(({ task, displayStart, displayEnd, isOverdue }) => {
+      const isCompleted = task.status === 'completed';
+      const isRunning = task.status === 'running';
+      const typeClass =
+        task.taskType === 'carryover'
+          ? 'card-type-carryover'
+          : task.taskType === 'single'
+          ? 'card-type-single'
+          : 'card-type-routine';
+
+      const elapsedSec = getTaskElapsedSeconds(task, nowMs);
+      const elapsedMin = Math.round(elapsedSec / 60);
+      const grpStats = getGroupStats(tasks, task.groupId, nowMs);
+
+      let leftBtnHtml = '';
+      if (isRunning) {
+        leftBtnHtml = `
+          <div class="flex flex-col items-center gap-1.5 shrink-0">
+            <button type="button" onclick="event.stopPropagation(); startOrCompleteTask('${task.id}')" aria-label="完了" class="w-11 h-11 rounded-full bg-[#34192c] text-white flex items-center justify-center shadow-md active:scale-90 transition">
+              <span class="w-3.5 h-3.5 rounded-xs bg-white block"></span>
+            </button>
+            <button type="button" onclick="event.stopPropagation(); pauseRunningTask('${task.id}')" aria-label="引き継ぎ中断" class="px-2 py-0.5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 text-[10px] font-black active:scale-90 transition">
+              ⏸
+            </button>
+          </div>
+        `;
+      } else if (isCompleted) {
+        leftBtnHtml = `
+          <button type="button" onclick="event.stopPropagation(); startOrCompleteTask('${task.id}')" aria-label="複製して開始" class="w-10 h-10 rounded-full bg-stone-200/80 text-stone-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+            <span class="text-xs ml-0.5">▶</span>
+          </button>
+        `;
+      } else {
+        const playStyle = isOverdue
+          ? 'background: linear-gradient(135deg, #e11d48, #be123c);'
+          : 'background: linear-gradient(135deg, #f472b6, #ec4899);';
+        leftBtnHtml = `
+          <button type="button" onclick="event.stopPropagation(); startOrCompleteTask('${task.id}')" aria-label="開始" style="${playStyle}" class="w-11 h-11 rounded-full text-white flex items-center justify-center shrink-0 shadow-sm active:scale-90 transition ${isOverdue ? 'danger-play-btn' : ''}">
+            <span class="text-sm ml-0.5">▶</span>
+          </button>
+        `;
+      }
+
+      let runningPillsHtml = '';
+      if (isRunning) {
+        const estSec = (task.duration || 0) * 60;
+        const remSec = Math.max(0, estSec - elapsedSec);
+        runningPillsHtml = `
+          <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-purple-600 text-white tabular-nums">残 ${formatMMSS(remSec)}</span>
+            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 tabular-nums">計 ${formatMMSS(elapsedSec)}</span>
+          </div>
+        `;
+      }
+
+      let groupPillHtml = '';
+      if (grpStats) {
+        const diffSign = grpStats.diffMin > 0 ? `+${grpStats.diffMin}` : `${grpStats.diffMin}`;
+        groupPillHtml = `
+          <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100/90 border border-purple-200 text-[10px] font-extrabold text-purple-800">
+            <span>🔗 合計 ${grpStats.totalMin}分 / 元見積 ${grpStats.origEstMin}分 (残${grpStats.remMin}分・差${diffSign}分)</span>
+          </div>
+        `;
+      }
+
+      const showPromoteBtn = isCompleted && (task.taskType === 'single' || task.taskType === 'carryover');
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'swipe-wrapper';
+      wrapper.dataset.taskId = task.id;
+
+      wrapper.innerHTML = `
+        <div class="swipe-delete-bg">
+          <i data-lucide="trash-2" class="w-5 h-5 text-white"></i>
+        </div>
+        <div onclick="openEditTaskModal('${task.id}')" class="task-card ${typeClass} ${isRunning ? 'is-running' : ''} ${isCompleted ? 'is-completed' : ''} rounded-3xl p-3 flex items-center gap-3 cursor-pointer">
+          ${leftBtnHtml}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap text-[11px] font-extrabold">
+              <span class="${isRunning ? 'text-pink-600' : 'text-stone-400'} tabular-nums">${formatHHMM(displayStart)}〜${formatHHMM(displayEnd)}</span>
+              <span class="px-2 py-0.5 rounded-full bg-purple-100/80 text-purple-700 text-[10px]">${task.duration}分</span>
+              ${(isCompleted || isRunning) ? `<span class="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px]">${elapsedMin}m</span>` : ''}
+              ${task.deadline ? `<span class="px-2 py-0.5 rounded-full ${isOverdue ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 border border-rose-200/80'} text-[10px]">🎯${task.deadline}</span>` : ''}
+            </div>
+
+            <div class="text-sm font-extrabold text-stone-800 mt-1 truncate ${isCompleted ? 'line-through text-stone-500' : ''}">
+              ${escapeHtml(task.title || '（無題のタスク）')}
+            </div>
+
+            ${runningPillsHtml}
+            ${groupPillHtml}
+
+            ${task.comment ? `
+              <div class="mt-1.5 text-[11px] font-medium text-stone-600 bg-white/80 border border-pink-100 rounded-xl px-2.5 py-1 truncate">
+                💬 ${escapeHtml(task.comment)}
+              </div>
+            ` : ''}
+
+            ${task.image ? `
+              <div class="mt-1.5 rounded-xl overflow-hidden border border-pink-100 max-h-24">
+                <img src="${task.image}" alt="" class="w-full h-24 object-cover" />
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="flex flex-col items-end gap-1.5 shrink-0">
+            ${showPromoteBtn ? `
+              <button type="button" onclick="event.stopPropagation(); openTaskToRoutineModal('${task.id}')" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] font-extrabold shadow-2xs active:scale-90 transition">
+                ✨ルーチン化
+              </button>
+            ` : ''}
+            <button type="button" onclick="event.stopPropagation(); openQuickNoteModal('${task.id}')" aria-label="メモ・写真" class="w-8 h-8 rounded-full bg-white/80 hover:bg-pink-50 border border-pink-100 text-stone-500 flex items-center justify-center active:scale-90 transition">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      attachSwipeAndDragHandlers(wrapper, task.id);
+      container.appendChild(wrapper);
+    });
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function attachSwipeAndDragHandlers(wrapper, taskId) {
+    const card = wrapper.querySelector('.task-card');
+    let startX = 0;
+    let startY = 0;
+    let deltaX = 0;
+    let isSwiping = false;
+    let isDragging = false;
+    let longPressTimer = null;
+
+    const clearTimer = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    };
+
+    wrapper.addEventListener('touchstart', e => {
+      if (e.target.closest('button')) return;
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      deltaX = 0;
+      isSwiping = false;
+      isDragging = false;
+
+      longPressTimer = setTimeout(() => {
+        isDragging = true;
+        wrapper.classList.add('is-dragging');
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 380);
+    }, { passive: true });
+
+    wrapper.addEventListener('touchmove', e => {
+      const touch = e.touches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      if (!isDragging && !isSwiping) {
+        if (Math.abs(dy) > 10) {
+          clearTimer();
+          return;
+        }
+        if (dx < -14 && Math.abs(dx) > Math.abs(dy)) {
+          clearTimer();
+          isSwiping = true;
+          wrapper.classList.add('is-swiping-active');
+          card.classList.add('swiping');
+        }
+      }
+
+      if (isSwiping) {
+        deltaX = Math.min(0, Math.max(-120, dx));
+        card.style.transform = `translateX(${deltaX}px)`;
+      } else if (isDragging) {
+        e.preventDefault();
+        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetWrapper = elemBelow ? elemBelow.closest('.swipe-wrapper') : null;
+        document.querySelectorAll('.swipe-wrapper').forEach(w => w.classList.remove('drag-over-target'));
+        if (targetWrapper && targetWrapper !== wrapper) {
+          targetWrapper.classList.add('drag-over-target');
+        }
+      }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend', () => {
+      clearTimer();
+      if (isSwiping) {
+        card.classList.remove('swiping');
+        if (deltaX < -75) {
+          card.style.transform = 'translateX(-100%)';
+          setTimeout(() => deleteTaskById(taskId), 160);
+        } else {
+          card.style.transform = '';
+          wrapper.classList.remove('is-swiping-active');
+        }
+        isSwiping = false;
+      } else if (isDragging) {
+        wrapper.classList.remove('is-dragging');
+        const overEl = document.querySelector('.swipe-wrapper.drag-over-target');
+        document.querySelectorAll('.swipe-wrapper').forEach(w => w.classList.remove('drag-over-target'));
+        if (overEl && overEl.dataset.taskId !== taskId) {
+          reorderTasksById(taskId, overEl.dataset.taskId);
+        }
+        isDragging = false;
+      }
+    });
+
+    wrapper.addEventListener('touchcancel', () => {
+      clearTimer();
+      card.classList.remove('swiping');
+      card.style.transform = '';
+      wrapper.classList.remove('is-swiping-active', 'is-dragging');
+    });
+  }
+
+  function reorderTasksById(fromId, toId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const fromIdx = tasks.findIndex(t => t.id === fromId);
+    const toIdx = tasks.findIndex(t => t.id === toId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = tasks.splice(fromIdx, 1);
+    tasks.splice(toIdx, 0, moved);
+    saveTasks();
+    renderAll();
+  }
+
+  // ============================================================================
+  // 5. 💬 コメント・写真ログ一覧モーダル＆実行日の詳細へのジャンプ
+  // ============================================================================
+  function openCommentLogModal() {
+    renderCommentLogList();
+    document.getElementById('commentLogModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeCommentLogModal() {
+    document.getElementById('commentLogModal').classList.add('hidden');
+  }
+
+  function renderCommentLogList() {
+    const container = document.getElementById('commentLogListContainer');
+    container.innerHTML = '';
+
+    const entries = [];
+    Object.keys(tasksByDate)
+      .sort()
+      .reverse()
+      .forEach(dateStr => {
+        const list = tasksByDate[dateStr] || [];
+        for (let i = list.length - 1; i >= 0; i--) {
+          const t = list[i];
+          if ((t.comment && t.comment.trim()) || t.image) {
+            entries.push({ dateStr, task: t });
+          }
+        }
+      });
+
+    if (entries.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-10 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 space-y-1">
+          <div class="text-2xl">💬</div>
+          <div class="text-xs font-extrabold text-stone-500">まだメモや写真がありません</div>
+          <div class="text-[11px] text-stone-400">タスク右側のカメラアイコンから残せるよ🌸</div>
+        </div>
+      `;
+      return;
+    }
+
+    entries.forEach(({ dateStr, task }) => {
+      const dt = parseDateKey(dateStr);
+      const dateLabel = `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()} (${DAY_NAMES[dt.getDay()]})`;
+      const timeRange = task.actualStart
+        ? `${formatHHMM(task.actualStart)}〜${task.actualEnd ? formatHHMM(task.actualEnd) : '実行中'}`
+        : `見積 ${task.duration}分`;
+      const actualMin = Math.round(getTaskElapsedSeconds(task) / 60);
+
+      const card = document.createElement('div');
+      card.onclick = () => jumpToTaskFromCommentLog(dateStr, task.id);
+      card.className = 'p-3 rounded-2xl bg-gradient-to-r from-pink-50/60 to-purple-50/60 hover:from-pink-100/70 hover:to-purple-100/70 border border-pink-200/80 cursor-pointer active:scale-[0.98] transition space-y-1.5';
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-2 text-[10px] font-extrabold">
+          <div class="flex items-center gap-1.5 text-pink-700">
+            <span>📅 ${dateLabel}</span>
+            <span class="text-stone-400">・</span>
+            <span class="text-purple-700">${timeRange}${actualMin > 0 ? ` (${actualMin}分)` : ''}</span>
+          </div>
+          <span class="text-pink-500 flex items-center gap-0.5 shrink-0">詳細へ →</span>
+        </div>
+        <div class="text-xs font-extrabold text-stone-800 truncate">
+          ${escapeHtml(task.title || '（無題のタスク）')}
+        </div>
+        ${task.comment ? `
+          <div class="text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 border border-pink-100 leading-relaxed">
+            💬 ${escapeHtml(task.comment)}
+          </div>
+        ` : ''}
+        ${task.image ? `
+          <div class="rounded-xl overflow-hidden border border-pink-200 max-h-32">
+            <img src="${task.image}" alt="" class="w-full h-32 object-cover" />
+          </div>
+        ` : ''}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function jumpToTaskFromCommentLog(dateStr, taskId) {
+    closeCommentLogModal();
+    currentDate = dateStr;
+    ensureTasksForDate(currentDate);
+    renderAll();
+
+    setTimeout(() => {
+      const targetWrapper = document.querySelector(`.swipe-wrapper[data-task-id="${taskId}"]`);
+      if (targetWrapper) {
+        targetWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetWrapper.classList.add('jump-highlight');
+        setTimeout(() => targetWrapper.classList.remove('jump-highlight'), 2200);
+      }
+      openEditTaskModal(taskId);
+    }, 120);
+  }
+
+  // ============================================================================
+  // 6. ルーチン化＆編集モーダル（連番なし・実績回数＆平均時間表示・連打重複防止）
+  // ============================================================================
+  function openTaskToRoutineModal(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const grpStats = getGroupStats(tasks, task.groupId);
+    document.getElementById('t2rSourceTaskId').value = task.id;
+    document.getElementById('t2rTitleInput').value = task.title || 'マイルーチン';
+
+    t2rEstMinutes = grpStats ? grpStats.origEstMin : (task.originalEst || task.duration || 15);
+    const singleAct = Math.max(1, Math.round(getTaskElapsedSeconds(task) / 60));
+    t2rActualMinutes = grpStats ? Math.max(1, grpStats.totalMin) : singleAct;
+
+    document.getElementById('t2rEstVal').textContent = t2rEstMinutes;
+    document.getElementById('t2rActualVal').textContent = t2rActualMinutes;
+    document.getElementById('t2rDurationInput').value = t2rEstMinutes;
+    document.getElementById('t2rDeadlineInput').value = task.deadline || '';
+
+    selectedT2RDays = [0, 1, 2, 3, 4, 5, 6];
+    selectedT2RNths = [2, 4];
+    selectedT2RNthDays = [parseDateKey(currentDate).getDay()];
+    document.getElementById('t2rMonthDayInput').value = parseDateKey(currentDate).getDate();
+    document.getElementById('t2rIntervalDaysInput').value = 45;
+    setT2RRepeatType('weekly');
+
+    document.getElementById('taskToRoutineModal').classList.remove('hidden');
+  }
+
+  function setT2RDurationMode(mode) {
+    document.getElementById('t2rDurationInput').value = mode === 'actual' ? t2rActualMinutes : t2rEstMinutes;
+  }
+
+  function closeTaskToRoutineModal() {
+    document.getElementById('taskToRoutineModal').classList.add('hidden');
+  }
+
+  function setT2RRepeatType(type) {
+    t2rRepeatType = type;
+    document.querySelectorAll('#t2rRepeatTypeTabs button').forEach(btn => {
+      const active = btn.dataset.rtype === type;
+      btn.className = `py-1.5 rounded-lg text-[10px] font-extrabold transition ${
+        active ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-2xs' : 'text-stone-500 hover:text-stone-700'
+      }`;
+    });
+    document.getElementById('t2rPanelWeekly').classList.toggle('hidden', type !== 'weekly');
+    document.getElementById('t2rPanelNthWeekday').classList.toggle('hidden', type !== 'nthWeekday');
+    document.getElementById('t2rPanelMonthlyDate').classList.toggle('hidden', type !== 'monthlyDate');
+    document.getElementById('t2rPanelAfterDays').classList.toggle('hidden', type !== 'afterDays');
+    renderT2RRepeatSelectors();
+  }
+
+  function toggleAllT2RDays() {
+    selectedT2RDays = selectedT2RDays.length === 7 ? [] : [0, 1, 2, 3, 4, 5, 6];
+    renderT2RRepeatSelectors();
+  }
+
+  function renderT2RRepeatSelectors() {
+    const wrap = document.getElementById('t2rDayCheckboxes');
+    wrap.innerHTML = '';
+    DAY_NAMES.forEach((name, d) => {
+      const active = selectedT2RDays.includes(d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => {
+        selectedT2RDays = active ? selectedT2RDays.filter(x => x !== d) : [...selectedT2RDays, d].sort();
+        renderT2RRepeatSelectors();
+      };
+      btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
+        active ? 'bg-gradient-to-b from-pink-500 to-purple-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+      }`;
+      btn.textContent = name;
+      wrap.appendChild(btn);
+    });
+
+    const nthWrap = document.getElementById('t2rNthCheckboxes');
+    nthWrap.innerHTML = '';
+    NTH_OPTIONS.forEach(opt => {
+      const active = selectedT2RNths.includes(opt.val);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => {
+        selectedT2RNths = active ? selectedT2RNths.filter(x => x !== opt.val) : [...selectedT2RNths, opt.val].sort();
+        renderT2RRepeatSelectors();
+      };
+      btn.className = `py-1.5 rounded-xl font-extrabold text-[11px] border transition ${
+        active ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-stone-500 border-stone-200'
+      }`;
+      btn.textContent = opt.label;
+      nthWrap.appendChild(btn);
+    });
+
+    const nthDayWrap = document.getElementById('t2rNthDayCheckboxes');
+    nthDayWrap.innerHTML = '';
+    DAY_NAMES.forEach((name, d) => {
+      const active = selectedT2RNthDays.includes(d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => {
+        selectedT2RNthDays = active ? selectedT2RNthDays.filter(x => x !== d) : [...selectedT2RNthDays, d].sort();
+        renderT2RRepeatSelectors();
+      };
+      btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
+        active ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+      }`;
+      btn.textContent = name;
+      nthDayWrap.appendChild(btn);
+    });
+  }
+
+  function saveTaskToRoutine() {
+    if (isSavingRoutineLock) return;
+    isSavingRoutineLock = true;
+    setTimeout(() => { isSavingRoutineLock = false; }, 500);
+
+    const taskId = document.getElementById('t2rSourceTaskId').value;
+    const title = document.getElementById('t2rTitleInput').value.trim() || 'マイルーチン';
+    const duration = Math.max(1, Number(document.getElementById('t2rDurationInput').value) || 15);
+    const deadline = document.getElementById('t2rDeadlineInput').value || '';
+
+    const tasks = ensureTasksForDate(currentDate);
+    const src = tasks.find(t => t.id === taskId);
+
+    const existingRoutine = routines.find(r => r.title.trim() === title);
+    if (existingRoutine) {
+      if (src) {
+        src.taskType = 'routine';
+        src.routineId = existingRoutine.id;
+        saveTasks();
+      }
+      closeTaskToRoutineModal();
+      renderTodayImportList();
+      renderRoutineList();
+      renderAll();
+      showToast(`「${title}」はすでにルーチン登録済みです🌸`);
+      return;
+    }
+
+    const intervalDays = Math.max(1, Number(document.getElementById('t2rIntervalDaysInput').value) || 45);
+    const newR = {
+      id: `r_${Date.now()}`,
+      title,
+      duration,
+      deadline,
+      alarm: false,
+      repeatType: t2rRepeatType,
+      days: selectedT2RDays.length > 0 ? [...selectedT2RDays] : [0, 1, 2, 3, 4, 5, 6],
+      nthWeeks: selectedT2RNths.length > 0 ? [...selectedT2RNths] : [1],
+      nthDays: selectedT2RNthDays.length > 0 ? [...selectedT2RNthDays] : [3],
+      monthDay: Math.min(31, Math.max(1, Number(document.getElementById('t2rMonthDayInput').value) || 1)),
+      intervalDays,
+      nextDueDate: addDays(currentDate, intervalDays)
+    };
+    routines.push(newR);
+    saveRoutines();
+
+    if (src) {
+      src.taskType = 'routine';
+      src.routineId = newR.id;
+      saveTasks();
+    }
+
+    closeTaskToRoutineModal();
+    renderTodayImportList();
+    renderRoutineList();
+    renderAll();
+    showToast('✨ ルーチンに追加しました！');
+  }
+
+  function setRoutineRepeatType(type) {
+    routineRepeatType = type;
+    document.querySelectorAll('#routineRepeatTypeTabs button').forEach(btn => {
+      const active = btn.dataset.rtype === type;
+      btn.className = `py-1 rounded-lg text-[10px] font-extrabold transition ${
+        active ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-2xs' : 'text-stone-500 hover:text-stone-700'
+      }`;
+    });
+    document.getElementById('routinePanelWeekly').classList.toggle('hidden', type !== 'weekly');
+    document.getElementById('routinePanelNthWeekday').classList.toggle('hidden', type !== 'nthWeekday');
+    document.getElementById('routinePanelMonthlyDate').classList.toggle('hidden', type !== 'monthlyDate');
+    document.getElementById('routinePanelAfterDays').classList.toggle('hidden', type !== 'afterDays');
+    renderRoutineRepeatSelectors();
+  }
+
+  function toggleAllRoutineDays() {
+    selectedRoutineDays = selectedRoutineDays.length === 7 ? [] : [0, 1, 2, 3, 4, 5, 6];
+    renderRoutineRepeatSelectors();
+  }
+
+  function renderRoutineRepeatSelectors() {
+    const wrap = document.getElementById('routineDayCheckboxes');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    DAY_NAMES.forEach((name, d) => {
+      const active = selectedRoutineDays.includes(d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => {
+        selectedRoutineDays = active ? selectedRoutineDays.filter(x => x !== d) : [...selectedRoutineDays, d].sort();
+        renderRoutineRepeatSelectors();
+      };
+      btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
+        active ? 'bg-gradient-to-b from-pink-500 to-purple-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+      }`;
+      btn.textContent = name;
+      wrap.appendChild(btn);
+    });
+
+    const nthWrap = document.getElementById('routineNthCheckboxes');
+    nthWrap.innerHTML = '';
+    NTH_OPTIONS.forEach(opt => {
+      const active = selectedRoutineNths.includes(opt.val);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => {
+        selectedRoutineNths = active ? selectedRoutineNths.filter(x => x !== opt.val) : [...selectedRoutineNths, opt.val].sort();
+        renderRoutineRepeatSelectors();
+      };
+      btn.className = `py-1.5 rounded-xl font-extrabold text-[11px] border transition ${
+        active ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-stone-500 border-stone-200'
+      }`;
+      btn.textContent = opt.label;
+      nthWrap.appendChild(btn);
+    });
+
+    const nthDayWrap = document.getElementById('routineNthDayCheckboxes');
+    nthDayWrap.innerHTML = '';
+    DAY_NAMES.forEach((name, d) => {
+      const active = selectedRoutineNthDays.includes(d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => {
+        selectedRoutineNthDays = active ? selectedRoutineNthDays.filter(x => x !== d) : [...selectedRoutineNthDays, d].sort();
+        renderRoutineRepeatSelectors();
+      };
+      btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
+        active ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+      }`;
+      btn.textContent = name;
+      nthDayWrap.appendChild(btn);
+    });
+  }
+
+  function renderTodayImportList() {
+    const container = document.getElementById('routineImportSection');
+    if (!container) return;
+    const tasks = ensureTasksForDate(currentDate);
+    container.innerHTML = '';
+
+    if (tasks.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 text-xs font-bold text-stone-400">
+          今日のタスクがまだありません🌸
+        </div>
+      `;
+      return;
+    }
+
+    const seenTitles = new Set();
+    tasks.forEach(t => {
+      const titleKey = (t.title || '').trim();
+      if (!titleKey || seenTitles.has(titleKey)) return;
+      seenTitles.add(titleKey);
+
+      const alreadyRoutine = t.taskType === 'routine' || routines.some(r => r.title.trim() === titleKey);
+      const grpStats = getGroupStats(tasks, t.groupId);
+      const est = grpStats ? grpStats.origEstMin : (t.originalEst || t.duration || 15);
+      const act = grpStats ? grpStats.totalMin : Math.round(getTaskElapsedSeconds(t) / 60);
+
+      const card = document.createElement('div');
+      card.className = 'flex items-center justify-between px-3 py-2.5 rounded-2xl bg-white border border-purple-100 shadow-2xs gap-2';
+      card.innerHTML = `
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-extrabold text-stone-800 truncate">${escapeHtml(titleKey)}</div>
+          <div class="text-[10px] font-bold text-stone-400 mt-0.5">
+            見積 ${est}分${act > 0 ? ` ・ 実績 ${act}分` : ''}
+          </div>
+        </div>
+        ${alreadyRoutine ? `
+          <button type="button" disabled class="px-3 py-1.5 rounded-full bg-purple-100/80 text-purple-600 text-[11px] font-extrabold shrink-0 cursor-default">
+            ✓ 登録済み
+          </button>
+        ` : `
+          <button type="button" onclick="openTaskToRoutineModal('${t.id}')" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[11px] font-extrabold shadow-2xs shrink-0 active:scale-90 transition">
+            ＋ ルーチンに追加
+          </button>
+        `}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function openRoutineModal() {
+    closeRoutineFormDrawer();
+    showRoutineListMode();
+    renderRoutineList();
+    renderTodayImportList();
+    document.getElementById('routineModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeRoutineModal() {
+    closeRoutineFormDrawer();
+    document.getElementById('routineModal').classList.add('hidden');
+  }
+
+  function showRoutineListMode() {
+    document.getElementById('routineListContainer').classList.remove('hidden');
+    document.getElementById('routineImportSection').classList.add('hidden');
+    document.getElementById('routineTabImportBtn').className =
+      'py-2 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition';
+    document.getElementById('routineTabImportBtn').innerHTML = '<span>📥</span><span>今日のタスクから</span>';
+  }
+
+  function toggleRoutineImportView() {
+    const importEl = document.getElementById('routineImportSection');
+    const isCurrentlyHidden = importEl.classList.contains('hidden');
+    if (isCurrentlyHidden) {
+      closeRoutineFormDrawer();
+      document.getElementById('routineListContainer').classList.add('hidden');
+      importEl.classList.remove('hidden');
+      document.getElementById('routineTabImportBtn').className =
+        'py-2 px-3 rounded-2xl bg-purple-600 text-white border border-purple-600 font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition';
+      document.getElementById('routineTabImportBtn').innerHTML = '<span>←</span><span>ルーチン一覧へ</span>';
+      renderTodayImportList();
+    } else {
+      showRoutineListMode();
+    }
+  }
+
+  function toggleRoutineFormDrawer() {
+    const formBox = document.getElementById('routineFormBox');
+    const isHidden = formBox.classList.contains('hidden');
+    if (isHidden) {
+      showRoutineListMode();
+      resetRoutineForm();
+      formBox.classList.remove('hidden');
+    } else {
+      closeRoutineFormDrawer();
+    }
+  }
+
+  function closeRoutineFormDrawer() {
+    resetRoutineForm();
+    const formBox = document.getElementById('routineFormBox');
+    if (formBox) formBox.classList.add('hidden');
+    renderRoutineList();
+  }
+
+  function applyAverageDurationToRoutine() {
+    if (currentEditingRoutineAvgMin && currentEditingRoutineAvgMin > 0) {
+      document.getElementById('routineDurationInput').value = currentEditingRoutineAvgMin;
+      showToast(`平均の ${currentEditingRoutineAvgMin}分 に変更しました✨`);
+    }
+  }
+
+  function startEditRoutine(routineId) {
+    const r = routines.find(x => x.id === routineId);
+    if (!r) return;
+    showRoutineListMode();
+    document.getElementById('editingRoutineId').value = r.id;
+    document.getElementById('routineTitleInput').value = r.title;
+    document.getElementById('routineDurationInput').value = r.duration;
+    document.getElementById('routineDeadlineInput').value = r.deadline || '';
+
+    const stats = getRoutineHistoryStats(r);
+    const statsBanner = document.getElementById('routineEditStatsBanner');
+    if (stats.count > 0) {
+      currentEditingRoutineAvgMin = stats.avgMin;
+      document.getElementById('routineEditStatsText').textContent = `📊 これまで ${stats.count}回 実施 ／ 平均 ${stats.avgMin}分`;
+      document.getElementById('applyAvgDurationBtn').classList.toggle('hidden', stats.avgMin === r.duration);
+      statsBanner.classList.remove('hidden');
+    } else {
+      currentEditingRoutineAvgMin = null;
+      statsBanner.classList.add('hidden');
+    }
+
+    selectedRoutineDays = [...(r.days || [0, 1, 2, 3, 4, 5, 6])];
+    selectedRoutineNths = [...(r.nthWeeks || [2, 4])];
+    selectedRoutineNthDays = [...(r.nthDays || [3])];
+    document.getElementById('routineMonthDayInput').value = r.monthDay || 1;
+    document.getElementById('routineIntervalDaysInput').value = r.intervalDays || 45;
+    setRoutineRepeatType(r.repeatType || 'weekly');
+
+    document.getElementById('routineFormModeLabel').textContent = `✏️ 編集中: ${r.title}`;
+    document.getElementById('routineFormBox').classList.remove('hidden');
+    renderRoutineList();
+  }
+
+  function resetRoutineForm() {
+    document.getElementById('editingRoutineId').value = '';
+    document.getElementById('routineTitleInput').value = '';
+    document.getElementById('routineDurationInput').value = 20;
+    document.getElementById('routineDeadlineInput').value = '';
+    currentEditingRoutineAvgMin = null;
+    const statsBanner = document.getElementById('routineEditStatsBanner');
+    if (statsBanner) statsBanner.classList.add('hidden');
+
+    selectedRoutineDays = [0, 1, 2, 3, 4, 5, 6];
+    selectedRoutineNths = [2, 4];
+    selectedRoutineNthDays = [3];
+    document.getElementById('routineMonthDayInput').value = 1;
+    document.getElementById('routineIntervalDaysInput').value = 45;
+    setRoutineRepeatType('weekly');
+    document.getElementById('routineFormModeLabel').textContent = '＋ 新しいルーチン';
+  }
+
+  function saveRoutineForm(e) {
+    e.preventDefault();
+    if (isSavingRoutineLock) return;
+    isSavingRoutineLock = true;
+    setTimeout(() => { isSavingRoutineLock = false; }, 500);
+
+    const editingId = document.getElementById('editingRoutineId').value;
+    const title = document.getElementById('routineTitleInput').value.trim();
+    if (!title) return;
+    const duration = Math.max(1, Number(document.getElementById('routineDurationInput').value) || 15);
+    const deadline = document.getElementById('routineDeadlineInput').value || '';
+
+    const days = selectedRoutineDays.length > 0 ? [...selectedRoutineDays] : [0, 1, 2, 3, 4, 5, 6];
+    const nthWeeks = selectedRoutineNths.length > 0 ? [...selectedRoutineNths] : [1];
+    const nthDays = selectedRoutineNthDays.length > 0 ? [...selectedRoutineNthDays] : [3];
+    const monthDay = Math.min(31, Math.max(1, Number(document.getElementById('routineMonthDayInput').value) || 1));
+    const intervalDays = Math.max(1, Number(document.getElementById('routineIntervalDaysInput').value) || 45);
+
+    if (editingId) {
+      const r = routines.find(x => x.id === editingId);
+      if (r) {
+        r.title = title;
+        r.duration = duration;
+        r.deadline = deadline;
+        r.repeatType = routineRepeatType;
+        r.days = days;
+        r.nthWeeks = nthWeeks;
+        r.nthDays = nthDays;
+        r.monthDay = monthDay;
+        r.intervalDays = intervalDays;
+        if (routineRepeatType === 'afterDays' && !r.nextDueDate) {
+          r.nextDueDate = addDays(currentDate, intervalDays);
+        }
+        const todayTasks = ensureTasksForDate(currentDate);
+        todayTasks.forEach(t => {
+          if (t.routineId === r.id && t.status === 'pending') {
+            t.title = title;
+            t.duration = duration;
+            t.originalEst = duration;
+            t.deadline = deadline;
+          }
+        });
+        saveTasks();
+      }
+      saveRoutines();
+      closeRoutineFormDrawer();
+      renderAll();
+      showToast('✨ ルーチンを保存しました！');
+      return;
+    }
+
+    if (routines.some(r => r.title.trim() === title)) {
+      showToast('同じ名前のルーチンがすでにあります🌸');
+      return;
+    }
+
+    const newR = {
+      id: `r_${Date.now()}`,
+      title,
+      duration,
+      deadline,
+      alarm: false,
+      repeatType: routineRepeatType,
+      days,
+      nthWeeks,
+      nthDays,
+      monthDay,
+      intervalDays,
+      nextDueDate: addDays(currentDate, intervalDays)
+    };
+    routines.push(newR);
+    saveRoutines();
+
+    if (doesRoutineMatchDate(newR, currentDate)) {
+      const tasks = ensureTasksForDate(currentDate);
+      if (!tasks.some(t => t.routineId === newR.id || t.title === newR.title)) {
+        tasks.push({
+          id: `t_${currentDate}_${Date.now()}`,
+          taskType: 'routine',
+          routineId: newR.id,
+          groupId: null,
+          originalEst: duration,
+          title,
+          duration,
+          deadline,
+          alarm: false,
+          status: 'pending',
+          actualStart: null,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '',
+          image: ''
+        });
+        saveTasks();
+      }
+    }
+
+    closeRoutineFormDrawer();
+    renderAll();
+    showToast('✨ ルーチンを保存しました！');
+
+    setTimeout(() => {
+      const listEl = document.getElementById('routineListContainer');
+      const addedCard = listEl ? listEl.querySelector(`[data-routine-id="${newR.id}"]`) : null;
+      if (addedCard) {
+        addedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        addedCard.classList.add('ring-2', 'ring-pink-400', 'bg-pink-50');
+        setTimeout(() => addedCard.classList.remove('ring-2', 'ring-pink-400', 'bg-pink-50'), 1400);
+      }
+    }, 60);
+  }
+
+  function deduplicateRoutines() {
+    const seen = new Set();
+    const beforeCount = routines.length;
+    routines = routines.filter(r => {
+      const key = (r.title || '').trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    const removed = beforeCount - routines.length;
+    saveRoutines();
+    renderRoutineList();
+    renderTodayImportList();
+    showToast(removed > 0 ? `🧹 重複していた${removed}件を整理しました！` : '重複はありません🌸');
+  }
+
+  function renderRoutineList() {
+    const container = document.getElementById('routineListContainer');
+    const editingId = document.getElementById('editingRoutineId').value;
+    container.innerHTML = '';
+
+    const dedupeBtn = document.getElementById('dedupeRoutinesBtn');
+    if (dedupeBtn) {
+      const uniqueTitles = new Set(routines.map(r => (r.title || '').trim()));
+      dedupeBtn.classList.toggle('hidden', uniqueTitles.size === routines.length);
+    }
+
+    if (routines.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 text-xs font-bold text-stone-400">
+          上の「＋ 新しいルーチンを追加」から登録してね🌸
+        </div>
+      `;
+      return;
+    }
+
+    routines.forEach(r => {
+      const schedLabel = formatRoutineScheduleLabel(r);
+      const stats = getRoutineHistoryStats(r);
+      const isEditing = r.id === editingId;
+      const item = document.createElement('div');
+      item.dataset.routineId = r.id;
+      item.className = `routine-item-card flex items-center justify-between px-3 py-2.5 rounded-2xl border select-none transition ${
+        isEditing ? 'bg-pink-50 border-pink-400' : 'bg-white border-purple-100 shadow-2xs'
+      }`;
+      item.innerHTML = `
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-5 shrink-0 text-purple-300 cursor-grab">
+            <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+          </div>
+          <div onclick="startEditRoutine('${r.id}')" class="min-w-0 flex-1 cursor-pointer">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs font-extrabold text-stone-800 truncate">${escapeHtml(r.title)}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 shrink-0">${r.duration}分</span>
+              ${r.deadline ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 shrink-0">🎯${r.deadline}</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <span class="text-[10px] font-bold text-stone-400 truncate">${escapeHtml(schedLabel)}</span>
+              ${stats.count > 0 ? `
+                <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-pink-50/90 text-pink-600 border border-pink-100 shrink-0">
+                  実績 ${stats.count}回・平均 ${stats.avgMin}分
+                </span>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 shrink-0 ml-2">
+          <button type="button" onclick="startEditRoutine('${r.id}')" aria-label="編集" class="w-8 h-8 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-extrabold flex items-center justify-center active:scale-90 transition">✏️</button>
+          <button type="button" onclick="deleteRoutine('${r.id}')" aria-label="削除" class="w-8 h-8 rounded-xl bg-rose-50/70 hover:bg-rose-100 text-stone-400 hover:text-rose-600 flex items-center justify-center active:scale-90 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      `;
+      attachRoutineLongPressDrag(item, r.id);
+      container.appendChild(item);
+    });
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function attachRoutineLongPressDrag(cardEl, routineId) {
+    let longPressTimer = null;
+    let isDragging = false;
+    let startY = 0;
+
+    const clearTimer = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    };
+
+    const startDrag = clientY => {
+      isDragging = true;
+      startY = clientY;
+      cardEl.classList.add('is-dragging');
+      if (navigator.vibrate) navigator.vibrate(30);
+    };
+
+    const moveDrag = (clientX, clientY, preventFn) => {
+      if (!isDragging) {
+        if (Math.abs(clientY - startY) > 10) clearTimer();
+        return;
+      }
+      if (preventFn) preventFn();
+      const elemBelow = document.elementFromPoint(clientX, clientY);
+      const targetCard = elemBelow ? elemBelow.closest('.routine-item-card') : null;
+      document.querySelectorAll('.routine-item-card').forEach(el => el.classList.remove('drag-over-target'));
+      if (targetCard && targetCard !== cardEl) {
+        targetCard.classList.add('drag-over-target');
+      }
+    };
+
+    const endDrag = () => {
+      clearTimer();
+      if (!isDragging) return;
+      cardEl.classList.remove('is-dragging');
+      const overEl = document.querySelector('.routine-item-card.drag-over-target');
+      document.querySelectorAll('.routine-item-card').forEach(el => el.classList.remove('drag-over-target'));
+      if (overEl && overEl.dataset.routineId !== routineId) {
+        reorderRoutinesById(routineId, overEl.dataset.routineId);
+      }
+      isDragging = false;
+    };
+
+    cardEl.addEventListener('touchstart', e => {
+      if (e.target.closest('button')) return;
+      const t = e.touches[0];
+      startY = t.clientY;
+      longPressTimer = setTimeout(() => startDrag(t.clientY), 300);
+    }, { passive: true });
+
+    cardEl.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      moveDrag(t.clientX, t.clientY, () => e.preventDefault());
+    }, { passive: false });
+
+    cardEl.addEventListener('touchend', endDrag);
+    cardEl.addEventListener('touchcancel', endDrag);
+
+    cardEl.addEventListener('mousedown', e => {
+      if (e.target.closest('button') || e.button !== 0) return;
+      startY = e.clientY;
+      longPressTimer = setTimeout(() => {
+        startDrag(e.clientY);
+        const onMouseMove = mv => moveDrag(mv.clientX, mv.clientY, () => mv.preventDefault());
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          endDrag();
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      }, 300);
+    });
+
+    cardEl.addEventListener('mouseup', clearTimer);
+    cardEl.addEventListener('mouseleave', () => {
+      if (!isDragging) clearTimer();
+    });
+  }
+
+  function reorderRoutinesById(fromId, toId) {
+    const fromIdx = routines.findIndex(r => r.id === fromId);
+    const toIdx = routines.findIndex(r => r.id === toId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = routines.splice(fromIdx, 1);
+    routines.splice(toIdx, 0, moved);
+    saveRoutines();
+
+    const todayTasks = ensureTasksForDate(currentDate);
+    const routineOrderMap = new Map(routines.map((r, i) => [r.id, i]));
+    const pendingRoutines = todayTasks
+      .filter(t => t.taskType === 'routine' && t.status === 'pending' && routineOrderMap.has(t.routineId))
+      .sort((a, b) => routineOrderMap.get(a.routineId) - routineOrderMap.get(b.routineId));
+
+    let ptr = 0;
+    for (let i = 0; i < todayTasks.length; i++) {
+      if (todayTasks[i].taskType === 'routine' && todayTasks[i].status === 'pending' && routineOrderMap.has(todayTasks[i].routineId)) {
+        todayTasks[i] = pendingRoutines[ptr++];
+      }
+    }
+    saveTasks();
+    renderRoutineList();
+    renderAll();
+    showToast('順番を入れ替えました✨');
+  }
+
+  function deleteRoutine(id) {
+    routines = routines.filter(r => r.id !== id);
+    saveRoutines();
+    renderRoutineList();
+    showToast('削除しました');
+  }
+
+  // ============================================================================
+  // 7. タスク編集（開始・終了時刻ドラム入力＆直前の終了から開始）・メモ・カレンダー
+  // ============================================================================
+  function openEditTaskModal(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const t = tasks.find(x => x.id === taskId);
+    if (!t) return;
+
+    document.getElementById('editTaskId').value = t.id;
+    document.getElementById('taskTitleInput').value = t.title;
+    document.getElementById('taskDurationInput').value = t.groupId ? (t.originalEst || t.duration) : t.duration;
+    document.getElementById('taskActualInput').value = Math.round(getTaskElapsedSeconds(t) / 60);
+    document.getElementById('taskDeadlineInput').value = t.deadline || '';
+    document.getElementById('taskAlarmInput').checked = !!t.alarm;
+    document.getElementById('taskCommentInput').value = t.comment || '';
+
+    const timeSection = document.getElementById('editTimeRangeSection');
+    const statusBadge = document.getElementById('editTaskStatusBadge');
+    const startInput = document.getElementById('taskStartTimeInput');
+    const endInput = document.getElementById('taskEndTimeInput');
+    const endCol = document.getElementById('taskEndTimeCol');
+    const actualWrap = document.getElementById('editActualWrap');
+
+    timeSection.classList.remove('hidden');
+    actualWrap.classList.remove('hidden');
+
+    if (t.status === 'completed') {
+      statusBadge.textContent = '完了済み';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white text-stone-600 border border-stone-200';
+      const sMs = t.actualStart || (Date.now() - getTaskElapsedSeconds(t) * 1000);
+      const eMs = t.actualEnd || Date.now();
+      startInput.value = formatHHMM(sMs);
+      endInput.value = formatHHMM(eMs);
+      endCol.classList.remove('hidden');
+    } else if (t.status === 'running') {
+      statusBadge.textContent = '▶ 実行中';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white';
+      startInput.value = t.actualStart ? formatHHMM(t.actualStart) : formatHHMM(new Date());
+      endInput.value = '';
+      endCol.classList.add('hidden');
+    } else {
+      statusBadge.textContent = '未開始';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700';
+      startInput.value = '';
+      endInput.value = '';
+      endCol.classList.add('hidden');
+    }
+
+    modalPrevEndTimeMs = findPreviousCompletedEndTime(tasks, t.id);
+    const snapWrap = document.getElementById('snapPrevEndWrap');
+    if (modalPrevEndTimeMs) {
+      const prevHHMM = formatHHMM(modalPrevEndTimeMs);
+      document.getElementById('snapPrevEndBtnLabel').textContent =
+        t.status === 'pending'
+          ? `⏪ 直前の終了 (${prevHHMM}) から開始にする`
+          : `⏪ 直前の終了 (${prevHHMM}) から開始にする`;
+      snapWrap.classList.remove('hidden');
+    } else {
+      snapWrap.classList.add('hidden');
+    }
+
+    if (t.image) {
+      modalImageBase64 = t.image;
+      document.getElementById('modalImagePreview').src = t.image;
+      document.getElementById('modalImagePreviewWrap').classList.remove('hidden');
+      document.getElementById('removeModalImageBtn').classList.remove('hidden');
+    } else {
+      clearModalImage();
+    }
+
+    document.getElementById('modalNewButtons').classList.add('hidden');
+    document.getElementById('modalEditButtons').classList.remove('hidden');
+    document.getElementById('taskModal').classList.remove('hidden');
+  }
+
+  function handleStartOrEndTimeChange() {
+    const startVal = document.getElementById('taskStartTimeInput').value;
+    const endVal = document.getElementById('taskEndTimeInput').value;
+    const startMs = combineDateAndHHMM(currentDate, startVal);
+    let endMs = combineDateAndHHMM(currentDate, endVal);
+
+    if (startMs && endMs) {
+      if (endMs < startMs) {
+        endMs += 24 * 60 * 60 * 1000;
+      }
+      const diffMin = Math.max(0, Math.round((endMs - startMs) / 60000));
+      document.getElementById('taskActualInput').value = diffMin;
+    } else if (startMs && !endVal) {
+      const diffMin = Math.max(0, Math.round((Date.now() - startMs) / 60000));
+      document.getElementById('taskActualInput').value = diffMin;
+    }
+  }
+
+  function handleActualMinutesManualChange() {
+    const startVal = document.getElementById('taskStartTimeInput').value;
+    const endCol = document.getElementById('taskEndTimeCol');
+    if (endCol.classList.contains('hidden')) return;
+    const startMs = combineDateAndHHMM(currentDate, startVal);
+    if (!startMs) return;
+    const min = Math.max(0, Number(document.getElementById('taskActualInput').value) || 0);
+    document.getElementById('taskEndTimeInput').value = formatHHMM(startMs + min * 60000);
+  }
+
+  function applyPrevTaskEndTimeInModal() {
+    if (!modalPrevEndTimeMs) return;
+    const prevHHMM = formatHHMM(modalPrevEndTimeMs);
+    document.getElementById('taskStartTimeInput').value = prevHHMM;
+    handleStartOrEndTimeChange();
+    showToast(`開始時刻を ${prevHHMM} にセットしました⏪`);
+  }
+
+  function closeTaskModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+  }
+
+  function submitTaskModal(startImmediately) {
+    const editId = document.getElementById('editTaskId').value;
+    const title = document.getElementById('taskTitleInput').value.trim();
+    const duration = Math.max(0, Number(document.getElementById('taskDurationInput').value) || 0);
+    const actualMin = Math.max(0, Number(document.getElementById('taskActualInput').value) || 0);
+    const deadline = document.getElementById('taskDeadlineInput').value || '';
+    const alarm = document.getElementById('taskAlarmInput').checked;
+    const comment = document.getElementById('taskCommentInput').value.trim();
+    const tasks = ensureTasksForDate(currentDate);
+
+    if (editId) {
+      const t = tasks.find(x => x.id === editId);
+      if (t) {
+        t.title = title;
+        if (t.groupId) {
+          tasks.filter(m => m.groupId === t.groupId).forEach(m => {
+            m.title = title;
+            m.originalEst = duration;
+            m.deadline = deadline;
+          });
+          syncSplitGroups(tasks);
+        } else {
+          t.duration = duration;
+          t.originalEst = duration;
+        }
+
+        const startStr = document.getElementById('taskStartTimeInput').value;
+        const endStr = document.getElementById('taskEndTimeInput').value;
+        const parsedStartMs = combineDateAndHHMM(currentDate, startStr);
+        let parsedEndMs = combineDateAndHHMM(currentDate, endStr);
+
+        if (t.status === 'completed') {
+          if (parsedStartMs && parsedEndMs) {
+            if (parsedEndMs < parsedStartMs) parsedEndMs += 24 * 60 * 60 * 1000;
+            t.actualStart = parsedStartMs;
+            t.actualEnd = parsedEndMs;
+            t.elapsedSeconds = Math.max(0, Math.round((parsedEndMs - parsedStartMs) / 1000));
+          } else {
+            t.elapsedSeconds = actualMin * 60;
+            if (parsedStartMs) {
+              t.actualStart = parsedStartMs;
+              t.actualEnd = parsedStartMs + actualMin * 60000;
+            }
+          }
+        } else if (t.status === 'running') {
+          if (parsedStartMs) {
+            t.actualStart = parsedStartMs;
+            t.elapsedSeconds = 0;
+          }
+        } else if (t.status === 'pending' && parsedStartMs) {
+          const running = tasks.find(x => x.status === 'running' && x.id !== t.id);
+          if (running) {
+            splitAndPauseRunningTask(running, t.id);
+          }
+          t.status = 'running';
+          t.actualStart = parsedStartMs;
+          t.actualEnd = null;
+          t.elapsedSeconds = 0;
+        }
+
+        t.deadline = deadline;
+        t.alarm = alarm;
+        t.comment = comment;
+        t.image = modalImageBase64;
+      }
+      saveTasks();
+      closeTaskModal();
+      renderAll();
+      showToast('保存しました🌸');
+      return;
+    }
+
+    const now = Date.now();
+    const newTask = {
+      id: `t_${currentDate}_${now}`,
+      taskType: 'single',
+      routineId: null,
+      groupId: null,
+      originalEst: duration,
+      title: title || (startImmediately ? '' : '単発タスク'),
+      duration,
+      deadline,
+      alarm,
+      status: startImmediately ? 'running' : 'pending',
+      actualStart: startImmediately ? now : null,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment,
+      image: modalImageBase64
+    };
+
+    if (startImmediately) {
+      const running = tasks.find(x => x.status === 'running');
+      if (running) {
+        const rIdx = tasks.findIndex(x => x.id === running.id);
+        tasks.splice(rIdx + 1, 0, newTask);
+        splitAndPauseRunningTask(running, newTask.id);
+      } else {
+        tasks.push(newTask);
+      }
+    } else {
+      tasks.push(newTask);
+    }
+
+    saveTasks();
+    closeTaskModal();
+    renderAll();
+  }
+
+  function deleteCurrentEditingTask() {
+    const id = document.getElementById('editTaskId').value;
+    if (id) {
+      deleteTaskById(id);
+      closeTaskModal();
+    }
+  }
+
+  function openQuickNoteModal(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const t = tasks.find(x => x.id === taskId);
+    if (!t) return;
+    quickNoteTargetId = taskId;
+    document.getElementById('quickNoteTitle').textContent = `💬 ${t.title || 'メモ・写真'}`;
+    document.getElementById('quickNoteTextarea').value = t.comment || '';
+    quickNoteImgBase64 = t.image || '';
+    if (quickNoteImgBase64) {
+      document.getElementById('quickNoteImgPreview').src = quickNoteImgBase64;
+      document.getElementById('quickNoteImgPreviewWrap').classList.remove('hidden');
+      document.getElementById('quickNoteRemoveImgBtn').classList.remove('hidden');
+    } else {
+      removeQuickNoteImage();
+    }
+    document.getElementById('quickNoteModal').classList.remove('hidden');
+  }
+
+  function closeQuickNoteModal() {
+    document.getElementById('quickNoteModal').classList.add('hidden');
+  }
+
+  function saveQuickNote() {
+    const tasks = ensureTasksForDate(currentDate);
+    const t = tasks.find(x => x.id === quickNoteTargetId);
+    if (t) {
+      t.comment = document.getElementById('quickNoteTextarea').value.trim();
+      t.image = quickNoteImgBase64;
+      saveTasks();
+      renderAll();
+      showToast('保存しました📸');
+    }
+    closeQuickNoteModal();
+  }
+
+  function compressImageFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxW = 520;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleModalImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    compressImageFile(file, dataUrl => {
+      modalImageBase64 = dataUrl;
+      document.getElementById('modalImagePreview').src = dataUrl;
+      document.getElementById('modalImagePreviewWrap').classList.remove('hidden');
+      document.getElementById('removeModalImageBtn').classList.remove('hidden');
+    });
+  }
+
+  function clearModalImage() {
+    modalImageBase64 = '';
+    document.getElementById('modalImagePreviewWrap').classList.add('hidden');
+    document.getElementById('removeModalImageBtn').classList.add('hidden');
+  }
+
+  function handleQuickNoteImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    compressImageFile(file, dataUrl => {
+      quickNoteImgBase64 = dataUrl;
+      document.getElementById('quickNoteImgPreview').src = dataUrl;
+      document.getElementById('quickNoteImgPreviewWrap').classList.remove('hidden');
+      document.getElementById('quickNoteRemoveImgBtn').classList.remove('hidden');
+    });
+  }
+
+  function removeQuickNoteImage() {
+    quickNoteImgBase64 = '';
+    document.getElementById('quickNoteImgPreviewWrap').classList.add('hidden');
+    document.getElementById('quickNoteRemoveImgBtn').classList.add('hidden');
+  }
+
+  function handleDateAreaTap() {
+    const now = Date.now();
+    if (now - lastDateTapMs < 280) {
+      clearTimeout(dateTapTimer);
+      dateTapTimer = null;
+      lastDateTapMs = 0;
+      closeCalendarModal();
+      jumpToToday(true);
+      return;
+    }
+    lastDateTapMs = now;
+    clearTimeout(dateTapTimer);
+    dateTapTimer = setTimeout(() => {
+      dateTapTimer = null;
+      openCalendarModal();
+    }, 260);
+  }
+
+  function openCalendarModal() {
+    const dt = parseDateKey(currentDate);
+    calendarViewYear = dt.getFullYear();
+    calendarViewMonth = dt.getMonth();
+    renderCalendarGrid();
+    document.getElementById('calendarModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeCalendarModal() {
+    document.getElementById('calendarModal').classList.add('hidden');
+  }
+
+  function shiftCalendarMonth(diff) {
+    calendarViewMonth += diff;
+    if (calendarViewMonth < 0) {
+      calendarViewMonth = 11;
+      calendarViewYear -= 1;
+    } else if (calendarViewMonth > 11) {
+      calendarViewMonth = 0;
+      calendarViewYear += 1;
+    }
+    renderCalendarGrid();
+  }
+
+  function renderCalendarGrid() {
+    document.getElementById('calendarMonthLabel').textContent = `${calendarViewYear}年${calendarViewMonth + 1}月`;
+    const grid = document.getElementById('calendarDaysGrid');
+    grid.innerHTML = '';
+
+    const firstDayDow = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+    const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+    const todayStr = getTodayStr();
+
+    for (let i = 0; i < firstDayDow; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'h-10';
+      grid.appendChild(blank);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isSelected = dateStr === currentDate;
+      const isToday = dateStr === todayStr;
+      const hasSavedTasks = Array.isArray(tasksByDate[dateStr]) && tasksByDate[dateStr].length > 0;
+      const dow = (firstDayDow + day - 1) % 7;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => selectCalendarDate(dateStr);
+
+      let cellStyle = 'bg-white hover:bg-pink-50 text-stone-700 border border-transparent';
+      if (isSelected) {
+        cellStyle = 'bg-gradient-to-br from-pink-500 to-purple-500 text-white font-black shadow-xs';
+      } else if (isToday) {
+        cellStyle = 'bg-pink-50 text-pink-700 border border-pink-300 font-black';
+      } else if (dow === 0) {
+        cellStyle = 'bg-white hover:bg-pink-50 text-rose-500 font-bold';
+      } else if (dow === 6) {
+        cellStyle = 'bg-white hover:bg-purple-50 text-purple-600 font-bold';
+      }
+
+      btn.className = `h-10 rounded-2xl flex flex-col items-center justify-center text-xs transition active:scale-90 ${cellStyle}`;
+      btn.innerHTML = `
+        <span class="leading-none">${day}</span>
+        <span class="w-1 h-1 rounded-full mt-1 ${hasSavedTasks ? (isSelected ? 'bg-white' : 'bg-pink-400') : 'opacity-0'}"></span>
+      `;
+      grid.appendChild(btn);
+    }
+  }
+
+  function selectCalendarDate(dateStr) {
+    currentDate = dateStr;
+    ensureTasksForDate(currentDate);
+    closeCalendarModal();
+    renderAll();
+  }
+
+  function changeDate(diff) {
+    currentDate = addDays(currentDate, diff);
+    ensureTasksForDate(currentDate);
+    renderAll();
+  }
+
+  function jumpToToday(withToast = false) {
+    const today = getTodayStr();
+    const alreadyToday = currentDate === today;
+    currentDate = today;
+    ensureTasksForDate(currentDate);
+    renderAll();
+    if (withToast) {
+      showToast(alreadyToday ? '今日は表示中だよ🌸' : '今日に戻ったよ🌸');
+    }
+  }
+
+  function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
+  function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+  function reloadRoutinesForToday() {
+    const tasks = ensureTasksForDate(currentDate);
+    let added = 0;
+    routines.filter(r => doesRoutineMatchDate(r, currentDate)).forEach(r => {
+      if (!tasks.some(t => t.routineId === r.id || t.title === r.title)) {
+        tasks.push({
+          id: `t_${currentDate}_${Date.now()}_${added}`,
+          taskType: 'routine',
+          routineId: r.id,
+          groupId: null,
+          originalEst: r.duration,
+          title: r.title,
+          duration: r.duration,
+          deadline: r.deadline || '',
+          alarm: !!r.alarm,
+          status: 'pending',
+          actualStart: null,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '',
+          image: ''
+        });
+        added++;
+      }
+    });
+    saveTasks();
+    closeSettingsModal();
+    renderAll();
+    showToast(added > 0 ? `${added}件追加しました✨` : 'すべて揃っています🌸');
+  }
+
+  function exportBackupJson() {
+    try {
+      const payload = JSON.stringify({ routines, tasksByDate, exportedAt: new Date().toISOString() }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `umechan_taskchute_${getTodayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('バックアップを保存しました📤');
+    } catch (e) {
+      showToast('書き出しに失敗しました');
+    }
+  }
+
+  function importBackupJson(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (parsed && typeof parsed === 'object') {
+          if (Array.isArray(parsed.routines)) {
+            routines = parsed.routines;
+            saveRoutines();
+          }
+          if (parsed.tasksByDate && typeof parsed.tasksByDate === 'object') {
+            tasksByDate = parsed.tasksByDate;
+            saveTasks();
+          }
+          ensureTasksForDate(currentDate);
+          closeSettingsModal();
+          renderAll();
+          showToast('バックアップを復元しました🌸');
+        }
+      } catch (err) {
+        showToast('ファイルの読み込みに失敗しました');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function resetToSampleData() {
+    localStorage.removeItem(STORAGE_KEY_TASKS);
+    localStorage.removeItem(STORAGE_KEY_ROUTINES);
+    currentDate = getTodayStr();
+    initData();
+    closeSettingsModal();
+    renderAll();
+    showToast('リセットしました🌸');
+  }
+
+  function playCuteChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.11);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.11);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.11 + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.11);
+        osc.stop(ctx.currentTime + i * 0.11 + 0.36);
+      });
+    } catch (e) {}
+  }
+
+  function testAlarmSound() {
+    playCuteChime();
+    showToast('🔔 ピロリン♪');
+  }
+
+  function showToast(msg) {
+    const box = document.getElementById('toastBox');
+    document.getElementById('toastText').textContent = msg;
+    box.classList.remove('opacity-0', 'translate-y-[-10px]');
+    box.classList.add('opacity-100', 'translate-y-0');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => {
+      box.classList.add('opacity-0', 'translate-y-[-10px]');
+      box.classList.remove('opacity-100', 'translate-y-0');
+    }, 2200);
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    generateSakuraAppIconAndManifest();
+    initData();
+    updateQuickDurationDisplay();
+    renderAll();
+    setInterval(() => {
+      if (document.querySelector('input:focus, textarea:focus')) return;
+      const tasks = tasksByDate[currentDate] || [];
+      if (tasks.some(t => t.status === 'running')) {
+        renderAll();
+      } else {
+        document.getElementById('liveClock').textContent = formatHHMM(new Date());
+      }
+    }, 1000);
+  });
+</script>
+</body>
+</html>
