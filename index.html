@@ -1548,6 +1548,19 @@
     showToast('削除しました');
   }
 
+  function insertTaskAfterCurrentAnchor(tasks, newTask) {
+    const runningIdx = tasks.findIndex(t => t.status === 'running');
+    if (runningIdx !== -1) {
+      tasks.splice(runningIdx + 1, 0, newTask);
+      return;
+    }
+    let lastDoneIdx = -1;
+    tasks.forEach((t, i) => {
+      if (t.status === 'completed') lastDoneIdx = i;
+    });
+    tasks.splice(lastDoneIdx + 1, 0, newTask);
+  }
+
   function quickAddAndStart() {
     const input = document.getElementById('quickTaskTitleInput');
     const title = input.value.trim();
@@ -1579,9 +1592,7 @@
       tasks.splice(rIdx + 1, 0, newTask);
       splitAndPauseRunningTask(runningTask, newTask.id);
     } else {
-      let lastDoneIdx = -1;
-      tasks.forEach((t, i) => { if (t.status === 'completed') lastDoneIdx = i; });
-      tasks.splice(lastDoneIdx + 1, 0, newTask);
+      insertTaskAfterCurrentAnchor(tasks, newTask);
     }
 
     input.value = '';
@@ -1597,7 +1608,7 @@
     const duration = quickDurationValue > 0 ? quickDurationValue : 15;
     const tasks = ensureTasksForDate(currentDate);
 
-    tasks.push({
+    const newTask = {
       id: `t_${currentDate}_${Date.now()}`,
       taskType: quickTaskType,
       routineId: null,
@@ -1613,13 +1624,16 @@
       elapsedSeconds: 0,
       comment: '',
       image: ''
-    });
+    };
+
+    insertTaskAfterCurrentAnchor(tasks, newTask);
 
     input.value = '';
     quickDurationValue = 15;
     updateQuickDurationDisplay();
     saveTasks();
     renderAll();
+    showToast('すぐ下に追加しました🌸');
   }
 
   function renderAll() {
@@ -2925,10 +2939,10 @@
         tasks.splice(rIdx + 1, 0, newTask);
         splitAndPauseRunningTask(running, newTask.id);
       } else {
-        tasks.push(newTask);
+        insertTaskAfterCurrentAnchor(tasks, newTask);
       }
     } else {
-      tasks.push(newTask);
+      insertTaskAfterCurrentAnchor(tasks, newTask);
     }
 
     saveTasks();
