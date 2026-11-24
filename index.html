@@ -2396,4 +2396,897 @@
   function resetRoutineForm() {
     document.getElementById('editingRoutineId').value = '';
     document.getElementById('routineTitleInput').value = '';
-    document.
+    document.getElementById('routineDurationInput').value = 20;
+    document.getElementById('routineDeadlineInput').value = '';
+    currentEditingRoutineAvgMin = null;
+    const statsBanner = document.getElementById('routineEditStatsBanner');
+    if (statsBanner) statsBanner.classList.add('hidden');
+
+    selectedRoutineDays = [0, 1, 2, 3, 4, 5, 6];
+    selectedRoutineNths = [2, 4];
+    selectedRoutineNthDays = [3];
+    document.getElementById('routineMonthDayInput').value = 1;
+    document.getElementById('routineIntervalDaysInput').value = 45;
+    setRoutineRepeatType('weekly');
+    document.getElementById('routineFormModeLabel').textContent = '＋ 新しいルーチン';
+  }
+
+  function saveRoutineForm(e) {
+    e.preventDefault();
+    if (isSavingRoutineLock) return;
+    isSavingRoutineLock = true;
+    setTimeout(() => { isSavingRoutineLock = false; }, 500);
+
+    const editingId = document.getElementById('editingRoutineId').value;
+    const title = document.getElementById('routineTitleInput').value.trim();
+    if (!title) return;
+    const duration = Math.max(1, Number(document.getElementById('routineDurationInput').value) || 15);
+    const deadline = document.getElementById('routineDeadlineInput').value || '';
+
+    const days = selectedRoutineDays.length > 0 ? [...selectedRoutineDays] : [0, 1, 2, 3, 4, 5, 6];
+    const nthWeeks = selectedRoutineNths.length > 0 ? [...selectedRoutineNths] : [1];
+    const nthDays = selectedRoutineNthDays.length > 0 ? [...selectedRoutineNthDays] : [3];
+    const monthDay = Math.min(31, Math.max(1, Number(document.getElementById('routineMonthDayInput').value) || 1));
+    const intervalDays = Math.max(1, Number(document.getElementById('routineIntervalDaysInput').value) || 45);
+
+    if (editingId) {
+      const r = routines.find(x => x.id === editingId);
+      if (r) {
+        r.title = title;
+        r.duration = duration;
+        r.deadline = deadline;
+        r.repeatType = routineRepeatType;
+        r.days = days;
+        r.nthWeeks = nthWeeks;
+        r.nthDays = nthDays;
+        r.monthDay = monthDay;
+        r.intervalDays = intervalDays;
+        if (routineRepeatType === 'afterDays' && !r.nextDueDate) {
+          r.nextDueDate = addDays(currentDate, intervalDays);
+        }
+        const todayTasks = ensureTasksForDate(currentDate);
+        todayTasks.forEach(t => {
+          if (t.routineId === r.id && t.status === 'pending') {
+            t.title = title;
+            t.duration = duration;
+            t.originalEst = duration;
+            t.deadline = deadline;
+          }
+        });
+        saveTasks();
+      }
+      saveRoutines();
+      closeRoutineFormDrawer();
+      renderAll();
+      showToast('✨ ルーチンを保存しました！');
+      return;
+    }
+
+    if (routines.some(r => r.title.trim() === title)) {
+      showToast('同じ名前のルーチンがすでにあります🌸');
+      return;
+    }
+
+    const newR = {
+      id: `r_${Date.now()}`,
+      title,
+      duration,
+      deadline,
+      alarm: false,
+      repeatType: routineRepeatType,
+      days,
+      nthWeeks,
+      nthDays,
+      monthDay,
+      intervalDays,
+      nextDueDate: addDays(currentDate, intervalDays)
+    };
+    routines.push(newR);
+    saveRoutines();
+
+    if (doesRoutineMatchDate(newR, currentDate)) {
+      const tasks = ensureTasksForDate(currentDate);
+      if (!tasks.some(t => t.routineId === newR.id || t.title === newR.title)) {
+        tasks.push({
+          id: `t_${currentDate}_${Date.now()}`,
+          taskType: 'routine',
+          routineId: newR.id,
+          groupId: null,
+          originalEst: duration,
+          title,
+          duration,
+          deadline,
+          alarm: false,
+          status: 'pending',
+          actualStart: null,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '',
+          image: ''
+        });
+        saveTasks();
+      }
+    }
+
+    closeRoutineFormDrawer();
+    renderAll();
+    showToast('✨ ルーチンを保存しました！');
+
+    setTimeout(() => {
+      const listEl = document.getElementById('routineListContainer');
+      const addedCard = listEl ? listEl.querySelector(`[data-routine-id="${newR.id}"]`) : null;
+      if (addedCard) {
+        addedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        addedCard.classList.add('ring-2', 'ring-pink-400', 'bg-pink-50');
+        setTimeout(() => addedCard.classList.remove('ring-2', 'ring-pink-400', 'bg-pink-50'), 1400);
+      }
+    }, 60);
+  }
+
+  function deduplicateRoutines() {
+    const seen = new Set();
+    const beforeCount = routines.length;
+    routines = routines.filter(r => {
+      const key = (r.title || '').trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    const removed = beforeCount - routines.length;
+    saveRoutines();
+    renderRoutineList();
+    renderTodayImportList();
+    showToast(removed > 0 ? `🧹 重複していた${removed}件を整理しました！` : '重複はありません🌸');
+  }
+
+  function renderRoutineList() {
+    const container = document.getElementById('routineListContainer');
+    const editingId = document.getElementById('editingRoutineId').value;
+    container.innerHTML = '';
+
+    const dedupeBtn = document.getElementById('dedupeRoutinesBtn');
+    if (dedupeBtn) {
+      const uniqueTitles = new Set(routines.map(r => (r.title || '').trim()));
+      dedupeBtn.classList.toggle('hidden', uniqueTitles.size === routines.length);
+    }
+
+    if (routines.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 text-xs font-bold text-stone-400">
+          上の「＋ 新しいルーチンを追加」から登録してね🌸
+        </div>
+      `;
+      return;
+    }
+
+    routines.forEach(r => {
+      const schedLabel = formatRoutineScheduleLabel(r);
+      const stats = getRoutineHistoryStats(r);
+      const isEditing = r.id === editingId;
+      const item = document.createElement('div');
+      item.dataset.routineId = r.id;
+      item.className = `routine-item-card flex items-center justify-between px-3 py-2.5 rounded-2xl border select-none transition ${
+        isEditing ? 'bg-pink-50 border-pink-400' : 'bg-white border-purple-100 shadow-2xs'
+      }`;
+      item.innerHTML = `
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-5 shrink-0 text-purple-300 cursor-grab">
+            <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+          </div>
+          <div onclick="startEditRoutine('${r.id}')" class="min-w-0 flex-1 cursor-pointer">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs font-extrabold text-stone-800 truncate">${escapeHtml(r.title)}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 shrink-0">${r.duration}分</span>
+              ${r.deadline ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 shrink-0">🎯${r.deadline}</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <span class="text-[10px] font-bold text-stone-400 truncate">${escapeHtml(schedLabel)}</span>
+              ${stats.count > 0 ? `
+                <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-pink-50/90 text-pink-600 border border-pink-100 shrink-0">
+                  実績 ${stats.count}回・平均 ${stats.avgMin}分
+                </span>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 shrink-0 ml-2">
+          <button type="button" onclick="startEditRoutine('${r.id}')" aria-label="編集" class="w-8 h-8 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-extrabold flex items-center justify-center active:scale-90 transition">✏️</button>
+          <button type="button" onclick="deleteRoutine('${r.id}')" aria-label="削除" class="w-8 h-8 rounded-xl bg-rose-50/70 hover:bg-rose-100 text-stone-400 hover:text-rose-600 flex items-center justify-center active:scale-90 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      `;
+      attachRoutineLongPressDrag(item, r.id);
+      container.appendChild(item);
+    });
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function attachRoutineLongPressDrag(cardEl, routineId) {
+    let longPressTimer = null;
+    let isDragging = false;
+    let startY = 0;
+
+    const clearTimer = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    };
+
+    const startDrag = clientY => {
+      isDragging = true;
+      startY = clientY;
+      cardEl.classList.add('is-dragging');
+      if (navigator.vibrate) navigator.vibrate(30);
+    };
+
+    const moveDrag = (clientX, clientY, preventFn) => {
+      if (!isDragging) {
+        if (Math.abs(clientY - startY) > 10) clearTimer();
+        return;
+      }
+      if (preventFn) preventFn();
+      const elemBelow = document.elementFromPoint(clientX, clientY);
+      const targetCard = elemBelow ? elemBelow.closest('.routine-item-card') : null;
+      document.querySelectorAll('.routine-item-card').forEach(el => el.classList.remove('drag-over-target'));
+      if (targetCard && targetCard !== cardEl) {
+        targetCard.classList.add('drag-over-target');
+      }
+    };
+
+    const endDrag = () => {
+      clearTimer();
+      if (!isDragging) return;
+      cardEl.classList.remove('is-dragging');
+      const overEl = document.querySelector('.routine-item-card.drag-over-target');
+      document.querySelectorAll('.routine-item-card').forEach(el => el.classList.remove('drag-over-target'));
+      if (overEl && overEl.dataset.routineId !== routineId) {
+        reorderRoutinesById(routineId, overEl.dataset.routineId);
+      }
+      isDragging = false;
+    };
+
+    cardEl.addEventListener('touchstart', e => {
+      if (e.target.closest('button')) return;
+      const t = e.touches[0];
+      startY = t.clientY;
+      longPressTimer = setTimeout(() => startDrag(t.clientY), 300);
+    }, { passive: true });
+
+    cardEl.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      moveDrag(t.clientX, t.clientY, () => e.preventDefault());
+    }, { passive: false });
+
+    cardEl.addEventListener('touchend', endDrag);
+    cardEl.addEventListener('touchcancel', endDrag);
+
+    cardEl.addEventListener('mousedown', e => {
+      if (e.target.closest('button') || e.button !== 0) return;
+      startY = e.clientY;
+      longPressTimer = setTimeout(() => {
+        startDrag(e.clientY);
+        const onMouseMove = mv => moveDrag(mv.clientX, mv.clientY, () => mv.preventDefault());
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          endDrag();
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      }, 300);
+    });
+
+    cardEl.addEventListener('mouseup', clearTimer);
+    cardEl.addEventListener('mouseleave', () => {
+      if (!isDragging) clearTimer();
+    });
+  }
+
+  function reorderRoutinesById(fromId, toId) {
+    const fromIdx = routines.findIndex(r => r.id === fromId);
+    const toIdx = routines.findIndex(r => r.id === toId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = routines.splice(fromIdx, 1);
+    routines.splice(toIdx, 0, moved);
+    saveRoutines();
+
+    const todayTasks = ensureTasksForDate(currentDate);
+    const routineOrderMap = new Map(routines.map((r, i) => [r.id, i]));
+    const pendingRoutines = todayTasks
+      .filter(t => t.taskType === 'routine' && t.status === 'pending' && routineOrderMap.has(t.routineId))
+      .sort((a, b) => routineOrderMap.get(a.routineId) - routineOrderMap.get(b.routineId));
+
+    let ptr = 0;
+    for (let i = 0; i < todayTasks.length; i++) {
+      if (todayTasks[i].taskType === 'routine' && todayTasks[i].status === 'pending' && routineOrderMap.has(todayTasks[i].routineId)) {
+        todayTasks[i] = pendingRoutines[ptr++];
+      }
+    }
+    saveTasks();
+    renderRoutineList();
+    renderAll();
+    showToast('順番を入れ替えました✨');
+  }
+
+  function deleteRoutine(id) {
+    routines = routines.filter(r => r.id !== id);
+    saveRoutines();
+    renderRoutineList();
+    showToast('削除しました');
+  }
+
+  function openEditTaskModal(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const t = tasks.find(x => x.id === taskId);
+    if (!t) return;
+
+    document.getElementById('editTaskId').value = t.id;
+    document.getElementById('taskTitleInput').value = t.title;
+    document.getElementById('taskDurationInput').value = t.groupId ? (t.originalEst || t.duration) : t.duration;
+    document.getElementById('taskActualInput').value = Math.round(getTaskElapsedSeconds(t) / 60);
+    document.getElementById('taskDeadlineInput').value = t.deadline || '';
+    document.getElementById('taskAlarmInput').checked = !!t.alarm;
+    document.getElementById('taskCommentInput').value = t.comment || '';
+
+    const timeSection = document.getElementById('editTimeRangeSection');
+    const statusBadge = document.getElementById('editTaskStatusBadge');
+    const startInput = document.getElementById('taskStartTimeInput');
+    const endInput = document.getElementById('taskEndTimeInput');
+    const endCol = document.getElementById('taskEndTimeCol');
+    const actualWrap = document.getElementById('editActualWrap');
+
+    timeSection.classList.remove('hidden');
+    actualWrap.classList.remove('hidden');
+
+    if (t.status === 'completed') {
+      statusBadge.textContent = '完了済み';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white text-stone-600 border border-stone-200';
+      const sMs = t.actualStart || (Date.now() - getTaskElapsedSeconds(t) * 1000);
+      const eMs = t.actualEnd || Date.now();
+      startInput.value = formatHHMM(sMs);
+      endInput.value = formatHHMM(eMs);
+      endCol.classList.remove('hidden');
+    } else if (t.status === 'running') {
+      statusBadge.textContent = '▶ 実行中';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white';
+      startInput.value = t.actualStart ? formatHHMM(t.actualStart) : formatHHMM(new Date());
+      endInput.value = '';
+      endCol.classList.add('hidden');
+    } else {
+      statusBadge.textContent = '未開始';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700';
+      startInput.value = '';
+      endInput.value = '';
+      endCol.classList.add('hidden');
+    }
+
+    modalPrevEndTimeMs = findPreviousCompletedEndTime(tasks, t.id);
+    const snapWrap = document.getElementById('snapPrevEndWrap');
+    if (modalPrevEndTimeMs) {
+      const prevHHMM = formatHHMM(modalPrevEndTimeMs);
+      document.getElementById('snapPrevEndBtnLabel').textContent =
+        t.status === 'pending'
+          ? `⏪ 直前の終了 (${prevHHMM}) から開始にする`
+          : `⏪ 直前の終了 (${prevHHMM}) から開始にする`;
+      snapWrap.classList.remove('hidden');
+    } else {
+      snapWrap.classList.add('hidden');
+    }
+
+    if (t.image) {
+      modalImageBase64 = t.image;
+      document.getElementById('modalImagePreview').src = t.image;
+      document.getElementById('modalImagePreviewWrap').classList.remove('hidden');
+      document.getElementById('removeModalImageBtn').classList.remove('hidden');
+    } else {
+      clearModalImage();
+    }
+
+    document.getElementById('modalNewButtons').classList.add('hidden');
+    document.getElementById('modalEditButtons').classList.remove('hidden');
+    document.getElementById('taskModal').classList.remove('hidden');
+  }
+
+  function handleStartOrEndTimeChange() {
+    const startVal = document.getElementById('taskStartTimeInput').value;
+    const endVal = document.getElementById('taskEndTimeInput').value;
+    const startMs = combineDateAndHHMM(currentDate, startVal);
+    let endMs = combineDateAndHHMM(currentDate, endVal);
+
+    if (startMs && endMs) {
+      if (endMs < startMs) {
+        endMs += 24 * 60 * 60 * 1000;
+      }
+      const diffMin = Math.max(0, Math.round((endMs - startMs) / 60000));
+      document.getElementById('taskActualInput').value = diffMin;
+    } else if (startMs && !endVal) {
+      const diffMin = Math.max(0, Math.round((Date.now() - startMs) / 60000));
+      document.getElementById('taskActualInput').value = diffMin;
+    }
+  }
+
+  function handleActualMinutesManualChange() {
+    const startVal = document.getElementById('taskStartTimeInput').value;
+    const endCol = document.getElementById('taskEndTimeCol');
+    if (endCol.classList.contains('hidden')) return;
+    const startMs = combineDateAndHHMM(currentDate, startVal);
+    if (!startMs) return;
+    const min = Math.max(0, Number(document.getElementById('taskActualInput').value) || 0);
+    document.getElementById('taskEndTimeInput').value = formatHHMM(startMs + min * 60000);
+  }
+
+  function applyPrevTaskEndTimeInModal() {
+    if (!modalPrevEndTimeMs) return;
+    const prevHHMM = formatHHMM(modalPrevEndTimeMs);
+    document.getElementById('taskStartTimeInput').value = prevHHMM;
+    handleStartOrEndTimeChange();
+    showToast(`開始時刻を ${prevHHMM} にセットしました⏪`);
+  }
+
+  function closeTaskModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+  }
+
+  function submitTaskModal(startImmediately) {
+    const editId = document.getElementById('editTaskId').value;
+    const title = document.getElementById('taskTitleInput').value.trim();
+    const duration = Math.max(0, Number(document.getElementById('taskDurationInput').value) || 0);
+    const actualMin = Math.max(0, Number(document.getElementById('taskActualInput').value) || 0);
+    const deadline = document.getElementById('taskDeadlineInput').value || '';
+    const alarm = document.getElementById('taskAlarmInput').checked;
+    const comment = document.getElementById('taskCommentInput').value.trim();
+    const tasks = ensureTasksForDate(currentDate);
+
+    if (editId) {
+      const t = tasks.find(x => x.id === editId);
+      if (t) {
+        t.title = title;
+        if (t.groupId) {
+          tasks.filter(m => m.groupId === t.groupId).forEach(m => {
+            m.title = title;
+            m.originalEst = duration;
+            m.deadline = deadline;
+          });
+          syncSplitGroups(tasks);
+        } else {
+          t.duration = duration;
+          t.originalEst = duration;
+        }
+
+        const startStr = document.getElementById('taskStartTimeInput').value;
+        const endStr = document.getElementById('taskEndTimeInput').value;
+        const parsedStartMs = combineDateAndHHMM(currentDate, startStr);
+        let parsedEndMs = combineDateAndHHMM(currentDate, endStr);
+
+        if (t.status === 'completed') {
+          if (parsedStartMs && parsedEndMs) {
+            if (parsedEndMs < parsedStartMs) parsedEndMs += 24 * 60 * 60 * 1000;
+            t.actualStart = parsedStartMs;
+            t.actualEnd = parsedEndMs;
+            t.elapsedSeconds = Math.max(0, Math.round((parsedEndMs - parsedStartMs) / 1000));
+          } else {
+            t.elapsedSeconds = actualMin * 60;
+            if (parsedStartMs) {
+              t.actualStart = parsedStartMs;
+              t.actualEnd = parsedStartMs + actualMin * 60000;
+            }
+          }
+        } else if (t.status === 'running') {
+          if (parsedStartMs) {
+            t.actualStart = parsedStartMs;
+            t.elapsedSeconds = 0;
+          }
+        } else if (t.status === 'pending' && parsedStartMs) {
+          const running = tasks.find(x => x.status === 'running' && x.id !== t.id);
+          if (running) {
+            splitAndPauseRunningTask(running, t.id);
+          }
+          t.status = 'running';
+          t.actualStart = parsedStartMs;
+          t.actualEnd = null;
+          t.elapsedSeconds = 0;
+        }
+
+        t.deadline = deadline;
+        t.alarm = alarm;
+        t.comment = comment;
+        t.image = modalImageBase64;
+      }
+      saveTasks();
+      closeTaskModal();
+      renderAll();
+      showToast('保存しました🌸');
+      return;
+    }
+
+    const now = Date.now();
+    const newTask = {
+      id: `t_${currentDate}_${now}`,
+      taskType: 'single',
+      routineId: null,
+      groupId: null,
+      originalEst: duration,
+      title: title || (startImmediately ? '' : '単発タスク'),
+      duration,
+      deadline,
+      alarm,
+      status: startImmediately ? 'running' : 'pending',
+      actualStart: startImmediately ? now : null,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment,
+      image: modalImageBase64
+    };
+
+    if (startImmediately) {
+      const running = tasks.find(x => x.status === 'running');
+      if (running) {
+        const rIdx = tasks.findIndex(x => x.id === running.id);
+        tasks.splice(rIdx + 1, 0, newTask);
+        splitAndPauseRunningTask(running, newTask.id);
+      } else {
+        tasks.push(newTask);
+      }
+    } else {
+      tasks.push(newTask);
+    }
+
+    saveTasks();
+    closeTaskModal();
+    renderAll();
+  }
+
+  function deleteCurrentEditingTask() {
+    const id = document.getElementById('editTaskId').value;
+    if (id) {
+      deleteTaskById(id);
+      closeTaskModal();
+    }
+  }
+
+  function openQuickNoteModal(taskId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const t = tasks.find(x => x.id === taskId);
+    if (!t) return;
+    quickNoteTargetId = taskId;
+    document.getElementById('quickNoteTitle').textContent = `💬 ${t.title || 'メモ・写真'}`;
+    document.getElementById('quickNoteTextarea').value = t.comment || '';
+    quickNoteImgBase64 = t.image || '';
+    if (quickNoteImgBase64) {
+      document.getElementById('quickNoteImgPreview').src = quickNoteImgBase64;
+      document.getElementById('quickNoteImgPreviewWrap').classList.remove('hidden');
+      document.getElementById('quickNoteRemoveImgBtn').classList.remove('hidden');
+    } else {
+      removeQuickNoteImage();
+    }
+    document.getElementById('quickNoteModal').classList.remove('hidden');
+  }
+
+  function closeQuickNoteModal() {
+    document.getElementById('quickNoteModal').classList.add('hidden');
+  }
+
+  function saveQuickNote() {
+    const tasks = ensureTasksForDate(currentDate);
+    const t = tasks.find(x => x.id === quickNoteTargetId);
+    if (t) {
+      t.comment = document.getElementById('quickNoteTextarea').value.trim();
+      t.image = quickNoteImgBase64;
+      saveTasks();
+      renderAll();
+      showToast('保存しました📸');
+    }
+    closeQuickNoteModal();
+  }
+
+  function compressImageFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxW = 520;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleModalImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    compressImageFile(file, dataUrl => {
+      modalImageBase64 = dataUrl;
+      document.getElementById('modalImagePreview').src = dataUrl;
+      document.getElementById('modalImagePreviewWrap').classList.remove('hidden');
+      document.getElementById('removeModalImageBtn').classList.remove('hidden');
+    });
+  }
+
+  function clearModalImage() {
+    modalImageBase64 = '';
+    document.getElementById('modalImagePreviewWrap').classList.add('hidden');
+    document.getElementById('removeModalImageBtn').classList.add('hidden');
+  }
+
+  function handleQuickNoteImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    compressImageFile(file, dataUrl => {
+      quickNoteImgBase64 = dataUrl;
+      document.getElementById('quickNoteImgPreview').src = dataUrl;
+      document.getElementById('quickNoteImgPreviewWrap').classList.remove('hidden');
+      document.getElementById('quickNoteRemoveImgBtn').classList.remove('hidden');
+    });
+  }
+
+  function removeQuickNoteImage() {
+    quickNoteImgBase64 = '';
+    document.getElementById('quickNoteImgPreviewWrap').classList.add('hidden');
+    document.getElementById('quickNoteRemoveImgBtn').classList.add('hidden');
+  }
+
+  function handleDateAreaTap() {
+    const now = Date.now();
+    if (now - lastDateTapMs < 280) {
+      clearTimeout(dateTapTimer);
+      dateTapTimer = null;
+      lastDateTapMs = 0;
+      closeCalendarModal();
+      jumpToToday(true);
+      return;
+    }
+    lastDateTapMs = now;
+    clearTimeout(dateTapTimer);
+    dateTapTimer = setTimeout(() => {
+      dateTapTimer = null;
+      openCalendarModal();
+    }, 260);
+  }
+
+  function openCalendarModal() {
+    const dt = parseDateKey(currentDate);
+    calendarViewYear = dt.getFullYear();
+    calendarViewMonth = dt.getMonth();
+    renderCalendarGrid();
+    document.getElementById('calendarModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeCalendarModal() {
+    document.getElementById('calendarModal').classList.add('hidden');
+  }
+
+  function shiftCalendarMonth(diff) {
+    calendarViewMonth += diff;
+    if (calendarViewMonth < 0) {
+      calendarViewMonth = 11;
+      calendarViewYear -= 1;
+    } else if (calendarViewMonth > 11) {
+      calendarViewMonth = 0;
+      calendarViewYear += 1;
+    }
+    renderCalendarGrid();
+  }
+
+  function renderCalendarGrid() {
+    document.getElementById('calendarMonthLabel').textContent = `${calendarViewYear}年${calendarViewMonth + 1}月`;
+    const grid = document.getElementById('calendarDaysGrid');
+    grid.innerHTML = '';
+
+    const firstDayDow = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+    const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+    const todayStr = getTodayStr();
+
+    for (let i = 0; i < firstDayDow; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'h-10';
+      grid.appendChild(blank);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isSelected = dateStr === currentDate;
+      const isToday = dateStr === todayStr;
+      const hasSavedTasks = Array.isArray(tasksByDate[dateStr]) && tasksByDate[dateStr].length > 0;
+      const dow = (firstDayDow + day - 1) % 7;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => selectCalendarDate(dateStr);
+
+      let cellStyle = 'bg-white hover:bg-pink-50 text-stone-700 border border-transparent';
+      if (isSelected) {
+        cellStyle = 'bg-gradient-to-br from-pink-500 to-purple-500 text-white font-black shadow-xs';
+      } else if (isToday) {
+        cellStyle = 'bg-pink-50 text-pink-700 border border-pink-300 font-black';
+      } else if (dow === 0) {
+        cellStyle = 'bg-white hover:bg-pink-50 text-rose-500 font-bold';
+      } else if (dow === 6) {
+        cellStyle = 'bg-white hover:bg-purple-50 text-purple-600 font-bold';
+      }
+
+      btn.className = `h-10 rounded-2xl flex flex-col items-center justify-center text-xs transition active:scale-90 ${cellStyle}`;
+      btn.innerHTML = `
+        <span class="leading-none">${day}</span>
+        <span class="w-1 h-1 rounded-full mt-1 ${hasSavedTasks ? (isSelected ? 'bg-white' : 'bg-pink-400') : 'opacity-0'}"></span>
+      `;
+      grid.appendChild(btn);
+    }
+  }
+
+  function selectCalendarDate(dateStr) {
+    currentDate = dateStr;
+    ensureTasksForDate(currentDate);
+    closeCalendarModal();
+    renderAll();
+  }
+
+  function changeDate(diff) {
+    currentDate = addDays(currentDate, diff);
+    ensureTasksForDate(currentDate);
+    renderAll();
+  }
+
+  function jumpToToday(withToast = false) {
+    const today = getTodayStr();
+    const alreadyToday = currentDate === today;
+    currentDate = today;
+    ensureTasksForDate(currentDate);
+    renderAll();
+    if (withToast) {
+      showToast(alreadyToday ? '今日は表示中だよ🌸' : '今日に戻ったよ🌸');
+    }
+  }
+
+  function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
+  function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+  function reloadRoutinesForToday() {
+    const tasks = ensureTasksForDate(currentDate);
+    let added = 0;
+    routines.filter(r => doesRoutineMatchDate(r, currentDate)).forEach(r => {
+      if (!tasks.some(t => t.routineId === r.id || t.title === r.title)) {
+        tasks.push({
+          id: `t_${currentDate}_${Date.now()}_${added}`,
+          taskType: 'routine',
+          routineId: r.id,
+          groupId: null,
+          originalEst: r.duration,
+          title: r.title,
+          duration: r.duration,
+          deadline: r.deadline || '',
+          alarm: !!r.alarm,
+          status: 'pending',
+          actualStart: null,
+          actualEnd: null,
+          elapsedSeconds: 0,
+          comment: '',
+          image: ''
+        });
+        added++;
+      }
+    });
+    saveTasks();
+    closeSettingsModal();
+    renderAll();
+    showToast(added > 0 ? `${added}件追加しました✨` : 'すべて揃っています🌸');
+  }
+
+  function exportBackupJson() {
+    try {
+      const payload = JSON.stringify({ routines, tasksByDate, exportedAt: new Date().toISOString() }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `umechan_taskchute_${getTodayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('バックアップを保存しました📤');
+    } catch (e) {
+      showToast('書き出しに失敗しました');
+    }
+  }
+
+  function importBackupJson(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (parsed && typeof parsed === 'object') {
+          if (Array.isArray(parsed.routines)) {
+            routines = parsed.routines;
+            saveRoutines();
+          }
+          if (parsed.tasksByDate && typeof parsed.tasksByDate === 'object') {
+            tasksByDate = parsed.tasksByDate;
+            saveTasks();
+          }
+          ensureTasksForDate(currentDate);
+          closeSettingsModal();
+          renderAll();
+          showToast('バックアップを復元しました🌸');
+        }
+      } catch (err) {
+        showToast('ファイルの読み込みに失敗しました');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function resetToSampleData() {
+    localStorage.removeItem(STORAGE_KEY_TASKS);
+    localStorage.removeItem(STORAGE_KEY_ROUTINES);
+    currentDate = getTodayStr();
+    initData();
+    closeSettingsModal();
+    renderAll();
+    showToast('リセットしました🌸');
+  }
+
+  function playCuteChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.11);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.11);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.11 + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.11);
+        osc.stop(ctx.currentTime + i * 0.11 + 0.36);
+      });
+    } catch (e) {}
+  }
+
+  function testAlarmSound() {
+    playCuteChime();
+    showToast('🔔 ピロリン♪');
+  }
+
+  function showToast(msg) {
+    const box = document.getElementById('toastBox');
+    document.getElementById('toastText').textContent = msg;
+    box.classList.remove('opacity-0', 'translate-y-[-10px]');
+    box.classList.add('opacity-100', 'translate-y-0');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => {
+      box.classList.add('opacity-0', 'translate-y-[-10px]');
+      box.classList.remove('opacity-100', 'translate-y-0');
+    }, 2200);
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    generateSakuraAppIconAndManifest();
+    initData();
+    updateQuickDurationDisplay();
+    renderAll();
+    setInterval(() => {
+      if (document.querySelector('input:focus, textarea:focus')) return;
+      const tasks = tasksByDate[currentDate] || [];
+      if (tasks.some(t => t.status === 'running')) {
+        renderAll();
+      } else {
+        document.getElementById('liveClock').textContent = formatHHMM(new Date());
+      }
+    }, 1000);
+  });
+</script>
+</body>
+</html>
