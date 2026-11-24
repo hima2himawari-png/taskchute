@@ -25,6 +25,9 @@
     input, textarea, select {
       font-size: 16px !important;
       line-height: 1.4;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      -webkit-touch-callout: default !important;
     }
 
     /* iOS標準のtimeドラムピッカーを押しやすく整形 */
@@ -61,6 +64,9 @@
       overflow: hidden;
       border-radius: 1.5rem;
       transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.3s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .swipe-delete-bg {
@@ -85,6 +91,15 @@
       z-index: 2;
       transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, box-shadow 0.2s ease;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .task-card,
+    .task-card * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .task-card.swiping {
@@ -1920,6 +1935,10 @@
       card.classList.remove('swiping');
       card.style.transform = '';
       wrapper.classList.remove('is-swiping-active', 'is-dragging');
+    });
+
+    wrapper.addEventListener('contextmenu', e => {
+      e.preventDefault();
     });
   }
 
