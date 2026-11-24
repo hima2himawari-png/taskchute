@@ -23,7 +23,7 @@
 
     input, textarea, select {
       font-size: 16px !important;
-      line-height: 1.4;
+      line-height: 1.35;
       user-select: text !important;
       -webkit-user-select: text !important;
       -webkit-touch-callout: default !important;
@@ -32,7 +32,7 @@
     input[type="time"] {
       -webkit-appearance: none;
       appearance: none;
-      min-height: 38px;
+      min-height: 34px;
       cursor: pointer;
     }
 
@@ -368,94 +368,88 @@
     </div>
   </div>
 
+  <!-- コンパクト化したタスク詳細・編集モーダル -->
   <div id="taskModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
-      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between shrink-0">
-        <h2 id="taskModalTitle" class="text-sm font-extrabold text-stone-800">🌸 タスク詳細・編集</h2>
-        <button type="button" onclick="closeTaskModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
-          <i data-lucide="x" class="w-4 h-4"></i>
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
+      <div class="bg-white px-4 pt-2.5 pb-2 border-b border-pink-100 flex items-center justify-between shrink-0">
+        <h2 id="taskModalTitle" class="text-xs font-extrabold text-stone-800">🌸 タスク詳細・編集</h2>
+        <button type="button" onclick="closeTaskModal()" class="w-7 h-7 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
       </div>
 
-      <form id="taskForm" onsubmit="event.preventDefault(); submitTaskModal(false);" class="p-5 pt-3.5 overflow-y-auto space-y-3">
+      <form id="taskForm" onsubmit="event.preventDefault(); submitTaskModal(false);" class="px-4 py-2.5 overflow-y-auto space-y-2">
         <input type="hidden" id="editTaskId" />
         <input type="hidden" id="taskTargetDateInput" />
 
-        <div>
-          <label class="block text-[11px] font-extrabold text-stone-500 mb-1">タスク名</label>
-          <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="w-full px-3.5 py-2 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none font-bold" />
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] font-extrabold text-stone-500 shrink-0">名前</span>
+          <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-pink-200 focus:border-pink-400 outline-none font-bold" />
         </div>
 
         <!-- 実行日（月曜始まりカレンダー＆ワンタップリスケ） -->
-        <div id="editTaskDateSection" class="bg-purple-50/60 p-3 rounded-2xl border border-purple-200/80 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-extrabold text-purple-800 flex items-center gap-1">
-              <span>📅</span>
-              <span>実行日（別の日へ移動）</span>
-            </span>
-            <span id="taskTargetDateDiffBadge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white">
-              移動予約中
+        <div id="editTaskDateSection" class="bg-purple-50/60 px-2.5 py-2 rounded-xl border border-purple-200/80 space-y-1.5">
+          <div class="flex items-center justify-between gap-1.5">
+            <button
+              type="button"
+              onclick="openCalendarModalForTask()"
+              class="flex-1 min-w-0 py-1 px-2.5 rounded-lg bg-white hover:bg-purple-50/70 border border-purple-200 flex items-center justify-between text-xs font-extrabold text-stone-800 active:scale-[0.99] transition"
+            >
+              <span class="flex items-center gap-1 truncate">
+                <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-purple-500 shrink-0"></i>
+                <span id="taskTargetDateLabel" class="truncate">2026年11月24日 (火)</span>
+              </span>
+              <span class="text-[10px] font-bold text-purple-600 shrink-0 ml-1">カレンダー ▾</span>
+            </button>
+            <span id="taskTargetDateDiffBadge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white shrink-0">
+              移動予約
             </span>
           </div>
 
-          <button
-            type="button"
-            onclick="openCalendarModalForTask()"
-            class="w-full py-2 px-3 rounded-xl bg-white hover:bg-purple-50/70 border border-purple-200 flex items-center justify-between text-xs font-extrabold text-stone-800 shadow-2xs active:scale-[0.99] transition"
-          >
-            <span class="flex items-center gap-1.5">
-              <i data-lucide="calendar-days" class="w-4 h-4 text-purple-500"></i>
-              <span id="taskTargetDateLabel">2026年11月24日 (火)</span>
-            </span>
-            <span class="text-[11px] font-bold text-purple-600">カレンダーで選ぶ ▾</span>
-          </button>
-
           <div class="grid grid-cols-4 gap-1">
-            <button type="button" onclick="shiftModalTargetDate(0)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-stone-600 active:scale-90 transition">今日</button>
-            <button type="button" onclick="shiftModalTargetDate(1)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-pink-700 active:scale-90 transition">明日</button>
-            <button type="button" onclick="shiftModalTargetDate(3)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-pink-700 active:scale-90 transition">3日後</button>
-            <button type="button" onclick="shiftModalTargetDate(7)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-purple-700 active:scale-90 transition">来週</button>
+            <button type="button" onclick="shiftModalTargetDate(0)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-stone-600 active:scale-90 transition">今日</button>
+            <button type="button" onclick="shiftModalTargetDate(1)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-pink-700 active:scale-90 transition">明日</button>
+            <button type="button" onclick="shiftModalTargetDate(3)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-pink-700 active:scale-90 transition">3日後</button>
+            <button type="button" onclick="shiftModalTargetDate(7)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-purple-700 active:scale-90 transition">来週</button>
           </div>
         </div>
 
-        <div id="editTimeRangeSection" class="bg-gradient-to-r from-pink-50/80 via-fuchsia-50/60 to-purple-50/80 p-3 rounded-2xl border border-pink-200/80 space-y-2.5">
+        <!-- 開始・終了時刻 -->
+        <div id="editTimeRangeSection" class="bg-gradient-to-r from-pink-50/80 via-fuchsia-50/60 to-purple-50/80 px-2.5 py-2 rounded-xl border border-pink-200/80 space-y-1.5">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-extrabold text-pink-800 flex items-center gap-1">
-              <span>⏱</span>
-              <span>開始・終了時刻（ドラム入力）</span>
-            </span>
+            <span class="text-[10px] font-extrabold text-pink-800">⏱ 開始・終了時刻</span>
             <span id="editTaskStatusBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white text-purple-700 border border-purple-200">
-              完了済み
+              未開始
             </span>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[10px] font-extrabold text-stone-500 mb-1">開始時刻</label>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-extrabold text-stone-500 shrink-0">開始</span>
               <input
                 type="time"
                 id="taskStartTimeInput"
                 onchange="handleStartOrEndTimeChange()"
-                class="w-full px-2.5 py-1.5 rounded-xl border border-pink-200 bg-white font-black text-center text-stone-800 outline-none focus:border-pink-400"
+                class="flex-1 min-w-0 px-2 py-1 rounded-lg border border-pink-200 bg-white font-black text-center text-stone-800 outline-none focus:border-pink-400"
               />
             </div>
-            <div id="taskEndTimeCol">
-              <label class="block text-[10px] font-extrabold text-stone-500 mb-1">終了時刻</label>
+            <div id="taskEndTimeCol" class="flex items-center gap-1.5">
+              <span class="text-[10px] font-extrabold text-stone-500 shrink-0">終了</span>
               <input
                 type="time"
                 id="taskEndTimeInput"
                 onchange="handleStartOrEndTimeChange()"
-                class="w-full px-2.5 py-1.5 rounded-xl border border-purple-200 bg-white font-black text-center text-stone-800 outline-none focus:border-purple-400"
+                class="flex-1 min-w-0 px-2 py-1 rounded-lg border border-purple-200 bg-white font-black text-center text-stone-800 outline-none focus:border-purple-400"
               />
             </div>
           </div>
 
-          <div id="snapPrevEndWrap" class="hidden pt-0.5">
+          <div id="snapPrevEndWrap" class="hidden">
             <button
               type="button"
               id="snapPrevEndBtn"
               onclick="applyPrevTaskEndTimeInModal()"
-              class="w-full py-2 px-3 rounded-xl bg-white hover:bg-pink-50 text-pink-700 border border-pink-300 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition"
+              class="w-full py-1 px-2 rounded-lg bg-white hover:bg-pink-50 text-pink-700 border border-pink-300 text-[10px] font-extrabold flex items-center justify-center gap-1 active:scale-95 transition"
             >
               <span>⏪</span>
               <span id="snapPrevEndBtnLabel">直前の終了 (08:00) から開始にする</span>
@@ -463,78 +457,77 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-          <div class="bg-pink-50/70 p-3 rounded-2xl border border-pink-100">
-            <label class="block text-[10px] font-extrabold text-pink-700 mb-1">見積もり (分)</label>
-            <input type="number" id="taskDurationInput" min="0" max="600" value="15" class="w-full px-2 py-1 rounded-xl border border-pink-200 bg-white font-black text-center text-purple-700 outline-none" />
+        <!-- 見積もり・実績＋クイック加算 -->
+        <div class="space-y-1.5">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-pink-50/70 px-2.5 py-1.5 rounded-xl border border-pink-100 flex items-center justify-between gap-1.5">
+              <span class="text-[10px] font-extrabold text-pink-700 shrink-0">見積(分)</span>
+              <input type="number" id="taskDurationInput" min="0" max="600" value="15" class="w-16 px-1.5 py-0.5 rounded-lg border border-pink-200 bg-white font-black text-center text-purple-700 outline-none" />
+            </div>
+            <div id="editActualWrap" class="bg-purple-50/70 px-2.5 py-1.5 rounded-xl border border-purple-100 flex items-center justify-between gap-1.5">
+              <span class="text-[10px] font-extrabold text-purple-700 shrink-0">実績(分)</span>
+              <input
+                type="number"
+                id="taskActualInput"
+                min="0"
+                max="600"
+                value="0"
+                oninput="handleActualMinutesManualChange()"
+                class="w-16 px-1.5 py-0.5 rounded-lg border border-purple-200 bg-white font-black text-center text-pink-700 outline-none"
+              />
+            </div>
           </div>
-          <div id="editActualWrap" class="bg-purple-50/70 p-3 rounded-2xl border border-purple-100">
-            <label class="block text-[10px] font-extrabold text-purple-700 mb-1">実績 (分)</label>
-            <input
-              type="number"
-              id="taskActualInput"
-              min="0"
-              max="600"
-              value="0"
-              oninput="handleActualMinutesManualChange()"
-              class="w-full px-2 py-1 rounded-xl border border-purple-200 bg-white font-black text-center text-pink-700 outline-none"
-            />
-          </div>
-        </div>
 
-        <div class="flex gap-1">
-          <button type="button" onclick="addModalDuration(5)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+5</button>
-          <button type="button" onclick="addModalDuration(10)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+10</button>
-          <button type="button" onclick="addModalDuration(15)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+15</button>
-          <button type="button" onclick="addModalDuration(60)" class="flex-1 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700">+1h</button>
-          <button type="button" onclick="document.getElementById('taskDurationInput').value=0" class="px-3 py-1.5 bg-rose-100 rounded-xl text-[11px] font-extrabold text-rose-700">0</button>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-extrabold text-stone-500 mb-1">🎯 目標時刻（ドラム入力）</label>
-          <div class="flex items-center gap-2">
-            <input type="time" id="taskDeadlineInput" class="flex-1 min-w-0 px-3 py-1.5 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none font-bold bg-white" />
-            <button type="button" onclick="document.getElementById('taskDeadlineInput').value=''" class="px-2.5 py-2 rounded-xl bg-stone-100 text-stone-500 text-xs font-bold shrink-0">クリア</button>
-            <label class="flex items-center gap-1 cursor-pointer bg-rose-50 border border-rose-200 px-3 py-2 rounded-2xl shrink-0">
-              <input type="checkbox" id="taskAlarmInput" class="w-4 h-4 rounded text-pink-600" />
-              <span class="text-xs font-bold text-rose-700">🔔</span>
-            </label>
+          <div class="flex gap-1">
+            <button type="button" onclick="addModalDuration(5)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+5</button>
+            <button type="button" onclick="addModalDuration(10)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+10</button>
+            <button type="button" onclick="addModalDuration(15)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+15</button>
+            <button type="button" onclick="addModalDuration(60)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+1h</button>
+            <button type="button" onclick="document.getElementById('taskDurationInput').value=0" class="px-2.5 py-1 bg-rose-100 rounded-lg text-[10px] font-extrabold text-rose-700">0</button>
           </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-extrabold text-stone-500 mb-1">💬 メモ</label>
-          <textarea id="taskCommentInput" rows="2" placeholder="ひとことメモ..." class="w-full px-3.5 py-2 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none"></textarea>
+        <!-- 目標時刻 -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[10px] font-extrabold text-stone-500 shrink-0">🎯 目標</span>
+          <input type="time" id="taskDeadlineInput" class="flex-1 min-w-0 px-2.5 py-1 rounded-xl border border-pink-200 focus:border-pink-400 outline-none font-bold bg-white" />
+          <button type="button" onclick="document.getElementById('taskDeadlineInput').value=''" class="px-2 py-1.5 rounded-lg bg-stone-100 text-stone-500 text-[10px] font-bold shrink-0">クリア</button>
+          <label class="flex items-center gap-1 cursor-pointer bg-rose-50 border border-rose-200 px-2 py-1.5 rounded-lg shrink-0">
+            <input type="checkbox" id="taskAlarmInput" class="w-3.5 h-3.5 rounded text-pink-600" />
+            <span class="text-[11px] font-bold text-rose-700">🔔</span>
+          </label>
         </div>
 
-        <div>
-          <div class="flex items-center gap-3">
-            <label class="px-3.5 py-2 rounded-xl bg-pink-50 text-pink-700 border border-pink-200 text-xs font-bold cursor-pointer flex items-center gap-1.5">
-              <i data-lucide="camera" class="w-4 h-4"></i>
+        <!-- メモ＆写真 -->
+        <div class="space-y-1.5">
+          <div class="flex items-start gap-1.5">
+            <textarea id="taskCommentInput" rows="1" placeholder="💬 ひとことメモ..." class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-pink-200 focus:border-pink-400 outline-none resize-none"></textarea>
+            <label class="px-2.5 py-2 rounded-xl bg-pink-50 text-pink-700 border border-pink-200 text-[11px] font-bold cursor-pointer flex items-center gap-1 shrink-0">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
               <span>写真</span>
               <input type="file" id="taskImageFile" accept="image/*" onchange="handleModalImageUpload(event)" class="hidden" />
             </label>
-            <button type="button" id="removeModalImageBtn" onclick="clearModalImage()" class="hidden text-xs text-rose-500 font-bold">削除</button>
+            <button type="button" id="removeModalImageBtn" onclick="clearModalImage()" class="hidden px-2 py-2 text-[10px] text-rose-500 font-bold shrink-0">削除</button>
           </div>
-          <div id="modalImagePreviewWrap" class="hidden mt-2 rounded-2xl overflow-hidden border border-pink-200 max-h-36">
-            <img id="modalImagePreview" src="" alt="プレビュー" class="w-full h-36 object-cover" />
+          <div id="modalImagePreviewWrap" class="hidden rounded-xl overflow-hidden border border-pink-200 max-h-24">
+            <img id="modalImagePreview" src="" alt="プレビュー" class="w-full h-24 object-cover" />
           </div>
         </div>
 
-        <div id="modalNewButtons" class="grid grid-cols-2 gap-2 pt-1">
-          <button type="button" onclick="submitTaskModal(true)" class="py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-extrabold text-xs shadow-sm">
+        <div id="modalNewButtons" class="grid grid-cols-2 gap-2 pt-0.5">
+          <button type="button" onclick="submitTaskModal(true)" class="py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-extrabold text-xs shadow-sm">
             ▶ すぐ開始
           </button>
-          <button type="button" onclick="submitTaskModal(false)" class="py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-extrabold text-xs shadow-sm">
+          <button type="button" onclick="submitTaskModal(false)" class="py-2.5 rounded-2xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-extrabold text-xs shadow-sm">
             ＋ 追加
           </button>
         </div>
 
-        <div id="modalEditButtons" class="hidden flex items-center gap-2 pt-1">
-          <button type="button" onclick="deleteCurrentEditingTask()" class="px-4 py-3 rounded-2xl bg-rose-50 text-rose-600 font-extrabold text-xs">
+        <div id="modalEditButtons" class="hidden flex items-center gap-2 pt-0.5">
+          <button type="button" onclick="deleteCurrentEditingTask()" class="px-3.5 py-2.5 rounded-2xl bg-rose-50 text-rose-600 font-extrabold text-xs">
             削除
           </button>
-          <button type="button" onclick="submitTaskModal(false)" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-sm">
+          <button type="button" onclick="submitTaskModal(false)" class="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-sm">
             保存する
           </button>
         </div>
@@ -877,7 +870,7 @@
 
   let calendarViewYear = new Date().getFullYear();
   let calendarViewMonth = new Date().getMonth();
-  let calendarPurpose = 'header'; // 'header' | 'taskEdit'
+  let calendarPurpose = 'header';
   let dateTapTimer = null;
   let lastDateTapMs = 0;
 
@@ -2774,7 +2767,7 @@
     const badge = document.getElementById('taskTargetDateDiffBadge');
     if (dateStr !== currentDate) {
       badge.classList.remove('hidden');
-      badge.textContent = `${dateStr.slice(5).replace('-', '/')} へ移動`;
+      badge.textContent = `${dateStr.slice(5).replace('-', '/')} へ`;
     } else {
       badge.classList.add('hidden');
     }
@@ -2977,7 +2970,6 @@
         t.comment = comment;
         t.image = modalImageBase64;
 
-        // 日付が変更された場合は、元の日のリストから抜いて移動先の日に引っ越しさせる
         if (targetDateStr !== currentDate) {
           tasksByDate[currentDate] = tasks.filter(x => x.id !== editId);
           syncSplitGroups(tasksByDate[currentDate]);
@@ -3193,7 +3185,6 @@
     const grid = document.getElementById('calendarDaysGrid');
     grid.innerHTML = '';
 
-    // 月曜始まりオフセット（月=0, 火=1, ..., 土=5, 日=6）
     const rawFirstDow = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
     const mondayOffset = (rawFirstDow + 6) % 7;
     const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
@@ -3213,7 +3204,7 @@
       const isSelected = dateStr === activeHighlightDate;
       const isToday = dateStr === todayStr;
       const hasSavedTasks = Array.isArray(tasksByDate[dateStr]) && tasksByDate[dateStr].length > 0;
-      const dow = new Date(calendarViewYear, calendarViewMonth, day).getDay(); // 0=日, 6=土
+      const dow = new Date(calendarViewYear, calendarViewMonth, day).getDay();
 
       const btn = document.createElement('button');
       btn.type = 'button';
