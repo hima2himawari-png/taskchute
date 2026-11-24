@@ -322,12 +322,13 @@
     </div>
   </div>
 
-  <div id="calendarModal" onclick="if(event.target===this) closeCalendarModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
+  <!-- 月曜始まりカレンダー（ヘッダー＆リスケ共通） -->
+  <div id="calendarModal" onclick="if(event.target===this) closeCalendarModal()" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-[380px] rounded-3xl shadow-2xl border-t-4 border-pink-400 overflow-hidden">
       <div class="px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between">
         <div class="flex items-center gap-1.5">
           <span class="text-base">📅</span>
-          <h2 class="text-sm font-extrabold text-stone-800">日付を選ぶ</h2>
+          <h2 id="calendarModalTitle" class="text-sm font-extrabold text-stone-800">日付を選ぶ</h2>
         </div>
         <button type="button" onclick="closeCalendarModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -346,19 +347,19 @@
         </div>
 
         <div class="grid grid-cols-7 text-center text-[11px] font-extrabold">
-          <span class="text-rose-500">日</span>
           <span class="text-stone-500">月</span>
           <span class="text-stone-500">火</span>
           <span class="text-stone-500">水</span>
           <span class="text-stone-500">木</span>
           <span class="text-stone-500">金</span>
           <span class="text-purple-500">土</span>
+          <span class="text-rose-500">日</span>
         </div>
 
         <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1"></div>
 
         <div class="pt-1 flex items-center justify-between gap-2">
-          <span class="text-[10px] font-bold text-stone-400">💡 日付をダブルタップでも今日に戻るよ</span>
+          <span id="calendarHintText" class="text-[10px] font-bold text-stone-400">💡 日付をダブルタップでも今日に戻るよ</span>
           <button type="button" onclick="selectCalendarDate(getTodayStr())" class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-extrabold shadow-2xs active:scale-95 transition shrink-0">
             今日へ移動
           </button>
@@ -378,10 +379,43 @@
 
       <form id="taskForm" onsubmit="event.preventDefault(); submitTaskModal(false);" class="p-5 pt-3.5 overflow-y-auto space-y-3">
         <input type="hidden" id="editTaskId" />
+        <input type="hidden" id="taskTargetDateInput" />
 
         <div>
           <label class="block text-[11px] font-extrabold text-stone-500 mb-1">タスク名</label>
           <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="w-full px-3.5 py-2 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none font-bold" />
+        </div>
+
+        <!-- 実行日（月曜始まりカレンダー＆ワンタップリスケ） -->
+        <div id="editTaskDateSection" class="bg-purple-50/60 p-3 rounded-2xl border border-purple-200/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold text-purple-800 flex items-center gap-1">
+              <span>📅</span>
+              <span>実行日（別の日へ移動）</span>
+            </span>
+            <span id="taskTargetDateDiffBadge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white">
+              移動予約中
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onclick="openCalendarModalForTask()"
+            class="w-full py-2 px-3 rounded-xl bg-white hover:bg-purple-50/70 border border-purple-200 flex items-center justify-between text-xs font-extrabold text-stone-800 shadow-2xs active:scale-[0.99] transition"
+          >
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="calendar-days" class="w-4 h-4 text-purple-500"></i>
+              <span id="taskTargetDateLabel">2026年11月24日 (火)</span>
+            </span>
+            <span class="text-[11px] font-bold text-purple-600">カレンダーで選ぶ ▾</span>
+          </button>
+
+          <div class="grid grid-cols-4 gap-1">
+            <button type="button" onclick="shiftModalTargetDate(0)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-stone-600 active:scale-90 transition">今日</button>
+            <button type="button" onclick="shiftModalTargetDate(1)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-pink-700 active:scale-90 transition">明日</button>
+            <button type="button" onclick="shiftModalTargetDate(3)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-pink-700 active:scale-90 transition">3日後</button>
+            <button type="button" onclick="shiftModalTargetDate(7)" class="py-1.5 rounded-xl bg-white hover:bg-pink-50 border border-purple-200/80 text-[11px] font-extrabold text-purple-700 active:scale-90 transition">来週</button>
+          </div>
         </div>
 
         <div id="editTimeRangeSection" class="bg-gradient-to-r from-pink-50/80 via-fuchsia-50/60 to-purple-50/80 p-3 rounded-2xl border border-pink-200/80 space-y-2.5">
@@ -843,6 +877,7 @@
 
   let calendarViewYear = new Date().getFullYear();
   let calendarViewMonth = new Date().getMonth();
+  let calendarPurpose = 'header'; // 'header' | 'taskEdit'
   let dateTapTimer = null;
   let lastDateTapMs = 0;
 
@@ -866,6 +901,11 @@
   function parseDateKey(dateStr) {
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d);
+  }
+
+  function formatDateWithDow(dateStr) {
+    const dt = parseDateKey(dateStr);
+    return `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 (${DAY_NAMES[dt.getDay()]})`;
   }
 
   function addDays(dateStr, diff) {
@@ -1642,9 +1682,8 @@
     const nowMs = now.getTime();
     const todayStr = getTodayStr();
 
-    const dt = parseDateKey(currentDate);
     const dateLabelEl = document.getElementById('currentDateLabel');
-    dateLabelEl.textContent = `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 (${DAY_NAMES[dt.getDay()]})`;
+    dateLabelEl.textContent = formatDateWithDow(currentDate);
     dateLabelEl.className = currentDate === todayStr
       ? 'text-xs sm:text-sm font-extrabold text-pink-700 tracking-tight'
       : 'text-xs sm:text-sm font-extrabold text-stone-700 tracking-tight';
@@ -2729,12 +2768,43 @@
     showToast('削除しました');
   }
 
+  function setModalTargetDate(dateStr) {
+    document.getElementById('taskTargetDateInput').value = dateStr;
+    document.getElementById('taskTargetDateLabel').textContent = formatDateWithDow(dateStr);
+    const badge = document.getElementById('taskTargetDateDiffBadge');
+    if (dateStr !== currentDate) {
+      badge.classList.remove('hidden');
+      badge.textContent = `${dateStr.slice(5).replace('-', '/')} へ移動`;
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
+  function shiftModalTargetDate(diffFromCurrent) {
+    const targetStr = addDays(currentDate, diffFromCurrent);
+    setModalTargetDate(targetStr);
+  }
+
+  function openCalendarModalForTask() {
+    const currentTarget = document.getElementById('taskTargetDateInput').value || currentDate;
+    const dt = parseDateKey(currentTarget);
+    calendarPurpose = 'taskEdit';
+    calendarViewYear = dt.getFullYear();
+    calendarViewMonth = dt.getMonth();
+    document.getElementById('calendarModalTitle').textContent = '移動先の日付を選ぶ（月曜始まり）';
+    document.getElementById('calendarHintText').textContent = '📅 移動したい日付をタップしてね';
+    renderCalendarGrid();
+    document.getElementById('calendarModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
   function openEditTaskModal(taskId) {
     const tasks = ensureTasksForDate(currentDate);
     const t = tasks.find(x => x.id === taskId);
     if (!t) return;
 
     document.getElementById('editTaskId').value = t.id;
+    setModalTargetDate(currentDate);
     document.getElementById('taskTitleInput').value = t.title;
     document.getElementById('taskDurationInput').value = t.groupId ? (t.originalEst || t.duration) : t.duration;
     document.getElementById('taskActualInput').value = Math.round(getTaskElapsedSeconds(t) / 60);
@@ -2778,10 +2848,7 @@
     const snapWrap = document.getElementById('snapPrevEndWrap');
     if (modalPrevEndTimeMs) {
       const prevHHMM = formatHHMM(modalPrevEndTimeMs);
-      document.getElementById('snapPrevEndBtnLabel').textContent =
-        t.status === 'pending'
-          ? `⏪ 直前の終了 (${prevHHMM}) から開始にする`
-          : `⏪ 直前の終了 (${prevHHMM}) から開始にする`;
+      document.getElementById('snapPrevEndBtnLabel').textContent = `⏪ 直前の終了 (${prevHHMM}) から開始にする`;
       snapWrap.classList.remove('hidden');
     } else {
       snapWrap.classList.add('hidden');
@@ -2799,13 +2866,15 @@
     document.getElementById('modalNewButtons').classList.add('hidden');
     document.getElementById('modalEditButtons').classList.remove('hidden');
     document.getElementById('taskModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
   }
 
   function handleStartOrEndTimeChange() {
+    const targetDateStr = document.getElementById('taskTargetDateInput').value || currentDate;
     const startVal = document.getElementById('taskStartTimeInput').value;
     const endVal = document.getElementById('taskEndTimeInput').value;
-    const startMs = combineDateAndHHMM(currentDate, startVal);
-    let endMs = combineDateAndHHMM(currentDate, endVal);
+    const startMs = combineDateAndHHMM(targetDateStr, startVal);
+    let endMs = combineDateAndHHMM(targetDateStr, endVal);
 
     if (startMs && endMs) {
       if (endMs < startMs) {
@@ -2820,10 +2889,11 @@
   }
 
   function handleActualMinutesManualChange() {
+    const targetDateStr = document.getElementById('taskTargetDateInput').value || currentDate;
     const startVal = document.getElementById('taskStartTimeInput').value;
     const endCol = document.getElementById('taskEndTimeCol');
     if (endCol.classList.contains('hidden')) return;
-    const startMs = combineDateAndHHMM(currentDate, startVal);
+    const startMs = combineDateAndHHMM(targetDateStr, startVal);
     if (!startMs) return;
     const min = Math.max(0, Number(document.getElementById('taskActualInput').value) || 0);
     document.getElementById('taskEndTimeInput').value = formatHHMM(startMs + min * 60000);
@@ -2843,6 +2913,7 @@
 
   function submitTaskModal(startImmediately) {
     const editId = document.getElementById('editTaskId').value;
+    const targetDateStr = document.getElementById('taskTargetDateInput').value || currentDate;
     const title = document.getElementById('taskTitleInput').value.trim();
     const duration = Math.max(0, Number(document.getElementById('taskDurationInput').value) || 0);
     const actualMin = Math.max(0, Number(document.getElementById('taskActualInput').value) || 0);
@@ -2869,8 +2940,8 @@
 
         const startStr = document.getElementById('taskStartTimeInput').value;
         const endStr = document.getElementById('taskEndTimeInput').value;
-        const parsedStartMs = combineDateAndHHMM(currentDate, startStr);
-        let parsedEndMs = combineDateAndHHMM(currentDate, endStr);
+        const parsedStartMs = combineDateAndHHMM(targetDateStr, startStr);
+        let parsedEndMs = combineDateAndHHMM(targetDateStr, endStr);
 
         if (t.status === 'completed') {
           if (parsedStartMs && parsedEndMs) {
@@ -2890,7 +2961,7 @@
             t.actualStart = parsedStartMs;
             t.elapsedSeconds = 0;
           }
-        } else if (t.status === 'pending' && parsedStartMs) {
+        } else if (t.status === 'pending' && parsedStartMs && targetDateStr === currentDate) {
           const running = tasks.find(x => x.status === 'running' && x.id !== t.id);
           if (running) {
             splitAndPauseRunningTask(running, t.id);
@@ -2905,6 +2976,29 @@
         t.alarm = alarm;
         t.comment = comment;
         t.image = modalImageBase64;
+
+        // 日付が変更された場合は、元の日のリストから抜いて移動先の日に引っ越しさせる
+        if (targetDateStr !== currentDate) {
+          tasksByDate[currentDate] = tasks.filter(x => x.id !== editId);
+          syncSplitGroups(tasksByDate[currentDate]);
+
+          const destList = ensureTasksForDate(targetDateStr);
+          if (t.status === 'running') {
+            t.status = 'pending';
+            t.actualStart = null;
+            t.actualEnd = null;
+            t.elapsedSeconds = 0;
+          }
+          t.groupId = null;
+          destList.push(t);
+
+          saveTasks();
+          closeTaskModal();
+          renderAll();
+          const dt = parseDateKey(targetDateStr);
+          showToast(`${dt.getMonth() + 1}月${dt.getDate()}日(${DAY_NAMES[dt.getDay()]})へ移動しました📅`);
+          return;
+        }
       }
       saveTasks();
       closeTaskModal();
@@ -2914,8 +3008,9 @@
     }
 
     const now = Date.now();
+    const destTasks = ensureTasksForDate(targetDateStr);
     const newTask = {
-      id: `t_${currentDate}_${now}`,
+      id: `t_${targetDateStr}_${now}`,
       taskType: 'single',
       routineId: null,
       groupId: null,
@@ -2924,25 +3019,27 @@
       duration,
       deadline,
       alarm,
-      status: startImmediately ? 'running' : 'pending',
-      actualStart: startImmediately ? now : null,
+      status: (startImmediately && targetDateStr === currentDate) ? 'running' : 'pending',
+      actualStart: (startImmediately && targetDateStr === currentDate) ? now : null,
       actualEnd: null,
       elapsedSeconds: 0,
       comment,
       image: modalImageBase64
     };
 
-    if (startImmediately) {
-      const running = tasks.find(x => x.status === 'running');
+    if (startImmediately && targetDateStr === currentDate) {
+      const running = destTasks.find(x => x.status === 'running');
       if (running) {
-        const rIdx = tasks.findIndex(x => x.id === running.id);
-        tasks.splice(rIdx + 1, 0, newTask);
+        const rIdx = destTasks.findIndex(x => x.id === running.id);
+        destTasks.splice(rIdx + 1, 0, newTask);
         splitAndPauseRunningTask(running, newTask.id);
       } else {
-        insertTaskAfterCurrentAnchor(tasks, newTask);
+        insertTaskAfterCurrentAnchor(destTasks, newTask);
       }
+    } else if (targetDateStr === currentDate) {
+      insertTaskAfterCurrentAnchor(destTasks, newTask);
     } else {
-      insertTaskAfterCurrentAnchor(tasks, newTask);
+      destTasks.push(newTask);
     }
 
     saveTasks();
@@ -3065,8 +3162,11 @@
 
   function openCalendarModal() {
     const dt = parseDateKey(currentDate);
+    calendarPurpose = 'header';
     calendarViewYear = dt.getFullYear();
     calendarViewMonth = dt.getMonth();
+    document.getElementById('calendarModalTitle').textContent = '日付を選ぶ';
+    document.getElementById('calendarHintText').textContent = '💡 日付をダブルタップでも今日に戻るよ';
     renderCalendarGrid();
     document.getElementById('calendarModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -3093,11 +3193,16 @@
     const grid = document.getElementById('calendarDaysGrid');
     grid.innerHTML = '';
 
-    const firstDayDow = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+    // 月曜始まりオフセット（月=0, 火=1, ..., 土=5, 日=6）
+    const rawFirstDow = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+    const mondayOffset = (rawFirstDow + 6) % 7;
     const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
     const todayStr = getTodayStr();
+    const activeHighlightDate = calendarPurpose === 'taskEdit'
+      ? (document.getElementById('taskTargetDateInput').value || currentDate)
+      : currentDate;
 
-    for (let i = 0; i < firstDayDow; i++) {
+    for (let i = 0; i < mondayOffset; i++) {
       const blank = document.createElement('div');
       blank.className = 'h-10';
       grid.appendChild(blank);
@@ -3105,10 +3210,10 @@
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const isSelected = dateStr === currentDate;
+      const isSelected = dateStr === activeHighlightDate;
       const isToday = dateStr === todayStr;
       const hasSavedTasks = Array.isArray(tasksByDate[dateStr]) && tasksByDate[dateStr].length > 0;
-      const dow = (firstDayDow + day - 1) % 7;
+      const dow = new Date(calendarViewYear, calendarViewMonth, day).getDay(); // 0=日, 6=土
 
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -3135,6 +3240,11 @@
   }
 
   function selectCalendarDate(dateStr) {
+    if (calendarPurpose === 'taskEdit') {
+      setModalTargetDate(dateStr);
+      closeCalendarModal();
+      return;
+    }
     currentDate = dateStr;
     ensureTasksForDate(currentDate);
     closeCalendarModal();
