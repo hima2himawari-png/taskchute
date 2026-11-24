@@ -21,7 +21,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* iPhone Safariで入力欄・ドラムピッカータップ時の勝手な拡大を完全防止（16px必須） */
     input, textarea, select {
       font-size: 16px !important;
       line-height: 1.4;
@@ -30,7 +29,6 @@
       -webkit-touch-callout: default !important;
     }
 
-    /* iOS標準のtimeドラムピッカーを押しやすく整形 */
     input[type="time"] {
       -webkit-appearance: none;
       appearance: none;
@@ -58,7 +56,6 @@
       flex-direction: column;
     }
 
-    /* スワイプ削除コンテナ：スワイプ中以外は赤い背景を完全に隠す */
     .swipe-wrapper {
       position: relative;
       overflow: hidden;
@@ -85,7 +82,6 @@
       display: flex;
     }
 
-    /* カード基本スタイル & 3色分け（白・淡ピンク・薄紫） */
     .task-card {
       position: relative;
       z-index: 2;
@@ -127,13 +123,11 @@
       border-color: #ec4899;
     }
 
-    /* 完了カードは元の色のまま綺麗に半透明にして主張を抑える */
     .task-card.is-completed {
       opacity: 0.58;
       box-shadow: none;
     }
 
-    /* コメント一覧からのジャンプ時のハイライト演出 */
     .swipe-wrapper.jump-highlight {
       box-shadow: 0 0 0 3px #ec4899, 0 10px 25px rgba(236, 72, 153, 0.25);
     }
@@ -141,7 +135,6 @@
       opacity: 0.94;
     }
 
-    /* 長押しドラッグ中 */
     .swipe-wrapper.is-dragging,
     .routine-item-card.is-dragging {
       opacity: 0.94;
@@ -180,7 +173,6 @@
 <body>
 
 <div class="app-shell" id="app">
-  <!-- トップヘッダー（グリーン・水色ゼロ、ローズ＆ラベンダー統一） -->
   <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-pink-100 px-3 pt-3 pb-2.5 shadow-2xs">
     <div class="flex items-center justify-between mb-2 gap-1">
       <div class="flex items-center gap-1.5 min-w-0">
@@ -209,7 +201,6 @@
       </div>
     </div>
 
-    <!-- 日付ナビゲーション（シングルタップ＝カレンダー / ダブルタップ＝今日に戻る） -->
     <div class="flex items-center justify-between bg-gradient-to-r from-pink-50/90 via-fuchsia-50/70 to-purple-50/90 border border-pink-100 rounded-2xl p-1 mb-2">
       <button type="button" onclick="changeDate(-1)" aria-label="前日" class="w-8 h-7 rounded-xl bg-white text-pink-600 font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
         <i data-lucide="chevron-left" class="w-4 h-4"></i>
@@ -231,7 +222,6 @@
       </button>
     </div>
 
-    <!-- サマリーバー -->
     <div class="grid grid-cols-4 gap-1 bg-gradient-to-r from-[#34192c] via-[#3f1d38] to-[#2e1a36] text-white rounded-2xl px-2.5 py-2 text-center shadow-inner">
       <div>
         <div class="text-[9px] text-pink-200/80 font-bold">現在</div>
@@ -252,13 +242,10 @@
     </div>
   </header>
 
-  <!-- メインタイムライン -->
   <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-36 space-y-2.5 overflow-y-auto"></main>
 
-  <!-- 下部固定クイック入力ドック（2行のスリム設計） -->
   <div class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
     <div class="max-w-[480px] mx-auto px-3 pt-2.5 pb-4 bg-white/95 backdrop-blur-md border-t border-pink-100 shadow-[0_-8px_28px_rgba(190,24,93,0.09)] rounded-t-3xl pointer-events-auto space-y-2">
-      <!-- 1行目：タスク名入力 & すぐ開始 & 追加 -->
       <div class="flex items-center gap-1.5">
         <input
           type="text"
@@ -288,7 +275,6 @@
         </button>
       </div>
 
-      <!-- 2行目：見積もり時間クイック調整ピル & 種別切替 -->
       <div class="flex items-center justify-between gap-1 overflow-x-auto">
         <div class="flex items-center gap-1 shrink-0">
           <span id="quickDurationDisplay" class="text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-1 rounded-xl border border-purple-200 tabular-nums">15分</span>
@@ -311,7 +297,6 @@
     </div>
   </div>
 
-  <!-- トースト通知 -->
   <div id="toastBox" class="fixed top-28 left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
     <div class="bg-[#34192c]/95 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap border border-pink-400/30">
       <span>🌸</span>
@@ -319,7 +304,6 @@
     </div>
   </div>
 
-  <!-- 💬 コメント・写真ログ一覧モーダル -->
   <div id="commentLogModal" onclick="if(event.target===this) closeCommentLogModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-pink-400">
       <div class="flex items-center justify-between mb-2 shrink-0">
@@ -338,7 +322,6 @@
     </div>
   </div>
 
-  <!-- 📅 カレンダーモーダル（日付シングルタップで開閉） -->
   <div id="calendarModal" onclick="if(event.target===this) closeCalendarModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-[380px] rounded-3xl shadow-2xl border-t-4 border-pink-400 overflow-hidden">
       <div class="px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between">
@@ -384,7 +367,6 @@
     </div>
   </div>
 
-  <!-- 🌸 タスク詳細・編集モーダル（開始・終了時刻ドラム入力 ＆ 直前の終了時刻から開始ボタン付き） -->
   <div id="taskModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
       <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between shrink-0">
@@ -402,7 +384,6 @@
           <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="w-full px-3.5 py-2 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none font-bold" />
         </div>
 
-        <!-- ⏱ 開始時刻・終了時刻のドラム入力セクション -->
         <div id="editTimeRangeSection" class="bg-gradient-to-r from-pink-50/80 via-fuchsia-50/60 to-purple-50/80 p-3 rounded-2xl border border-pink-200/80 space-y-2.5">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-extrabold text-pink-800 flex items-center gap-1">
@@ -435,7 +416,6 @@
             </div>
           </div>
 
-          <!-- スタート押し忘れ救済：直前のタスクの終了時刻から開始ボタン -->
           <div id="snapPrevEndWrap" class="hidden pt-0.5">
             <button
               type="button"
@@ -528,7 +508,6 @@
     </div>
   </div>
 
-  <!-- ✨ その場でルーチン化モーダル -->
   <div id="taskToRoutineModal" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-[460px] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t-4 border-purple-400 max-h-[85dvh] flex flex-col overflow-hidden">
       <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-purple-100 flex items-center justify-between shrink-0">
@@ -617,7 +596,6 @@
     </div>
   </div>
 
-  <!-- ✨ ルーチン一覧＆編集モーダル（連番なし・実績回数＆平均時間表示付き） -->
   <div id="routineModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-purple-400">
       <div class="flex items-center justify-between mb-2.5 shrink-0">
@@ -635,7 +613,6 @@
         </div>
       </div>
 
-      <!-- 上部アクションバー -->
       <div class="grid grid-cols-2 gap-1.5 mb-2.5 shrink-0">
         <button type="button" id="routineToggleNewBtn" onclick="toggleRoutineFormDrawer()" class="py-2 px-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-xs shadow-2xs flex items-center justify-center gap-1 active:scale-95 transition">
           <span>＋</span>
@@ -647,7 +624,6 @@
         </button>
       </div>
 
-      <!-- 折りたたみ式：新規・編集フォーム -->
       <form id="routineFormBox" onsubmit="saveRoutineForm(event)" class="hidden bg-gradient-to-r from-pink-50/90 to-purple-50/90 p-3 rounded-2xl border border-pink-200 mb-2.5 space-y-2.5 shrink-0 max-h-[56dvh] overflow-y-auto">
         <input type="hidden" id="editingRoutineId" value="" />
 
@@ -658,7 +634,6 @@
           </button>
         </div>
 
-        <!-- 編集中のルーチンの過去実績統計バナー -->
         <div id="routineEditStatsBanner" class="hidden flex items-center justify-between bg-white/90 border border-purple-200 rounded-xl px-3 py-1.5 text-[11px]">
           <span id="routineEditStatsText" class="font-extrabold text-purple-800">📊 これまで 0回 実施</span>
           <button type="button" id="applyAvgDurationBtn" onclick="applyAverageDurationToRoutine()" class="px-2 py-0.5 rounded-lg bg-pink-100 text-pink-700 font-extrabold text-[10px] active:scale-90 transition">
@@ -724,7 +699,6 @@
     </div>
   </div>
 
-  <!-- 設定＆バックアップモーダル -->
   <div id="settingsModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3 border-t-4 border-pink-400">
       <div class="flex items-center justify-between">
@@ -769,7 +743,6 @@
     </div>
   </div>
 
-  <!-- クイックメモ・写真モーダル -->
   <div id="quickNoteModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
       <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between shrink-0">
@@ -800,9 +773,6 @@
 </div>
 
 <script>
-  // ============================================================================
-  // 0. ホーム画面用カスタムアイコン（🌸）＆ PWAマニフェストの自動生成
-  // ============================================================================
   function generateSakuraAppIconAndManifest() {
     try {
       const canvas = document.createElement('canvas');
@@ -848,9 +818,6 @@
     } catch (e) {}
   }
 
-  // ============================================================================
-  // 1. 状態管理・ユーティリティ・サンプルデータ
-  // ============================================================================
   const STORAGE_KEY_TASKS = 'ume_taskchute_v9_tasks';
   const STORAGE_KEY_ROUTINES = 'ume_taskchute_v9_routines';
   const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
@@ -866,7 +833,7 @@
   let routines = [];
   let currentDate = getTodayStr();
   let quickDurationValue = 15;
-  let quickTaskType = 'single'; // 'single' | 'carryover'
+  let quickTaskType = 'single';
   let modalImageBase64 = '';
   let quickNoteTargetId = null;
   let quickNoteImgBase64 = '';
@@ -1268,9 +1235,6 @@
     return list;
   }
 
-  // ============================================================================
-  // 2. 経過時間・直前の終了時刻取得・引き継ぎ中断・スケジュール計算
-  // ============================================================================
   function getTaskElapsedSeconds(task, nowMs = Date.now()) {
     if (task.status === 'running' && task.actualStart) {
       return (task.elapsedSeconds || 0) + Math.max(0, Math.floor((nowMs - task.actualStart) / 1000));
@@ -1458,9 +1422,6 @@
     el.value = (Number(el.value) || 0) + min;
   }
 
-  // ============================================================================
-  // 3. タスク操作（▶開始 / ■完了 / ⏸引き継ぎ中断 / 完了時▶複製開始）
-  // ============================================================================
   function startOrCompleteTask(taskId) {
     const tasks = ensureTasksForDate(currentDate);
     const target = tasks.find(t => t.id === taskId);
@@ -1587,19 +1548,6 @@
     showToast('削除しました');
   }
 
-  function insertTaskAfterCurrentAnchor(tasks, newTask) {
-    const runningIdx = tasks.findIndex(t => t.status === 'running');
-    if (runningIdx !== -1) {
-      tasks.splice(runningIdx + 1, 0, newTask);
-      return;
-    }
-    let lastDoneIdx = -1;
-    tasks.forEach((t, i) => {
-      if (t.status === 'completed') lastDoneIdx = i;
-    });
-    tasks.splice(lastDoneIdx + 1, 0, newTask);
-  }
-
   function quickAddAndStart() {
     const input = document.getElementById('quickTaskTitleInput');
     const title = input.value.trim();
@@ -1631,7 +1579,9 @@
       tasks.splice(rIdx + 1, 0, newTask);
       splitAndPauseRunningTask(runningTask, newTask.id);
     } else {
-      insertTaskAfterCurrentAnchor(tasks, newTask);
+      let lastDoneIdx = -1;
+      tasks.forEach((t, i) => { if (t.status === 'completed') lastDoneIdx = i; });
+      tasks.splice(lastDoneIdx + 1, 0, newTask);
     }
 
     input.value = '';
@@ -1647,7 +1597,7 @@
     const duration = quickDurationValue > 0 ? quickDurationValue : 15;
     const tasks = ensureTasksForDate(currentDate);
 
-    const newTask = {
+    tasks.push({
       id: `t_${currentDate}_${Date.now()}`,
       taskType: quickTaskType,
       routineId: null,
@@ -1663,21 +1613,15 @@
       elapsedSeconds: 0,
       comment: '',
       image: ''
-    };
-
-    insertTaskAfterCurrentAnchor(tasks, newTask);
+    });
 
     input.value = '';
     quickDurationValue = 15;
     updateQuickDurationDisplay();
     saveTasks();
     renderAll();
-    showToast('すぐ下に追加しました🌸');
   }
 
-  // ============================================================================
-  // 4. 描画（renderAll）＆スワイプ削除・長押しドラッグ並び替え
-  // ============================================================================
   function renderAll() {
     const tasks = ensureTasksForDate(currentDate);
     const now = new Date();
@@ -1967,9 +1911,6 @@
     renderAll();
   }
 
-  // ============================================================================
-  // 5. 💬 コメント・写真ログ一覧モーダル＆実行日の詳細へのジャンプ
-  // ============================================================================
   function openCommentLogModal() {
     renderCommentLogList();
     document.getElementById('commentLogModal').classList.remove('hidden');
@@ -2064,9 +2005,6 @@
     }, 120);
   }
 
-  // ============================================================================
-  // 6. ルーチン化＆編集モーダル（連番なし・実績回数＆平均時間表示・連打重複防止）
-  // ============================================================================
   function openTaskToRoutineModal(taskId) {
     const tasks = ensureTasksForDate(currentDate);
     const task = tasks.find(t => t.id === taskId);
@@ -2450,4 +2388,12 @@
     document.getElementById('routineIntervalDaysInput').value = r.intervalDays || 45;
     setRoutineRepeatType(r.repeatType || 'weekly');
 
-    document.get
+    document.getElementById('routineFormModeLabel').textContent = `✏️ 編集中: ${r.title}`;
+    document.getElementById('routineFormBox').classList.remove('hidden');
+    renderRoutineList();
+  }
+
+  function resetRoutineForm() {
+    document.getElementById('editingRoutineId').value = '';
+    document.getElementById('routineTitleInput').value = '';
+    document.
