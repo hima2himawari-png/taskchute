@@ -1324,16 +1324,20 @@
     });
   }
 
-  function moveTaskToChronologicalActiveSlot(tasks, taskId) {
-    const curIdx = tasks.findIndex(t => t.id === taskId);
-    if (curIdx === -1) return;
-    const [item] = tasks.splice(curIdx, 1);
+  // 「完了済み」を上にまとめ、その直後に「実行中」、続けて「未開始」が並ぶように整列する
+  function moveTaskToChronologicalActiveSlot(tasks, activeTaskId) {
+    const completedList = tasks.filter(t => t.status === 'completed');
+    const runningList = tasks.filter(t => t.status === 'running' && t.id !== activeTaskId);
+    const activeTask = tasks.find(t => t.id === activeTaskId);
+    const pendingList = tasks.filter(t => t.status !== 'completed' && t.status !== 'running' && t.id !== activeTaskId);
 
-    let lastDoneIdx = -1;
-    tasks.forEach((t, i) => {
-      if (t.status === 'completed') lastDoneIdx = i;
-    });
-    tasks.splice(lastDoneIdx + 1, 0, item);
+    const ordered = [...completedList];
+    if (activeTask && activeTask.status !== 'completed') {
+      ordered.push(activeTask);
+    }
+    ordered.push(...runningList, ...pendingList);
+
+    tasks.splice(0, tasks.length, ...ordered);
   }
 
   function splitAndPauseRunningTask(runningTask, insertAfterTaskId) {
@@ -1512,23 +1516,25 @@
       return;
     }
 
-    // 飛びで実行した場合は、まず時系列の位置（直近完了タスクのすぐ真下）へ移動する
     const prevIdx = tasks.findIndex(t => t.id === taskId);
-    moveTaskToChronologicalActiveSlot(tasks, taskId);
-    const newIdx = tasks.findIndex(t => t.id === taskId);
-
     const runningTask = tasks.find(t => t.status === 'running' && t.id !== taskId);
     if (runningTask) {
-      const cont = splitAndPauseRunningTask(runningTask, target.id);
-      moveTaskToChronologicalActiveSlot(tasks, taskId);
-      showToast(`中断 → 残り${cont.duration}分の続きを作成⏸`);
-    } else if (prevIdx !== newIdx) {
-      showToast('時系列の位置に移動して開始しました▶');
+      splitAndPauseRunningTask(runningTask, target.id);
     }
 
     target.status = 'running';
     target.actualStart = now;
     target.actualEnd = null;
+
+    moveTaskToChronologicalActiveSlot(tasks, taskId);
+    const newIdx = tasks.findIndex(t => t.id === taskId);
+
+    if (runningTask) {
+      const cont = tasks.find(t => t.groupId === runningTask.groupId && t.status === 'pending');
+      showToast(cont ? `中断 → 残り${cont.duration}分の続きを作成⏸` : '切り替えました▶');
+    } else if (prevIdx !== newIdx) {
+      showToast('時系列の位置に移動して開始しました▶');
+    }
 
     syncSplitGroups(tasks);
     saveTasks();
@@ -1573,13 +1579,14 @@
       image: ''
     };
 
-    insertTaskAfterCurrentAnchor(tasks, duplicated);
-    moveTaskToChronologicalActiveSlot(tasks, duplicated.id);
+    const idx = tasks.findIndex(t => t.id === taskId);
+    tasks.splice(idx + 1, 0, duplicated);
 
     if (runningTask) {
       splitAndPauseRunningTask(runningTask, duplicated.id);
-      moveTaskToChronologicalActiveSlot(tasks, duplicated.id);
     }
+
+    moveTaskToChronologicalActiveSlot(tasks, duplicated.id);
 
     saveTasks();
     renderAll();
@@ -1638,10 +1645,11 @@
       const rIdx = tasks.findIndex(t => t.id === runningTask.id);
       tasks.splice(rIdx + 1, 0, newTask);
       splitAndPauseRunningTask(runningTask, newTask.id);
-      moveTaskToChronologicalActiveSlot(tasks, newTask.id);
     } else {
       insertTaskAfterCurrentAnchor(tasks, newTask);
     }
+
+    moveTaskToChronologicalActiveSlot(tasks, newTask.id);
 
     input.value = '';
     quickDurationValue = 15;
@@ -2971,16 +2979,15 @@
             t.elapsedSeconds = 0;
           }
         } else if (t.status === 'pending' && parsedStartMs && targetDateStr === currentDate) {
-          moveTaskToChronologicalActiveSlot(tasks, t.id);
           const running = tasks.find(x => x.status === 'running' && x.id !== t.id);
           if (running) {
             splitAndPauseRunningTask(running, t.id);
-            moveTaskToChronologicalActiveSlot(tasks, t.id);
           }
           t.status = 'running';
           t.actualStart = parsedStartMs;
           t.actualEnd = null;
           t.elapsedSeconds = 0;
+          moveTaskToChronologicalActiveSlot(tasks, t.id);
         }
 
         t.deadline = deadline;
@@ -3043,10 +3050,10 @@
         const rIdx = destTasks.findIndex(x => x.id === running.id);
         destTasks.splice(rIdx + 1, 0, newTask);
         splitAndPauseRunningTask(running, newTask.id);
-        moveTaskToChronologicalActiveSlot(destTasks, newTask.id);
       } else {
         insertTaskAfterCurrentAnchor(destTasks, newTask);
       }
+      moveTaskToChronologicalActiveSlot(destTasks, newTask.id);
     } else if (targetDateStr === currentDate) {
       insertTaskAfterCurrentAnchor(destTasks, newTask);
     } else {
