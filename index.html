@@ -21,6 +21,29 @@
       --bg-grad-end: #f6f0ff;
       --shell-bg: #fffbfc;
       --shell-shadow: rgba(190, 24, 93, 0.08);
+      --top-shadow: 0 -8px 28px rgba(190, 24, 93, 0.09);
+
+      --accent-1: #ec4899;
+      --accent-2: #a855f7;
+      --accent-text: #be185d;
+      --accent-text-strong: #9d174d;
+      --accent-sub-text: #7e22ce;
+
+      --surface-soft: #fdf2f8;
+      --surface-soft-hover: #fce7f3;
+      --surface-sub: #f5f3ff;
+      --surface-sub-hover: #ede9fe;
+      --border-soft: #fbcfe8;
+      --border-sub: #e9d5ff;
+
+      --badge-dur-bg: #f3e8ff;
+      --badge-dur-text: #6b21a8;
+      --badge-act-bg: #fce7f3;
+      --badge-act-text: #be185d;
+      --badge-dl-bg: #fff1f2;
+      --badge-dl-text: #e11d48;
+      --badge-dl-border: #fecdd3;
+
       --card-single-bg: #fdf2f8;
       --card-single-border: #fbcfe8;
       --card-routine-border: #f3e8ff;
@@ -35,27 +58,54 @@
       --summary-bg-1: #34192c;
       --summary-bg-2: #3f1d38;
       --summary-bg-3: #2e1a36;
+      --summary-est-text: #e9d5ff;
+      --summary-act-text: #f9a8d4;
     }
 
     body.theme-blue {
-      --bg-grad-start: #f0f9ff;
-      --bg-grad-end: #eef2ff;
-      --shell-bg: #f8fcff;
+      --bg-grad-start: #eff8ff;
+      --bg-grad-end: #eef4ff;
+      --shell-bg: #f7fbff;
       --shell-shadow: rgba(2, 132, 199, 0.09);
+      --top-shadow: 0 -8px 28px rgba(2, 132, 199, 0.1);
+
+      --accent-1: #0ea5e9;
+      --accent-2: #4f46e5;
+      --accent-text: #0369a1;
+      --accent-text-strong: #075985;
+      --accent-sub-text: #3730a3;
+
+      --surface-soft: #f0f9ff;
+      --surface-soft-hover: #e0f2fe;
+      --surface-sub: #eef2ff;
+      --surface-sub-hover: #e0e7ff;
+      --border-soft: #bae6fd;
+      --border-sub: #c7d2fe;
+
+      --badge-dur-bg: #e0e7ff;
+      --badge-dur-text: #3730a3;
+      --badge-act-bg: #e0f2fe;
+      --badge-act-text: #0369a1;
+      --badge-dl-bg: #eef2ff;
+      --badge-dl-text: #4338ca;
+      --badge-dl-border: #c7d2fe;
+
       --card-single-bg: #f0f9ff;
       --card-single-border: #bae6fd;
       --card-routine-border: #e0e7ff;
       --card-carry-bg: #eef2ff;
       --card-carry-border: #c7d2fe;
-      --running-shadow: rgba(14, 165, 233, 0.2);
-      --running-border: #0ea5e9;
+      --running-shadow: rgba(14, 165, 233, 0.22);
+      --running-border: #0284c7;
       --drag-shadow: rgba(3, 105, 161, 0.22);
-      --drag-border: #818cf8;
+      --drag-border: #6366f1;
       --drag-bg: #f0f9ff;
       --scroll-thumb: #7dd3fc;
-      --summary-bg-1: #162b3d;
-      --summary-bg-2: #1a334a;
-      --summary-bg-3: #1b2842;
+      --summary-bg-1: #13293d;
+      --summary-bg-2: #17334f;
+      --summary-bg-3: #1b2847;
+      --summary-est-text: #bae6fd;
+      --summary-act-text: #7dd3fc;
     }
 
     * {
@@ -81,7 +131,7 @@
     body {
       font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
       background: linear-gradient(160deg, var(--bg-grad-start) 0%, var(--bg-grad-end) 100%);
-      color: #3b2838;
+      color: #2b2638;
       margin: 0;
       padding: 0;
       overscroll-behavior-y: contain;
@@ -98,9 +148,114 @@
       flex-direction: column;
     }
 
+    .themed-header {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .themed-bottom-bar {
+      background-color: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid var(--border-soft);
+      box-shadow: var(--top-shadow);
+    }
+
+    .themed-icon-btn {
+      background-color: var(--surface-soft);
+      color: var(--accent-text);
+      border: 1px solid var(--border-soft);
+    }
+    .themed-icon-btn:hover {
+      background-color: var(--surface-soft-hover);
+    }
+
+    .themed-routine-btn {
+      background-image: linear-gradient(90deg, var(--surface-soft), var(--surface-sub));
+      color: var(--accent-sub-text);
+      border: 1px solid var(--border-sub);
+    }
+
+    .themed-date-pill {
+      background-image: linear-gradient(90deg, var(--surface-soft), var(--surface-sub));
+      border: 1px solid var(--border-soft);
+    }
+
+    .themed-date-nav-btn {
+      background-color: #ffffff;
+      color: var(--accent-text);
+    }
+
+    .themed-primary-btn {
+      background-image: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+      color: #ffffff;
+    }
+
+    .themed-secondary-btn {
+      background-color: var(--surface-sub);
+      color: var(--accent-sub-text);
+      border: 1px solid var(--border-sub);
+    }
+    .themed-secondary-btn:hover {
+      background-color: var(--surface-sub-hover);
+    }
+
+    .themed-chip-btn {
+      background-color: var(--surface-soft);
+      border: 1px solid var(--border-soft);
+      color: #3f364b;
+    }
+    .themed-chip-btn:hover {
+      background-color: var(--surface-soft-hover);
+    }
+
+    .themed-duration-box {
+      background-color: var(--surface-sub);
+      border: 1px solid var(--border-sub);
+      color: var(--accent-sub-text);
+    }
+
+    .themed-type-single-btn {
+      background-color: var(--surface-soft);
+      border: 1px solid var(--border-soft);
+      color: var(--accent-text-strong);
+    }
+
+    .themed-input {
+      background-color: var(--surface-soft);
+      border: 1px solid var(--border-soft);
+      color: #2b2638;
+    }
+    .themed-input:focus {
+      background-color: #ffffff;
+      border-color: var(--accent-1);
+    }
+
+    .themed-modal-card {
+      background-color: #ffffff;
+      border-top: 4px solid var(--accent-1);
+    }
+
+    .themed-badge-dur {
+      background-color: var(--badge-dur-bg);
+      color: var(--badge-dur-text);
+    }
+
+    .themed-badge-act {
+      background-color: var(--badge-act-bg);
+      color: var(--badge-act-text);
+    }
+
+    .themed-badge-dl {
+      background-color: var(--badge-dl-bg);
+      color: var(--badge-dl-text);
+      border: 1px solid var(--badge-dl-border);
+    }
+
     .summary-bar {
       background-image: linear-gradient(90deg, var(--summary-bg-1), var(--summary-bg-2), var(--summary-bg-3));
     }
+
+    .summary-est-text { color: var(--summary-est-text); }
+    .summary-act-text { color: var(--summary-act-text); }
 
     .swipe-wrapper {
       position: relative;
@@ -219,36 +374,36 @@
 <body>
 
 <div class="app-shell" id="app">
-  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-pink-100 px-3 pt-3 pb-2.5 shadow-2xs">
+  <header class="sticky top-0 z-30 themed-header backdrop-blur-md px-3 pt-3 pb-2.5 shadow-2xs">
     <div class="flex items-center justify-between mb-2 gap-1">
       <div class="flex items-center gap-1.5 min-w-0">
-        <span id="headerLogoBadge" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 via-rose-400 to-purple-400 text-white shadow-xs text-base shrink-0">
+        <span id="headerLogoBadge" class="inline-flex items-center justify-center w-8 h-8 rounded-full themed-primary-btn shadow-xs text-base shrink-0">
           🌸
         </span>
-        <h1 id="headerAppTitle" class="text-xs sm:text-sm font-extrabold tracking-tight bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 bg-clip-text text-transparent truncate">
+        <h1 id="headerAppTitle" class="text-xs sm:text-sm font-extrabold tracking-tight truncate" style="color: var(--accent-text-strong);">
           たすくしゅーと
         </h1>
       </div>
 
       <div class="flex items-center gap-1 shrink-0">
-        <button type="button" onclick="openCommentLogModal()" aria-label="コメント一覧" class="w-8 h-8 rounded-2xl bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200/80 flex items-center justify-center active:scale-90 transition">
+        <button type="button" onclick="openCommentLogModal()" aria-label="コメント一覧" class="w-8 h-8 rounded-2xl themed-icon-btn flex items-center justify-center active:scale-90 transition">
           <i data-lucide="message-square-heart" class="w-4 h-4"></i>
         </button>
-        <button type="button" onclick="testAlarmSound()" aria-label="音テスト" class="w-8 h-8 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 flex items-center justify-center active:scale-90 transition">
+        <button type="button" onclick="testAlarmSound()" aria-label="音テスト" class="w-8 h-8 rounded-2xl themed-icon-btn flex items-center justify-center active:scale-90 transition">
           <i data-lucide="bell" class="w-4 h-4"></i>
         </button>
-        <button type="button" onclick="openRoutineModal()" aria-label="ルーチン管理" class="px-2.5 h-8 rounded-2xl bg-gradient-to-r from-pink-50 to-purple-50 hover:from-pink-100 hover:to-purple-100 text-purple-700 border border-purple-200/80 text-xs font-extrabold flex items-center gap-1 active:scale-90 transition">
+        <button type="button" onclick="openRoutineModal()" aria-label="ルーチン管理" class="px-2.5 h-8 rounded-2xl themed-routine-btn text-xs font-extrabold flex items-center gap-1 active:scale-90 transition">
           <span>✨</span>
           <span>ルーチン</span>
         </button>
-        <button type="button" onclick="openSettingsModal()" aria-label="設定" class="w-8 h-8 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center active:scale-90 transition">
+        <button type="button" onclick="openSettingsModal()" aria-label="設定" class="w-8 h-8 rounded-2xl themed-icon-btn flex items-center justify-center active:scale-90 transition">
           <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
       </div>
     </div>
 
-    <div class="flex items-center justify-between bg-gradient-to-r from-pink-50/90 via-fuchsia-50/70 to-purple-50/90 border border-pink-100 rounded-2xl p-1 mb-2">
-      <button type="button" onclick="changeDate(-1)" aria-label="前日" class="w-8 h-7 rounded-xl bg-white text-pink-600 font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
+    <div class="flex items-center justify-between themed-date-pill rounded-2xl p-1 mb-2">
+      <button type="button" onclick="changeDate(-1)" aria-label="前日" class="w-8 h-7 rounded-xl themed-date-nav-btn font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
         <i data-lucide="chevron-left" class="w-4 h-4"></i>
       </button>
 
@@ -259,30 +414,30 @@
         title="タップでカレンダー・ダブルタップで今日に戻る"
         class="flex-1 mx-1.5 py-1 px-2.5 rounded-xl hover:bg-white/70 active:bg-white transition flex items-center justify-center gap-1.5 select-none"
       >
-        <i data-lucide="calendar" class="w-3.5 h-3.5 text-pink-500 shrink-0"></i>
+        <i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0" style="color: var(--accent-1);"></i>
         <span id="currentDateLabel" class="text-xs sm:text-sm font-extrabold text-stone-800 tracking-tight">2026年11月20日 (金)</span>
       </button>
 
-      <button type="button" onclick="changeDate(1)" aria-label="翌日" class="w-8 h-7 rounded-xl bg-white text-purple-600 font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
+      <button type="button" onclick="changeDate(1)" aria-label="翌日" class="w-8 h-7 rounded-xl themed-date-nav-btn font-bold flex items-center justify-center shadow-2xs active:scale-90 transition">
         <i data-lucide="chevron-right" class="w-4 h-4"></i>
       </button>
     </div>
 
     <div class="grid grid-cols-4 gap-1 summary-bar text-white rounded-2xl px-2 py-2 text-center shadow-inner">
       <div>
-        <div class="text-[9px] text-pink-200/80 font-bold">現在</div>
+        <div class="text-[9px] text-white/75 font-bold">現在</div>
         <div id="liveClock" class="text-xs sm:text-sm font-black tabular-nums text-white">--:--</div>
       </div>
       <div class="border-l border-white/10">
-        <div class="text-[9px] text-purple-200/80 font-bold">予定</div>
-        <div id="totalEstLabel" class="text-[11px] sm:text-xs font-black tabular-nums text-purple-100 leading-tight mt-0.5">0分</div>
+        <div class="text-[9px] text-white/75 font-bold">予定</div>
+        <div id="totalEstLabel" class="text-[11px] sm:text-xs font-black tabular-nums summary-est-text leading-tight mt-0.5">0分</div>
       </div>
       <div class="border-l border-white/10">
-        <div class="text-[9px] text-rose-200/80 font-bold">実績</div>
-        <div id="totalActualLabel" class="text-[11px] sm:text-xs font-black tabular-nums text-pink-300 leading-tight mt-0.5">0分</div>
+        <div class="text-[9px] text-white/75 font-bold">実績</div>
+        <div id="totalActualLabel" class="text-[11px] sm:text-xs font-black tabular-nums summary-act-text leading-tight mt-0.5">0分</div>
       </div>
       <div class="border-l border-white/10">
-        <div class="text-[9px] text-amber-200/80 font-bold">終了予定</div>
+        <div class="text-[9px] text-amber-200/85 font-bold">終了予定</div>
         <div id="finalEndTime" class="text-xs sm:text-sm font-black tabular-nums text-amber-200">--:--</div>
       </div>
     </div>
@@ -291,21 +446,20 @@
   <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-36 space-y-2.5 overflow-y-auto"></main>
 
   <div class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
-    <div class="max-w-[480px] mx-auto px-3 pt-2.5 pb-4 bg-white/95 backdrop-blur-md border-t border-pink-100 shadow-[0_-8px_28px_rgba(190,24,93,0.09)] rounded-t-3xl pointer-events-auto space-y-2">
+    <div class="max-w-[480px] mx-auto px-3 pt-2.5 pb-4 themed-bottom-bar backdrop-blur-md rounded-t-3xl pointer-events-auto space-y-2">
       <div class="flex items-center gap-1.5">
         <input
           type="text"
           id="quickTaskTitleInput"
           placeholder="タスク名（空欄で開始もOK）"
           onkeypress="if(event.key==='Enter') quickAddOnly()"
-          class="flex-1 min-w-0 px-3.5 py-2 rounded-2xl bg-pink-50/50 border border-pink-200/80 focus:bg-white focus:border-pink-400 outline-none font-bold text-stone-800 placeholder:text-stone-400 placeholder:font-normal transition"
+          class="flex-1 min-w-0 px-3.5 py-2 rounded-2xl themed-input outline-none font-bold placeholder:text-stone-400 placeholder:font-normal transition"
         />
         <button
           type="button"
           onclick="quickAddAndStart()"
           aria-label="すぐ開始"
-          class="px-3 py-2 rounded-2xl text-white font-extrabold text-xs shadow-xs flex items-center gap-1 shrink-0 active:scale-95 transition"
-          style="background-image: linear-gradient(90deg, #f43f5e, #ec4899);"
+          class="px-3 py-2 rounded-2xl themed-primary-btn font-extrabold text-xs shadow-xs flex items-center gap-1 shrink-0 active:scale-95 transition"
         >
           <span>▶</span>
           <span>開始</span>
@@ -314,7 +468,7 @@
           type="button"
           onclick="quickAddOnly()"
           aria-label="追加"
-          class="px-3 py-2 rounded-2xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-extrabold text-xs shadow-xs flex items-center gap-0.5 shrink-0 active:scale-95 transition"
+          class="px-3 py-2 rounded-2xl themed-secondary-btn font-extrabold text-xs shadow-xs flex items-center gap-0.5 shrink-0 active:scale-95 transition"
         >
           <span>＋</span>
           <span>追加</span>
@@ -323,11 +477,11 @@
 
       <div class="flex items-center justify-between gap-1 overflow-x-auto">
         <div class="flex items-center gap-1 shrink-0">
-          <span id="quickDurationDisplay" class="text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-1 rounded-xl border border-purple-200 tabular-nums">0分</span>
-          <button type="button" onclick="addQuickDuration(5)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+5</button>
-          <button type="button" onclick="addQuickDuration(10)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+10</button>
-          <button type="button" onclick="addQuickDuration(30)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+30</button>
-          <button type="button" onclick="addQuickDuration(60)" class="px-2 py-1 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl text-[11px] font-extrabold text-stone-700 active:scale-90">+1h</button>
+          <span id="quickDurationDisplay" class="text-xs font-black themed-duration-box px-2.5 py-1 rounded-xl tabular-nums">0分</span>
+          <button type="button" onclick="addQuickDuration(5)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+5</button>
+          <button type="button" onclick="addQuickDuration(10)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+10</button>
+          <button type="button" onclick="addQuickDuration(30)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+30</button>
+          <button type="button" onclick="addQuickDuration(60)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+1h</button>
           <button type="button" onclick="resetQuickDuration()" aria-label="クリア" class="px-2 py-1 bg-rose-100 rounded-xl text-[11px] font-extrabold text-rose-700 active:scale-90">↺</button>
         </div>
 
@@ -335,7 +489,7 @@
           type="button"
           id="quickTaskTypeToggle"
           onclick="cycleQuickTaskType()"
-          class="px-2.5 py-1 rounded-xl bg-pink-50 border border-pink-200 text-[10px] font-extrabold text-pink-700 shrink-0 active:scale-95 transition"
+          class="px-2.5 py-1 rounded-xl themed-type-single-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition"
         >
           🌸 単発
         </button>
@@ -344,49 +498,49 @@
   </div>
 
   <div id="toastBox" class="fixed top-28 left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
-    <div class="summary-bar text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap border border-pink-400/30">
+    <div class="summary-bar text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap border border-white/20">
       <span id="toastEmoji">🌸</span>
       <span id="toastText">保存しました</span>
     </div>
   </div>
 
   <div id="commentLogModal" onclick="if(event.target===this) closeCommentLogModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-pink-400">
+    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col">
       <div class="flex items-center justify-between mb-2 shrink-0">
         <div class="flex items-center gap-1.5">
           <span class="text-base">💬</span>
           <h2 class="text-sm font-extrabold text-stone-800">コメント・写真ログ一覧</h2>
         </div>
-        <button type="button" onclick="closeCommentLogModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+        <button type="button" onclick="closeCommentLogModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
       <div class="text-[11px] font-bold text-stone-400 mb-2.5 shrink-0">
-        タップするとその日のタスク詳細画面へジャンプするよ🌸
+        タップするとその日のタスク詳細画面へジャンプするよ
       </div>
       <div id="commentLogListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 pb-2"></div>
     </div>
   </div>
 
   <div id="calendarModal" onclick="if(event.target===this) closeCalendarModal()" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-[380px] rounded-3xl shadow-2xl border-t-4 border-pink-400 overflow-hidden">
-      <div class="px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between">
+    <div class="themed-modal-card w-full max-w-[380px] rounded-3xl shadow-2xl overflow-hidden">
+      <div class="px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between">
         <div class="flex items-center gap-1.5">
           <span class="text-base">📅</span>
           <h2 id="calendarModalTitle" class="text-sm font-extrabold text-stone-800">日付を選ぶ</h2>
         </div>
-        <button type="button" onclick="closeCalendarModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+        <button type="button" onclick="closeCalendarModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
       <div class="p-4 space-y-3">
-        <div class="flex items-center justify-between bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-1.5 border border-pink-100">
-          <button type="button" onclick="shiftCalendarMonth(-1)" aria-label="前の月" class="w-8 h-8 rounded-xl bg-white text-pink-600 flex items-center justify-center shadow-2xs active:scale-90 transition">
+        <div class="flex items-center justify-between themed-date-pill rounded-2xl p-1.5">
+          <button type="button" onclick="shiftCalendarMonth(-1)" aria-label="前の月" class="w-8 h-8 rounded-xl themed-date-nav-btn flex items-center justify-center shadow-2xs active:scale-90 transition">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </button>
           <span id="calendarMonthLabel" class="text-sm font-extrabold text-stone-800">2026年11月</span>
-          <button type="button" onclick="shiftCalendarMonth(1)" aria-label="次の月" class="w-8 h-8 rounded-xl bg-white text-purple-600 flex items-center justify-center shadow-2xs active:scale-90 transition">
+          <button type="button" onclick="shiftCalendarMonth(1)" aria-label="次の月" class="w-8 h-8 rounded-xl themed-date-nav-btn flex items-center justify-center shadow-2xs active:scale-90 transition">
             <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
         </div>
@@ -397,7 +551,7 @@
           <span class="text-stone-500">水</span>
           <span class="text-stone-500">木</span>
           <span class="text-stone-500">金</span>
-          <span class="text-purple-500">土</span>
+          <span style="color: var(--accent-sub-text);">土</span>
           <span class="text-rose-500">日</span>
         </div>
 
@@ -405,7 +559,7 @@
 
         <div class="pt-1 flex items-center justify-between gap-2">
           <span id="calendarHintText" class="text-[10px] font-bold text-stone-400">💡 日付をダブルタップでも今日に戻るよ</span>
-          <button type="button" onclick="selectCalendarDate(getTodayStr())" class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-extrabold shadow-2xs active:scale-95 transition shrink-0">
+          <button type="button" onclick="selectCalendarDate(getTodayStr())" class="px-3.5 py-1.5 rounded-full themed-primary-btn text-xs font-extrabold shadow-2xs active:scale-95 transition shrink-0">
             今日へ移動
           </button>
         </div>
@@ -414,10 +568,10 @@
   </div>
 
   <div id="taskModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
-      <div class="bg-white px-4 pt-2.5 pb-2 border-b border-pink-100 flex items-center justify-between shrink-0">
-        <h2 id="taskModalTitle" class="text-xs font-extrabold text-stone-800">🌸 タスク詳細・編集</h2>
-        <button type="button" onclick="closeTaskModal()" class="w-7 h-7 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col overflow-hidden">
+      <div class="bg-white px-4 pt-2.5 pb-2 border-b border-stone-100 flex items-center justify-between shrink-0">
+        <h2 id="taskModalTitle" class="text-xs font-extrabold text-stone-800">タスク詳細・編集</h2>
+        <button type="button" onclick="closeTaskModal()" class="w-7 h-7 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
       </div>
@@ -428,39 +582,40 @@
 
         <div class="flex items-center gap-2">
           <span class="text-[11px] font-extrabold text-stone-500 shrink-0">名前</span>
-          <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-pink-200 focus:border-pink-400 outline-none font-bold" />
+          <input type="text" id="taskTitleInput" placeholder="例：1週間分のお弁当を作る" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input outline-none font-bold" />
         </div>
 
-        <div id="editTaskDateSection" class="bg-purple-50/60 px-2.5 py-2 rounded-xl border border-purple-200/80 space-y-1.5">
+        <div id="editTaskDateSection" class="px-2.5 py-2 rounded-xl space-y-1.5" style="background-color: var(--surface-sub); border: 1px solid var(--border-sub);">
           <div class="flex items-center justify-between gap-1.5">
             <button
               type="button"
               onclick="openCalendarModalForTask()"
-              class="flex-1 min-w-0 py-1 px-2.5 rounded-lg bg-white hover:bg-purple-50/70 border border-purple-200 flex items-center justify-between text-xs font-extrabold text-stone-800 active:scale-[0.99] transition"
+              class="flex-1 min-w-0 py-1 px-2.5 rounded-lg bg-white flex items-center justify-between text-xs font-extrabold text-stone-800 active:scale-[0.99] transition"
+              style="border: 1px solid var(--border-sub);"
             >
               <span class="flex items-center gap-1 truncate">
-                <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-purple-500 shrink-0"></i>
+                <i data-lucide="calendar-days" class="w-3.5 h-3.5 shrink-0" style="color: var(--accent-2);"></i>
                 <span id="taskTargetDateLabel" class="truncate">2026年11月24日 (火)</span>
               </span>
-              <span class="text-[10px] font-bold text-purple-600 shrink-0 ml-1">カレンダー ▾</span>
+              <span class="text-[10px] font-bold shrink-0 ml-1" style="color: var(--accent-sub-text);">カレンダー ▾</span>
             </button>
-            <span id="taskTargetDateDiffBadge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white shrink-0">
+            <span id="taskTargetDateDiffBadge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full themed-primary-btn shrink-0">
               移動予約
             </span>
           </div>
 
           <div class="grid grid-cols-4 gap-1">
-            <button type="button" onclick="shiftModalTargetDate(0)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-stone-600 active:scale-90 transition">今日</button>
-            <button type="button" onclick="shiftModalTargetDate(1)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-pink-700 active:scale-90 transition">明日</button>
-            <button type="button" onclick="shiftModalTargetDate(3)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-pink-700 active:scale-90 transition">3日後</button>
-            <button type="button" onclick="shiftModalTargetDate(7)" class="py-1 rounded-lg bg-white hover:bg-pink-50 border border-purple-200/80 text-[10px] font-extrabold text-purple-700 active:scale-90 transition">来週</button>
+            <button type="button" onclick="shiftModalTargetDate(0)" class="py-1 rounded-lg bg-white text-[10px] font-extrabold text-stone-600 active:scale-90 transition" style="border: 1px solid var(--border-sub);">今日</button>
+            <button type="button" onclick="shiftModalTargetDate(1)" class="py-1 rounded-lg bg-white text-[10px] font-extrabold active:scale-90 transition" style="border: 1px solid var(--border-sub); color: var(--accent-text-strong);">明日</button>
+            <button type="button" onclick="shiftModalTargetDate(3)" class="py-1 rounded-lg bg-white text-[10px] font-extrabold active:scale-90 transition" style="border: 1px solid var(--border-sub); color: var(--accent-text-strong);">3日後</button>
+            <button type="button" onclick="shiftModalTargetDate(7)" class="py-1 rounded-lg bg-white text-[10px] font-extrabold active:scale-90 transition" style="border: 1px solid var(--border-sub); color: var(--accent-sub-text);">来週</button>
           </div>
         </div>
 
-        <div id="editTimeRangeSection" class="bg-gradient-to-r from-pink-50/80 via-fuchsia-50/60 to-purple-50/80 px-2.5 py-2 rounded-xl border border-pink-200/80 space-y-1.5">
+        <div id="editTimeRangeSection" class="themed-date-pill px-2.5 py-2 rounded-xl space-y-1.5">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-extrabold text-pink-800">⏱ 開始・終了時刻</span>
-            <span id="editTaskStatusBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white text-purple-700 border border-purple-200">
+            <span class="text-[10px] font-extrabold" style="color: var(--accent-text-strong);">⏱ 開始・終了時刻</span>
+            <span id="editTaskStatusBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white" style="color: var(--accent-sub-text); border: 1px solid var(--border-sub);">
               未開始
             </span>
           </div>
@@ -472,7 +627,8 @@
                 type="time"
                 id="taskStartTimeInput"
                 onchange="handleStartOrEndTimeChange()"
-                class="flex-1 min-w-0 px-2 py-1 rounded-lg border border-pink-200 bg-white font-black text-center text-stone-800 outline-none focus:border-pink-400"
+                class="flex-1 min-w-0 px-2 py-1 rounded-lg bg-white font-black text-center text-stone-800 outline-none"
+                style="border: 1px solid var(--border-soft);"
               />
             </div>
             <div id="taskEndTimeCol" class="flex items-center gap-1.5">
@@ -481,7 +637,8 @@
                 type="time"
                 id="taskEndTimeInput"
                 onchange="handleStartOrEndTimeChange()"
-                class="flex-1 min-w-0 px-2 py-1 rounded-lg border border-purple-200 bg-white font-black text-center text-stone-800 outline-none focus:border-purple-400"
+                class="flex-1 min-w-0 px-2 py-1 rounded-lg bg-white font-black text-center text-stone-800 outline-none"
+                style="border: 1px solid var(--border-sub);"
               />
             </div>
           </div>
@@ -491,7 +648,8 @@
               type="button"
               id="snapPrevEndBtn"
               onclick="applyPrevTaskEndTimeInModal()"
-              class="w-full py-1 px-2 rounded-lg bg-white hover:bg-pink-50 text-pink-700 border border-pink-300 text-[10px] font-extrabold flex items-center justify-center gap-1 active:scale-95 transition"
+              class="w-full py-1 px-2 rounded-lg bg-white text-[10px] font-extrabold flex items-center justify-center gap-1 active:scale-95 transition"
+              style="color: var(--accent-text-strong); border: 1px solid var(--border-soft);"
             >
               <span>⏪</span>
               <span id="snapPrevEndBtnLabel">直前の終了 (08:00) から開始にする</span>
@@ -501,12 +659,12 @@
 
         <div class="space-y-1.5">
           <div class="grid grid-cols-2 gap-2">
-            <div class="bg-pink-50/70 px-2.5 py-1.5 rounded-xl border border-pink-100 flex items-center justify-between gap-1.5">
-              <span class="text-[10px] font-extrabold text-pink-700 shrink-0">見積(分)</span>
-              <input type="number" id="taskDurationInput" min="0" max="600" value="0" class="w-16 px-1.5 py-0.5 rounded-lg border border-pink-200 bg-white font-black text-center text-purple-700 outline-none" />
+            <div class="px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-1.5" style="background-color: var(--surface-soft); border: 1px solid var(--border-soft);">
+              <span class="text-[10px] font-extrabold shrink-0" style="color: var(--accent-text);">見積(分)</span>
+              <input type="number" id="taskDurationInput" min="0" max="600" value="0" class="w-16 px-1.5 py-0.5 rounded-lg bg-white font-black text-center outline-none" style="border: 1px solid var(--border-soft); color: var(--accent-sub-text);" />
             </div>
-            <div id="editActualWrap" class="bg-purple-50/70 px-2.5 py-1.5 rounded-xl border border-purple-100 flex items-center justify-between gap-1.5">
-              <span class="text-[10px] font-extrabold text-purple-700 shrink-0">実績(分)</span>
+            <div id="editActualWrap" class="px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-1.5" style="background-color: var(--surface-sub); border: 1px solid var(--border-sub);">
+              <span class="text-[10px] font-extrabold shrink-0" style="color: var(--accent-sub-text);">実績(分)</span>
               <input
                 type="number"
                 id="taskActualInput"
@@ -514,34 +672,35 @@
                 max="600"
                 value="0"
                 oninput="handleActualMinutesManualChange()"
-                class="w-16 px-1.5 py-0.5 rounded-lg border border-purple-200 bg-white font-black text-center text-pink-700 outline-none"
+                class="w-16 px-1.5 py-0.5 rounded-lg bg-white font-black text-center outline-none"
+                style="border: 1px solid var(--border-sub); color: var(--accent-text);"
               />
             </div>
           </div>
 
           <div class="flex gap-1">
-            <button type="button" onclick="addModalDuration(5)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+5</button>
-            <button type="button" onclick="addModalDuration(10)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+10</button>
-            <button type="button" onclick="addModalDuration(30)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+30</button>
-            <button type="button" onclick="addModalDuration(60)" class="flex-1 py-1 bg-pink-50 border border-pink-200 rounded-lg text-[10px] font-extrabold text-stone-700">+1h</button>
+            <button type="button" onclick="addModalDuration(5)" class="flex-1 py-1 themed-chip-btn rounded-lg text-[10px] font-extrabold">+5</button>
+            <button type="button" onclick="addModalDuration(10)" class="flex-1 py-1 themed-chip-btn rounded-lg text-[10px] font-extrabold">+10</button>
+            <button type="button" onclick="addModalDuration(30)" class="flex-1 py-1 themed-chip-btn rounded-lg text-[10px] font-extrabold">+30</button>
+            <button type="button" onclick="addModalDuration(60)" class="flex-1 py-1 themed-chip-btn rounded-lg text-[10px] font-extrabold">+1h</button>
             <button type="button" onclick="document.getElementById('taskDurationInput').value=0" class="px-2.5 py-1 bg-rose-100 rounded-lg text-[10px] font-extrabold text-rose-700">↺</button>
           </div>
         </div>
 
         <div class="flex items-center gap-1.5">
           <span class="text-[10px] font-extrabold text-stone-500 shrink-0">🎯 目標</span>
-          <input type="time" id="taskDeadlineInput" class="flex-1 min-w-0 px-2.5 py-1 rounded-xl border border-pink-200 focus:border-pink-400 outline-none font-bold bg-white" />
+          <input type="time" id="taskDeadlineInput" class="flex-1 min-w-0 px-2.5 py-1 rounded-xl themed-input outline-none font-bold" />
           <button type="button" onclick="document.getElementById('taskDeadlineInput').value=''" class="px-2 py-1.5 rounded-lg bg-stone-100 text-stone-500 text-[10px] font-bold shrink-0">クリア</button>
           <label class="flex items-center gap-1 cursor-pointer bg-rose-50 border border-rose-200 px-2 py-1.5 rounded-lg shrink-0">
-            <input type="checkbox" id="taskAlarmInput" class="w-3.5 h-3.5 rounded text-pink-600" />
+            <input type="checkbox" id="taskAlarmInput" class="w-3.5 h-3.5 rounded" />
             <span class="text-[11px] font-bold text-rose-700">🔔</span>
           </label>
         </div>
 
         <div class="space-y-1.5">
           <div class="flex items-start gap-1.5">
-            <textarea id="taskCommentInput" rows="1" placeholder="💬 ひとことメモ..." class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-pink-200 focus:border-pink-400 outline-none resize-none"></textarea>
-            <label class="px-2.5 py-2 rounded-xl bg-pink-50 text-pink-700 border border-pink-200 text-[11px] font-bold cursor-pointer flex items-center gap-1 shrink-0">
+            <textarea id="taskCommentInput" rows="1" placeholder="💬 ひとことメモ..." class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input outline-none resize-none"></textarea>
+            <label class="px-2.5 py-2 rounded-xl themed-icon-btn text-[11px] font-bold cursor-pointer flex items-center gap-1 shrink-0">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
               <span>写真</span>
               <input type="file" id="taskImageFile" accept="image/*" onchange="handleModalImageUpload(event)" class="hidden" />
@@ -549,15 +708,15 @@
             <button type="button" id="removeModalImageBtn" onclick="clearModalImage()" class="hidden px-2 py-2 text-[10px] text-rose-500 font-bold shrink-0">削除</button>
           </div>
           <div id="modalImagePreviewWrap" class="hidden pt-0.5">
-            <img id="modalImagePreview" src="" alt="プレビュー" class="h-20 w-auto max-w-full object-contain rounded-xl border border-pink-200 bg-white/80" />
+            <img id="modalImagePreview" src="" alt="プレビュー" class="h-20 w-auto max-w-full object-contain rounded-xl bg-white/80" style="border: 1px solid var(--border-soft);" />
           </div>
         </div>
 
         <div id="modalNewButtons" class="grid grid-cols-2 gap-2 pt-0.5">
-          <button type="button" onclick="submitTaskModal(true)" class="py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-extrabold text-xs shadow-sm">
+          <button type="button" onclick="submitTaskModal(true)" class="py-2.5 rounded-2xl themed-primary-btn font-extrabold text-xs shadow-sm">
             ▶ すぐ開始
           </button>
-          <button type="button" onclick="submitTaskModal(false)" class="py-2.5 rounded-2xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-extrabold text-xs shadow-sm">
+          <button type="button" onclick="submitTaskModal(false)" class="py-2.5 rounded-2xl themed-secondary-btn font-extrabold text-xs shadow-sm">
             ＋ 追加
           </button>
         </div>
@@ -566,7 +725,7 @@
           <button type="button" onclick="deleteCurrentEditingTask()" class="px-3.5 py-2.5 rounded-2xl bg-rose-50 text-rose-600 font-extrabold text-xs">
             削除
           </button>
-          <button type="button" onclick="submitTaskModal(false)" class="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-sm">
+          <button type="button" onclick="submitTaskModal(false)" class="flex-1 py-2.5 rounded-2xl themed-primary-btn font-extrabold text-sm shadow-sm">
             保存する
           </button>
         </div>
@@ -575,10 +734,10 @@
   </div>
 
   <div id="taskToRoutineModal" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-[460px] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t-4 border-purple-400 max-h-[85dvh] flex flex-col overflow-hidden">
-      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-purple-100 flex items-center justify-between shrink-0">
+    <div class="themed-modal-card w-full max-w-[460px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] flex flex-col overflow-hidden">
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between shrink-0">
         <h3 class="text-sm font-extrabold text-stone-800">✨ ルーチンに登録</h3>
-        <button type="button" onclick="closeTaskToRoutineModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+        <button type="button" onclick="closeTaskToRoutineModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -586,17 +745,17 @@
       <div class="p-5 pt-3.5 overflow-y-auto space-y-3.5">
         <input type="hidden" id="t2rSourceTaskId" />
 
-        <div class="space-y-3 bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100">
+        <div class="space-y-3 p-3.5 rounded-2xl" style="background-color: var(--surface-sub); border: 1px solid var(--border-sub);">
           <div>
             <label class="block text-[11px] font-extrabold text-stone-500 mb-1">ルーチン名</label>
-            <input type="text" id="t2rTitleInput" class="w-full px-3 py-1.5 rounded-xl border border-purple-200 bg-white font-bold text-stone-800 outline-none" />
+            <input type="text" id="t2rTitleInput" class="w-full px-3 py-1.5 rounded-xl bg-white font-bold text-stone-800 outline-none" style="border: 1px solid var(--border-sub);" />
           </div>
 
           <div id="t2rTimeChoiceWrap" class="grid grid-cols-2 gap-2">
-            <button type="button" onclick="setT2RDurationMode('est')" class="p-2 rounded-xl border border-purple-300 bg-white text-purple-800 text-xs font-extrabold text-center active:bg-purple-100">
+            <button type="button" onclick="setT2RDurationMode('est')" class="p-2 rounded-xl bg-white text-xs font-extrabold text-center" style="border: 1px solid var(--border-sub); color: var(--accent-sub-text);">
               見積 (<span id="t2rEstVal">30</span>分)
             </button>
-            <button type="button" onclick="setT2RDurationMode('actual')" class="p-2 rounded-xl border border-pink-300 bg-white text-pink-800 text-xs font-extrabold text-center active:bg-pink-100">
+            <button type="button" onclick="setT2RDurationMode('actual')" class="p-2 rounded-xl bg-white text-xs font-extrabold text-center" style="border: 1px solid var(--border-soft); color: var(--accent-text);">
               実績 (<span id="t2rActualVal">25</span>分)
             </button>
           </div>
@@ -604,18 +763,18 @@
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5">
               <span class="text-[11px] font-extrabold text-stone-600">見積:</span>
-              <input type="number" id="t2rDurationInput" min="1" max="600" value="15" class="w-16 px-2 py-1 rounded-xl border border-purple-200 bg-white font-black text-center text-purple-700" />
+              <input type="number" id="t2rDurationInput" min="1" max="600" value="15" class="w-16 px-2 py-1 rounded-xl bg-white font-black text-center" style="border: 1px solid var(--border-sub); color: var(--accent-sub-text);" />
               <span class="text-xs font-bold text-stone-500">分</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="text-[11px] font-extrabold text-stone-600">🎯</span>
-              <input type="time" id="t2rDeadlineInput" class="px-2 py-1 rounded-xl border border-purple-200 bg-white font-bold" />
+              <input type="time" id="t2rDeadlineInput" class="px-2 py-1 rounded-xl bg-white font-bold" style="border: 1px solid var(--border-sub);" />
             </div>
           </div>
 
           <div>
             <span class="block text-[11px] font-extrabold text-stone-500 mb-1.5">繰り返しパターン</span>
-            <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl border border-purple-200/80" id="t2rRepeatTypeTabs">
+            <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl" style="border: 1px solid var(--border-sub);" id="t2rRepeatTypeTabs">
               <button type="button" data-rtype="weekly" onclick="setT2RRepeatType('weekly')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">曜日指定</button>
               <button type="button" data-rtype="nthWeekday" onclick="setT2RRepeatType('nthWeekday')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">第〇曜日</button>
               <button type="button" data-rtype="monthlyDate" onclick="setT2RRepeatType('monthlyDate')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">毎月〇日</button>
@@ -626,7 +785,7 @@
           <div id="t2rPanelWeekly" class="space-y-1.5">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-bold text-stone-500">繰り返す曜日</span>
-              <button type="button" onclick="toggleAllT2RDays()" class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-extrabold">毎日</button>
+              <button type="button" onclick="toggleAllT2RDays()" class="px-2.5 py-0.5 rounded-full themed-secondary-btn text-[10px] font-extrabold">毎日</button>
             </div>
             <div class="grid grid-cols-7 gap-1" id="t2rDayCheckboxes"></div>
           </div>
@@ -642,28 +801,28 @@
             </div>
           </div>
 
-          <div id="t2rPanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-purple-200">
+          <div id="t2rPanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-2 rounded-xl" style="border: 1px solid var(--border-sub);">
             <span class="text-xs font-extrabold text-stone-600">毎月</span>
-            <input type="number" id="t2rMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg border border-purple-200 font-black text-center text-purple-700" />
+            <input type="number" id="t2rMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-sub); color: var(--accent-sub-text);" />
             <span class="text-xs font-extrabold text-stone-600">日</span>
           </div>
 
-          <div id="t2rPanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-purple-200">
+          <div id="t2rPanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-2 rounded-xl" style="border: 1px solid var(--border-sub);">
             <span class="text-xs font-extrabold text-stone-600">完了してから</span>
-            <input type="number" id="t2rIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg border border-purple-200 font-black text-center text-pink-600" />
+            <input type="number" id="t2rIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-sub); color: var(--accent-text);" />
             <span class="text-xs font-extrabold text-stone-600">日後に自動出現</span>
           </div>
         </div>
 
-        <button type="button" onclick="saveTaskToRoutine()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-md active:scale-95 transition">
+        <button type="button" onclick="saveTaskToRoutine()" class="w-full py-3 rounded-2xl themed-primary-btn font-extrabold text-sm shadow-md active:scale-95 transition">
           ✨ 保存する
         </button>
       </div>
     </div>
   </div>
 
-  <div id="routineModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-purple-400">
+  <div id="routineModal" onclick="if(event.target===this) closeRoutineModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col">
       <div class="flex items-center justify-between mb-2.5 shrink-0">
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-extrabold text-stone-800">✨ ルーチン一覧・流れ</h2>
@@ -673,44 +832,44 @@
           <button type="button" id="dedupeRoutinesBtn" onclick="deduplicateRoutines()" class="hidden px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-extrabold active:scale-90 transition">
             🧹 重複を整理
           </button>
-          <button type="button" onclick="closeRoutineModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+          <button type="button" onclick="closeRoutineModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-1.5 mb-2.5 shrink-0">
-        <button type="button" id="routineToggleNewBtn" onclick="toggleRoutineFormDrawer()" class="py-2 px-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-xs shadow-2xs flex items-center justify-center gap-1 active:scale-95 transition">
+        <button type="button" id="routineToggleNewBtn" onclick="toggleRoutineFormDrawer()" class="py-2 px-3 rounded-2xl themed-primary-btn font-extrabold text-xs shadow-2xs flex items-center justify-center gap-1 active:scale-95 transition">
           <span>＋</span>
           <span>新しいルーチンを追加</span>
         </button>
-        <button type="button" id="routineTabImportBtn" onclick="toggleRoutineImportView()" class="py-2 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition">
+        <button type="button" id="routineTabImportBtn" onclick="toggleRoutineImportView()" class="py-2 px-3 rounded-2xl themed-secondary-btn font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition">
           <span>📥</span>
           <span>今日のタスクから</span>
         </button>
       </div>
 
-      <form id="routineFormBox" onsubmit="saveRoutineForm(event)" class="hidden bg-gradient-to-r from-pink-50/90 to-purple-50/90 p-3 rounded-2xl border border-pink-200 mb-2.5 space-y-2.5 shrink-0 max-h-[56dvh] overflow-y-auto">
+      <form id="routineFormBox" onsubmit="saveRoutineForm(event)" class="hidden themed-date-pill p-3 rounded-2xl mb-2.5 space-y-2.5 shrink-0 max-h-[56dvh] overflow-y-auto">
         <input type="hidden" id="editingRoutineId" value="" />
 
         <div class="flex items-center justify-between">
-          <span id="routineFormModeLabel" class="text-[11px] font-extrabold text-purple-700">＋ 新しいルーチン</span>
+          <span id="routineFormModeLabel" class="text-[11px] font-extrabold" style="color: var(--accent-sub-text);">＋ 新しいルーチン</span>
           <button type="button" id="cancelRoutineEditBtn" onclick="closeRoutineFormDrawer()" class="text-[10px] font-extrabold text-rose-600 bg-white px-2.5 py-0.5 rounded-lg border border-rose-200 active:scale-90 transition">
             閉じる
           </button>
         </div>
 
-        <div id="routineEditStatsBanner" class="hidden flex items-center justify-between bg-white/90 border border-purple-200 rounded-xl px-3 py-1.5 text-[11px]">
-          <span id="routineEditStatsText" class="font-extrabold text-purple-800">📊 これまで 0回 実施</span>
-          <button type="button" id="applyAvgDurationBtn" onclick="applyAverageDurationToRoutine()" class="px-2 py-0.5 rounded-lg bg-pink-100 text-pink-700 font-extrabold text-[10px] active:scale-90 transition">
+        <div id="routineEditStatsBanner" class="hidden flex items-center justify-between bg-white/90 rounded-xl px-3 py-1.5 text-[11px]" style="border: 1px solid var(--border-sub);">
+          <span id="routineEditStatsText" class="font-extrabold" style="color: var(--accent-sub-text);">📊 これまで 0回 実施</span>
+          <button type="button" id="applyAvgDurationBtn" onclick="applyAverageDurationToRoutine()" class="px-2 py-0.5 rounded-lg themed-chip-btn font-extrabold text-[10px] active:scale-90 transition">
             平均を反映
           </button>
         </div>
 
         <div class="flex gap-1.5">
-          <input type="text" id="routineTitleInput" required placeholder="ルーチン名（例：資源ごみ出し）" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-pink-200 font-bold bg-white outline-none" />
-          <div class="flex items-center gap-1 bg-white border border-pink-200 rounded-xl px-2 shrink-0">
-            <input type="number" id="routineDurationInput" value="20" min="1" max="480" required class="w-12 py-1 font-black text-purple-700 text-center outline-none" />
+          <input type="text" id="routineTitleInput" required placeholder="ルーチン名（例：資源ごみ出し）" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input font-bold outline-none" />
+          <div class="flex items-center gap-1 bg-white rounded-xl px-2 shrink-0" style="border: 1px solid var(--border-soft);">
+            <input type="number" id="routineDurationInput" value="20" min="1" max="480" required class="w-12 py-1 font-black text-center outline-none" style="color: var(--accent-sub-text);" />
             <span class="text-[11px] font-bold text-stone-400">分</span>
           </div>
         </div>
@@ -718,12 +877,12 @@
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-1.5">
             <span class="text-[11px] font-bold text-stone-500">🎯</span>
-            <input type="time" id="routineDeadlineInput" class="px-2 py-1 rounded-lg border border-pink-200 font-bold bg-white" />
+            <input type="time" id="routineDeadlineInput" class="px-2 py-1 rounded-lg bg-white font-bold" style="border: 1px solid var(--border-soft);" />
             <button type="button" onclick="document.getElementById('routineDeadlineInput').value=''" class="text-[10px] text-stone-400 font-bold px-1.5 py-0.5 bg-white rounded border border-stone-200">×</button>
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl border border-pink-200/80" id="routineRepeatTypeTabs">
+        <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl" style="border: 1px solid var(--border-soft);" id="routineRepeatTypeTabs">
           <button type="button" data-rtype="weekly" onclick="setRoutineRepeatType('weekly')" class="py-1 rounded-lg text-[10px] font-extrabold transition">曜日指定</button>
           <button type="button" data-rtype="nthWeekday" onclick="setRoutineRepeatType('nthWeekday')" class="py-1 rounded-lg text-[10px] font-extrabold transition">第〇曜日</button>
           <button type="button" data-rtype="monthlyDate" onclick="setRoutineRepeatType('monthlyDate')" class="py-1 rounded-lg text-[10px] font-extrabold transition">毎月〇日</button>
@@ -733,7 +892,7 @@
         <div id="routinePanelWeekly" class="space-y-1.5">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-bold text-stone-500">曜日を選択</span>
-            <button type="button" onclick="toggleAllRoutineDays()" class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-extrabold active:scale-95 transition">毎日</button>
+            <button type="button" onclick="toggleAllRoutineDays()" class="px-2.5 py-0.5 rounded-full themed-secondary-btn text-[10px] font-extrabold active:scale-95 transition">毎日</button>
           </div>
           <div class="grid grid-cols-7 gap-1" id="routineDayCheckboxes"></div>
         </div>
@@ -743,19 +902,19 @@
           <div class="grid grid-cols-7 gap-1" id="routineNthDayCheckboxes"></div>
         </div>
 
-        <div id="routinePanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-pink-200">
+        <div id="routinePanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl" style="border: 1px solid var(--border-soft);">
           <span class="text-xs font-extrabold text-stone-600">毎月</span>
-          <input type="number" id="routineMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg border border-pink-200 font-black text-center text-purple-700" />
+          <input type="number" id="routineMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-soft); color: var(--accent-sub-text);" />
           <span class="text-xs font-extrabold text-stone-600">日に実行</span>
         </div>
 
-        <div id="routinePanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-pink-200">
+        <div id="routinePanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl" style="border: 1px solid var(--border-soft);">
           <span class="text-xs font-extrabold text-stone-600">完了してから</span>
-          <input type="number" id="routineIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg border border-pink-200 font-black text-center text-pink-600" />
+          <input type="number" id="routineIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-soft); color: var(--accent-text);" />
           <span class="text-xs font-extrabold text-stone-600">日後に自動出現</span>
         </div>
 
-        <button type="submit" id="routineSubmitBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-xs shadow-xs active:scale-95 transition">
+        <button type="submit" id="routineSubmitBtn" class="w-full py-2.5 rounded-xl themed-primary-btn font-extrabold text-xs shadow-xs active:scale-95 transition">
           保存する
         </button>
       </form>
@@ -766,16 +925,16 @@
   </div>
 
   <div id="settingsModal" onclick="if(event.target===this) closeSettingsModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 border-t-4 border-pink-400 max-h-[88dvh] overflow-y-auto">
+    <div class="themed-modal-card w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 max-h-[88dvh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h2 class="text-sm font-extrabold text-stone-800">⚙️ 設定・バックアップ</h2>
-        <button type="button" onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center">
+        <button type="button" onclick="closeSettingsModal()" class="w-8 h-8 rounded-full themed-icon-btn flex items-center justify-center">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
       <!-- テーマカラー切替 -->
-      <div class="bg-pink-50/50 p-3 rounded-2xl border border-pink-100 space-y-2">
+      <div class="p-3 rounded-2xl space-y-2" style="background-color: var(--surface-soft); border: 1px solid var(--border-soft);">
         <div class="text-[11px] font-extrabold text-stone-700">🎨 テーマカラー</div>
         <div class="grid grid-cols-2 gap-2">
           <button
@@ -798,12 +957,12 @@
       </div>
 
       <!-- 曜日ごとの1日のスタート時間 -->
-      <div class="bg-purple-50/50 p-3 rounded-2xl border border-purple-100 space-y-2">
+      <div class="p-3 rounded-2xl space-y-2" style="background-color: var(--surface-sub); border: 1px solid var(--border-sub);">
         <div class="flex items-center justify-between gap-1 flex-wrap">
           <span class="text-[11px] font-extrabold text-stone-700">🌅 1日のスタート時間</span>
           <div class="flex items-center gap-1">
-            <button type="button" onclick="applyPresetStartTimes('weekday')" class="px-2 py-0.5 rounded-lg bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-extrabold active:scale-90 transition">月〜金一括</button>
-            <button type="button" onclick="applyPresetStartTimes('weekend')" class="px-2 py-0.5 rounded-lg bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-extrabold active:scale-90 transition">土日一括</button>
+            <button type="button" onclick="applyPresetStartTimes('weekday')" class="px-2 py-0.5 rounded-lg bg-white themed-secondary-btn text-[10px] font-extrabold active:scale-90 transition">月〜金一括</button>
+            <button type="button" onclick="applyPresetStartTimes('weekend')" class="px-2 py-0.5 rounded-lg bg-white themed-secondary-btn text-[10px] font-extrabold active:scale-90 transition">土日一括</button>
           </div>
         </div>
         <div id="dayStartTimesGrid" class="grid grid-cols-2 gap-1.5"></div>
@@ -813,29 +972,29 @@
       </div>
 
       <div class="space-y-1.5 text-xs">
-        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-white border border-purple-100">
-          <span class="w-3.5 h-3.5 rounded-full bg-white border-2 border-purple-300 shrink-0"></span>
+        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-white" style="border: 1px solid var(--border-sub);">
+          <span class="w-3.5 h-3.5 rounded-full bg-white shrink-0" style="border: 2px solid var(--accent-2);"></span>
           <span class="font-extrabold text-stone-700">白：ルーチンタスク</span>
         </div>
-        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-pink-50/70 border border-pink-200">
-          <span class="w-3.5 h-3.5 rounded-full bg-pink-400 shrink-0"></span>
-          <span class="font-extrabold text-pink-900">淡色：単発（未完了は翌朝持ち越し）</span>
+        <div class="flex items-center gap-2 p-2.5 rounded-2xl" style="background-color: var(--card-single-bg); border: 1px solid var(--card-single-border);">
+          <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: var(--accent-1);"></span>
+          <span class="font-extrabold" style="color: var(--accent-text-strong);">淡色：単発（未完了は翌朝持ち越し）</span>
         </div>
-        <div class="flex items-center gap-2 p-2.5 rounded-2xl bg-purple-50/70 border border-purple-200">
-          <span class="w-3.5 h-3.5 rounded-full bg-purple-400 shrink-0"></span>
-          <span class="font-extrabold text-purple-900">薄紫：前日からの持ち越しタスク</span>
+        <div class="flex items-center gap-2 p-2.5 rounded-2xl" style="background-color: var(--card-carry-bg); border: 1px solid var(--card-carry-border);">
+          <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: var(--accent-2);"></span>
+          <span class="font-extrabold" style="color: var(--accent-sub-text);">薄紫：前日からの持ち越しタスク</span>
         </div>
       </div>
 
-      <button type="button" onclick="reloadRoutinesForToday()" class="w-full py-2.5 rounded-2xl bg-purple-50 text-purple-700 font-extrabold text-xs">
+      <button type="button" onclick="reloadRoutinesForToday()" class="w-full py-2.5 rounded-2xl themed-secondary-btn font-extrabold text-xs">
         ✨ 今日のルーチンを再同期する
       </button>
 
       <div class="grid grid-cols-2 gap-2">
-        <button type="button" onclick="exportBackupJson()" class="py-2.5 px-2 rounded-2xl bg-pink-50 text-pink-700 font-extrabold text-xs border border-pink-200">
+        <button type="button" onclick="exportBackupJson()" class="py-2.5 px-2 rounded-2xl themed-chip-btn font-extrabold text-xs">
           📤 バックアップ保存
         </button>
-        <label class="py-2.5 px-2 rounded-2xl bg-purple-50 text-purple-700 font-extrabold text-xs border border-purple-200 text-center cursor-pointer">
+        <label class="py-2.5 px-2 rounded-2xl themed-secondary-btn font-extrabold text-xs text-center cursor-pointer">
           📥 バックアップ復元
           <input type="file" accept=".json,application/json" onchange="importBackupJson(event)" class="hidden" />
         </label>
@@ -847,18 +1006,18 @@
     </div>
   </div>
 
-  <div id="quickNoteModal" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] flex flex-col border-t-4 border-pink-400 overflow-hidden">
-      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-pink-100 flex items-center justify-between shrink-0">
+  <div id="quickNoteModal" onclick="if(event.target===this) closeQuickNoteModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] flex flex-col overflow-hidden">
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between shrink-0">
         <h3 id="quickNoteTitle" class="text-sm font-extrabold text-stone-800 truncate pr-2">💬 メモ・写真</h3>
-        <button type="button" onclick="closeQuickNoteModal()" class="w-9 h-9 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 active:scale-90 transition">
+        <button type="button" onclick="closeQuickNoteModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
       <div class="p-5 pt-3.5 overflow-y-auto space-y-3">
-        <textarea id="quickNoteTextarea" rows="3" placeholder="メモを入力..." class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 focus:border-pink-400 outline-none"></textarea>
+        <textarea id="quickNoteTextarea" rows="3" placeholder="メモを入力..." class="w-full px-3.5 py-2.5 rounded-2xl themed-input outline-none"></textarea>
         <div class="flex items-center justify-between">
-          <label class="px-3.5 py-2 rounded-xl bg-pink-50 text-pink-700 border border-pink-200 text-xs font-bold cursor-pointer flex items-center gap-1.5">
+          <label class="px-3.5 py-2 rounded-xl themed-icon-btn text-xs font-bold cursor-pointer flex items-center gap-1.5">
             <i data-lucide="image-plus" class="w-4 h-4"></i>
             <span>写真</span>
             <input type="file" accept="image/*" onchange="handleQuickNoteImage(event)" class="hidden" />
@@ -866,9 +1025,9 @@
           <button type="button" id="quickNoteRemoveImgBtn" onclick="removeQuickNoteImage()" class="hidden text-xs text-rose-500 font-bold">削除</button>
         </div>
         <div id="quickNoteImgPreviewWrap" class="hidden pt-0.5">
-          <img id="quickNoteImgPreview" src="" alt="プレビュー" class="h-28 w-auto max-w-full object-contain rounded-2xl border border-pink-200 bg-pink-50/30" />
+          <img id="quickNoteImgPreview" src="" alt="プレビュー" class="h-28 w-auto max-w-full object-contain rounded-2xl" style="border: 1px solid var(--border-soft); background-color: var(--surface-soft);" />
         </div>
-        <button type="button" onclick="saveQuickNote()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold text-sm shadow-sm">
+        <button type="button" onclick="saveQuickNote()" class="w-full py-3 rounded-2xl themed-primary-btn font-extrabold text-sm shadow-sm">
           保存する
         </button>
       </div>
@@ -882,7 +1041,7 @@
   const STORAGE_KEY_PREFS = 'ume_taskchute_v10_prefs';
 
   const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
-  const ORDERED_DOWS = [1, 2, 3, 4, 5, 6, 0]; // 月〜日
+  const ORDERED_DOWS = [1, 2, 3, 4, 5, 6, 0];
   const NTH_OPTIONS = [
     { val: 1, label: '第1' },
     { val: 2, label: '第2' },
@@ -893,15 +1052,15 @@
 
   function getDefaultPrefs() {
     return {
-      theme: 'pink', // 'pink' | 'blue'
+      theme: 'pink',
       dayStartTimes: {
-        0: '05:30', // 日
-        1: '05:30', // 月
-        2: '07:00', // 火
-        3: '07:00', // 水
-        4: '05:30', // 木
-        5: '05:30', // 金
-        6: '05:30'  // 土
+        0: '05:30',
+        1: '05:30',
+        2: '07:00',
+        3: '07:00',
+        4: '05:30',
+        5: '05:30',
+        6: '05:30'
       }
     };
   }
@@ -978,7 +1137,7 @@
       const emoji = isBlue ? '💙' : '🌸';
       const c1 = isBlue ? '#38bdf8' : '#ff85b3';
       const c2 = isBlue ? '#0284c7' : '#f472b6';
-      const c3 = isBlue ? '#818cf8' : '#c084fc';
+      const c3 = isBlue ? '#4f46e5' : '#c084fc';
 
       const canvas = document.createElement('canvas');
       canvas.width = 180;
@@ -1013,8 +1172,8 @@
         short_name: 'たすくしゅーと',
         start_url: '.',
         display: 'standalone',
-        background_color: isBlue ? '#f0f9ff' : '#fff5f8',
-        theme_color: isBlue ? '#f0f9ff' : '#fff5f8',
+        background_color: isBlue ? '#eff8ff' : '#fff5f8',
+        theme_color: isBlue ? '#eff8ff' : '#fff5f8',
         icons: [{ src: dataUrl, sizes: '180x180', type: 'image/png' }]
       };
       const mBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
@@ -1029,20 +1188,14 @@
     document.title = isBlue ? '💙 たすくしゅーと 💙' : '🌸 たすくしゅーと 🌸';
 
     const metaTheme = document.getElementById('themeColorMeta');
-    if (metaTheme) metaTheme.setAttribute('content', isBlue ? '#f0f9ff' : '#fff5f8');
+    if (metaTheme) metaTheme.setAttribute('content', isBlue ? '#eff8ff' : '#fff5f8');
 
     const badge = document.getElementById('headerLogoBadge');
-    const title = document.getElementById('headerAppTitle');
-    if (badge) {
-      badge.textContent = isBlue ? '💙' : '🌸';
-      badge.className = isBlue
-        ? 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 via-blue-400 to-indigo-400 text-white shadow-xs text-base shrink-0'
-        : 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 via-rose-400 to-purple-400 text-white shadow-xs text-base shrink-0';
-    }
-    if (title) {
-      title.className = isBlue
-        ? 'text-xs sm:text-sm font-extrabold tracking-tight bg-gradient-to-r from-sky-600 via-blue-500 to-indigo-600 bg-clip-text text-transparent truncate'
-        : 'text-xs sm:text-sm font-extrabold tracking-tight bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 bg-clip-text text-transparent truncate';
+    if (badge) badge.textContent = isBlue ? '💙' : '🌸';
+
+    const typeBtn = document.getElementById('quickTaskTypeToggle');
+    if (typeBtn && quickTaskType === 'single') {
+      typeBtn.textContent = `${isBlue ? '💙' : '🌸'} 単発`;
     }
 
     const btnPink = document.getElementById('themeBtnPink');
@@ -1066,7 +1219,8 @@
     prefs.theme = themeName === 'blue' ? 'blue' : 'pink';
     savePrefs();
     applyThemeUI();
-    showToast(prefs.theme === 'blue' ? 'そらいろブルーに変更したよ' : 'さくらピンクに変更したよ');
+    renderAll();
+    showToast(prefs.theme === 'blue' ? 'そらいろブルーに統一したよ' : 'さくらピンクに統一したよ');
   }
 
   function renderDayStartTimesSettings() {
@@ -1078,16 +1232,15 @@
       const val = (prefs.dayStartTimes && prefs.dayStartTimes[dow]) || '05:30';
       const isWeekend = dow === 0 || dow === 6;
       const row = document.createElement('div');
-      row.className = `flex items-center justify-between gap-1.5 px-2 py-1 rounded-xl border ${
-        isWeekend ? 'bg-white/95 border-purple-200' : 'bg-white border-pink-100'
-      }`;
+      row.className = `flex items-center justify-between gap-1.5 px-2 py-1 rounded-xl bg-white`;
+      row.style.border = `1px solid ${isWeekend ? 'var(--border-sub)' : 'var(--border-soft)'}`;
       row.innerHTML = `
-        <span class="text-xs font-extrabold ${dow === 0 ? 'text-rose-500' : dow === 6 ? 'text-purple-600' : 'text-stone-700'} shrink-0">${DAY_NAMES[dow]}</span>
+        <span class="text-xs font-extrabold ${dow === 0 ? 'text-rose-500' : dow === 6 ? 'text-indigo-600' : 'text-stone-700'} shrink-0">${DAY_NAMES[dow]}</span>
         <input
           type="time"
           value="${val}"
           onchange="updateDayStartTime(${dow}, this.value)"
-          class="w-24 px-1.5 py-0.5 rounded-lg border border-pink-200 bg-pink-50/30 font-black text-center text-stone-800 outline-none focus:border-pink-400 text-xs"
+          class="w-24 px-1.5 py-0.5 rounded-lg themed-input font-black text-center outline-none text-xs"
         />
       `;
       grid.appendChild(row);
@@ -1631,7 +1784,6 @@
     const dayStartMs = combineDateAndHHMM(currentDate, dayStartHHMM);
 
     if (currentDate === todayStr) {
-      // まだ1つも開始しておらず、現在時刻が1日のスタート時間より前ならスタート時間を起点にする
       const anyStarted = (tasksByDate[currentDate] || []).some(t => t.status === 'completed' || t.status === 'running');
       if (!anyStarted && dayStartMs && nowMs < dayStartMs) {
         return dayStartMs;
@@ -1705,11 +1857,11 @@
     if (quickTaskType === 'single') {
       quickTaskType = 'carryover';
       btn.textContent = '💜 持ち越し';
-      btn.className = 'px-2.5 py-1 rounded-xl bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-700 shrink-0 active:scale-95 transition';
+      btn.className = 'px-2.5 py-1 rounded-xl themed-secondary-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition';
     } else {
       quickTaskType = 'single';
       btn.textContent = `${emoji} 単発`;
-      btn.className = 'px-2.5 py-1 rounded-xl bg-pink-50 border border-pink-200 text-[10px] font-extrabold text-pink-700 shrink-0 active:scale-95 transition';
+      btn.className = 'px-2.5 py-1 rounded-xl themed-type-single-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition';
     }
   }
 
@@ -1951,12 +2103,14 @@
     const now = new Date();
     const nowMs = now.getTime();
     const todayStr = getTodayStr();
+    const isBlue = prefs.theme === 'blue';
 
     const dateLabelEl = document.getElementById('currentDateLabel');
     dateLabelEl.textContent = formatDateWithDow(currentDate);
     dateLabelEl.className = currentDate === todayStr
-      ? 'text-xs sm:text-sm font-extrabold text-pink-700 tracking-tight'
+      ? 'text-xs sm:text-sm font-extrabold tracking-tight'
       : 'text-xs sm:text-sm font-extrabold text-stone-700 tracking-tight';
+    dateLabelEl.style.color = currentDate === todayStr ? 'var(--accent-text-strong)' : '';
 
     const scheduled = calculateSchedule(tasks);
     document.getElementById('liveClock').textContent = formatHHMM(now);
@@ -1988,9 +2142,9 @@
     container.innerHTML = '';
 
     if (scheduled.length === 0) {
-      const emptyEmoji = prefs.theme === 'blue' ? '💙' : '🌸';
+      const emptyEmoji = isBlue ? '💙' : '🌸';
       container.innerHTML = `
-        <div class="text-center py-12 px-4 rounded-3xl bg-white/70 border border-dashed border-pink-200 space-y-1.5">
+        <div class="text-center py-12 px-4 rounded-3xl bg-white/75 space-y-1.5" style="border: 1px dashed var(--border-soft);">
           <div class="text-2xl">${emptyEmoji}</div>
           <div class="text-xs font-extrabold text-stone-500">タスクがありません</div>
           <div class="text-[11px] text-stone-400">下の入力欄または「✨ ルーチン」から追加してね</div>
@@ -2021,7 +2175,7 @@
             <button type="button" onclick="event.stopPropagation(); startOrCompleteTask('${task.id}')" aria-label="完了" class="w-11 h-11 rounded-full summary-bar text-white flex items-center justify-center shadow-md active:scale-90 transition">
               <span class="w-3.5 h-3.5 rounded-xs bg-white block"></span>
             </button>
-            <button type="button" onclick="event.stopPropagation(); pauseRunningTask('${task.id}')" aria-label="引き継ぎ中断" class="px-2 py-0.5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 text-[10px] font-black active:scale-90 transition">
+            <button type="button" onclick="event.stopPropagation(); pauseRunningTask('${task.id}')" aria-label="引き継ぎ中断" class="px-2 py-0.5 rounded-full themed-secondary-btn text-[10px] font-black active:scale-90 transition">
               ⏸
             </button>
           </div>
@@ -2035,9 +2189,7 @@
       } else {
         const playStyle = isOverdue
           ? 'background: linear-gradient(135deg, #e11d48, #be123c);'
-          : prefs.theme === 'blue'
-          ? 'background: linear-gradient(135deg, #38bdf8, #0284c7);'
-          : 'background: linear-gradient(135deg, #f472b6, #ec4899);';
+          : 'background-image: linear-gradient(135deg, var(--accent-1), var(--accent-2));';
         leftBtnHtml = `
           <button type="button" onclick="event.stopPropagation(); startOrCompleteTask('${task.id}')" aria-label="開始" style="${playStyle}" class="w-11 h-11 rounded-full text-white flex items-center justify-center shrink-0 shadow-sm active:scale-90 transition ${isOverdue ? 'danger-play-btn' : ''}">
             <span class="text-sm ml-0.5">▶</span>
@@ -2051,8 +2203,8 @@
         const remSec = Math.max(0, estSec - elapsedSec);
         runningPillsHtml = `
           <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-purple-600 text-white tabular-nums">残 ${formatMMSS(remSec)}</span>
-            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 tabular-nums">計 ${formatMMSS(elapsedSec)}</span>
+            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full themed-primary-btn tabular-nums">残 ${formatMMSS(remSec)}</span>
+            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full themed-badge-act tabular-nums">計 ${formatMMSS(elapsedSec)}</span>
           </div>
         `;
       }
@@ -2061,7 +2213,7 @@
       if (grpStats) {
         const diffSign = grpStats.diffMin > 0 ? `+${grpStats.diffMin}` : `${grpStats.diffMin}`;
         groupPillHtml = `
-          <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100/90 border border-purple-200 text-[10px] font-extrabold text-purple-800">
+          <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full themed-badge-dur text-[10px] font-extrabold">
             <span>🔗 合計 ${grpStats.totalMin}分 / 元見積 ${grpStats.origEstMin}分 (残${grpStats.remMin}分・差${diffSign}分)</span>
           </div>
         `;
@@ -2081,10 +2233,10 @@
           ${leftBtnHtml}
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap text-[11px] font-extrabold">
-              <span class="${isRunning ? 'text-pink-600' : 'text-stone-400'} tabular-nums">${formatHHMM(displayStart)}〜${formatHHMM(displayEnd)}</span>
-              <span class="px-2 py-0.5 rounded-full bg-purple-100/80 text-purple-700 text-[10px]">${task.duration}分</span>
-              ${(isCompleted || isRunning) ? `<span class="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px]">${elapsedMin}m</span>` : ''}
-              ${task.deadline ? `<span class="px-2 py-0.5 rounded-full ${isOverdue ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 border border-rose-200/80'} text-[10px]">🎯${task.deadline}</span>` : ''}
+              <span class="tabular-nums" style="color: ${isRunning ? 'var(--accent-text)' : '#9ca3af'};">${formatHHMM(displayStart)}〜${formatHHMM(displayEnd)}</span>
+              <span class="px-2 py-0.5 rounded-full themed-badge-dur text-[10px]">${task.duration}分</span>
+              ${(isCompleted || isRunning) ? `<span class="px-2 py-0.5 rounded-full themed-badge-act text-[10px]">${elapsedMin}m</span>` : ''}
+              ${task.deadline ? `<span class="px-2 py-0.5 rounded-full ${isOverdue ? 'bg-rose-600 text-white' : 'themed-badge-dl'} text-[10px]">🎯${task.deadline}</span>` : ''}
             </div>
 
             <div class="text-sm font-extrabold text-stone-800 mt-1 truncate ${isCompleted ? 'line-through text-stone-500' : ''}">
@@ -2097,10 +2249,10 @@
             ${(task.comment || task.image) ? `
               <div class="mt-1.5 flex items-center gap-2">
                 ${task.image ? `
-                  <img src="${task.image}" alt="" class="h-14 w-auto max-w-[110px] object-contain rounded-xl border border-pink-200/90 bg-white/90 shrink-0 shadow-2xs" />
+                  <img src="${task.image}" alt="" class="h-14 w-auto max-w-[110px] object-contain rounded-xl bg-white/90 shrink-0 shadow-2xs" style="border: 1px solid var(--border-soft);" />
                 ` : ''}
                 ${task.comment ? `
-                  <div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/80 border border-pink-100 rounded-xl px-2.5 py-1.5 line-clamp-2">
+                  <div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/85 rounded-xl px-2.5 py-1.5 line-clamp-2" style="border: 1px solid var(--border-soft);">
                     💬 ${escapeHtml(task.comment)}
                   </div>
                 ` : ''}
@@ -2110,11 +2262,11 @@
 
           <div class="flex flex-col items-end gap-1.5 shrink-0">
             ${showPromoteBtn ? `
-              <button type="button" onclick="event.stopPropagation(); openTaskToRoutineModal('${task.id}')" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] font-extrabold shadow-2xs active:scale-90 transition">
+              <button type="button" onclick="event.stopPropagation(); openTaskToRoutineModal('${task.id}')" class="px-2.5 py-1 rounded-full themed-primary-btn text-[10px] font-extrabold shadow-2xs active:scale-90 transition">
                 ✨ルーチン化
               </button>
             ` : ''}
-            <button type="button" onclick="event.stopPropagation(); openQuickNoteModal('${task.id}')" aria-label="メモ・写真" class="w-8 h-8 rounded-full bg-white/80 hover:bg-pink-50 border border-pink-100 text-stone-500 flex items-center justify-center active:scale-90 transition">
+            <button type="button" onclick="event.stopPropagation(); openQuickNoteModal('${task.id}')" aria-label="メモ・写真" class="w-8 h-8 rounded-full themed-icon-btn flex items-center justify-center active:scale-90 transition">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
             </button>
           </div>
@@ -2268,7 +2420,7 @@
 
     if (entries.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-10 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 space-y-1">
+        <div class="text-center py-10 px-4 rounded-2xl space-y-1" style="background-color: var(--surface-soft); border: 1px dashed var(--border-soft);">
           <div class="text-2xl">💬</div>
           <div class="text-xs font-extrabold text-stone-500">まだメモや写真がありません</div>
           <div class="text-[11px] text-stone-400">タスク右側のカメラアイコンから残せるよ</div>
@@ -2287,25 +2439,25 @@
 
       const card = document.createElement('div');
       card.onclick = () => jumpToTaskFromCommentLog(dateStr, task.id);
-      card.className = 'p-3 rounded-2xl bg-gradient-to-r from-pink-50/60 to-purple-50/60 hover:from-pink-100/70 hover:to-purple-100/70 border border-pink-200/80 cursor-pointer active:scale-[0.98] transition space-y-1.5';
+      card.className = 'p-3 rounded-2xl themed-date-pill cursor-pointer active:scale-[0.98] transition space-y-1.5';
       card.innerHTML = `
         <div class="flex items-center justify-between gap-2 text-[10px] font-extrabold">
-          <div class="flex items-center gap-1.5 text-pink-700">
+          <div class="flex items-center gap-1.5" style="color: var(--accent-text-strong);">
             <span>📅 ${dateLabel}</span>
             <span class="text-stone-400">・</span>
-            <span class="text-purple-700">${timeRange}${actualMin > 0 ? ` (${actualMin}分)` : ''}</span>
+            <span style="color: var(--accent-sub-text);">${timeRange}${actualMin > 0 ? ` (${actualMin}分)` : ''}</span>
           </div>
-          <span class="text-pink-500 flex items-center gap-0.5 shrink-0">詳細へ →</span>
+          <span class="flex items-center gap-0.5 shrink-0" style="color: var(--accent-text);">詳細へ →</span>
         </div>
         <div class="text-xs font-extrabold text-stone-800 truncate">
           ${escapeHtml(task.title || '（無題のタスク）')}
         </div>
         <div class="flex items-start gap-2">
           ${task.image ? `
-            <img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl border border-pink-200 bg-white shrink-0" />
+            <img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl bg-white shrink-0" style="border: 1px solid var(--border-soft);" />
           ` : ''}
           ${task.comment ? `
-            <div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 border border-pink-100 leading-relaxed">
+            <div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 leading-relaxed" style="border: 1px solid var(--border-soft);">
               💬 ${escapeHtml(task.comment)}
             </div>
           ` : ''}
@@ -2373,7 +2525,7 @@
     document.querySelectorAll('#t2rRepeatTypeTabs button').forEach(btn => {
       const active = btn.dataset.rtype === type;
       btn.className = `py-1.5 rounded-lg text-[10px] font-extrabold transition ${
-        active ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-2xs' : 'text-stone-500 hover:text-stone-700'
+        active ? 'themed-primary-btn shadow-2xs' : 'text-stone-500 hover:text-stone-700'
       }`;
     });
     document.getElementById('t2rPanelWeekly').classList.toggle('hidden', type !== 'weekly');
@@ -2400,7 +2552,7 @@
         renderT2RRepeatSelectors();
       };
       btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
-        active ? 'bg-gradient-to-b from-pink-500 to-purple-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+        active ? 'themed-primary-btn border-transparent' : 'bg-white text-stone-400 border-stone-200'
       }`;
       btn.textContent = name;
       wrap.appendChild(btn);
@@ -2417,7 +2569,7 @@
         renderT2RRepeatSelectors();
       };
       btn.className = `py-1.5 rounded-xl font-extrabold text-[11px] border transition ${
-        active ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-stone-500 border-stone-200'
+        active ? 'themed-primary-btn border-transparent' : 'bg-white text-stone-500 border-stone-200'
       }`;
       btn.textContent = opt.label;
       nthWrap.appendChild(btn);
@@ -2434,7 +2586,7 @@
         renderT2RRepeatSelectors();
       };
       btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
-        active ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+        active ? 'themed-primary-btn border-transparent' : 'bg-white text-stone-400 border-stone-200'
       }`;
       btn.textContent = name;
       nthDayWrap.appendChild(btn);
@@ -2505,7 +2657,7 @@
     document.querySelectorAll('#routineRepeatTypeTabs button').forEach(btn => {
       const active = btn.dataset.rtype === type;
       btn.className = `py-1 rounded-lg text-[10px] font-extrabold transition ${
-        active ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-2xs' : 'text-stone-500 hover:text-stone-700'
+        active ? 'themed-primary-btn shadow-2xs' : 'text-stone-500 hover:text-stone-700'
       }`;
     });
     document.getElementById('routinePanelWeekly').classList.toggle('hidden', type !== 'weekly');
@@ -2533,7 +2685,7 @@
         renderRoutineRepeatSelectors();
       };
       btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
-        active ? 'bg-gradient-to-b from-pink-500 to-purple-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+        active ? 'themed-primary-btn border-transparent' : 'bg-white text-stone-400 border-stone-200'
       }`;
       btn.textContent = name;
       wrap.appendChild(btn);
@@ -2550,7 +2702,7 @@
         renderRoutineRepeatSelectors();
       };
       btn.className = `py-1.5 rounded-xl font-extrabold text-[11px] border transition ${
-        active ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-stone-500 border-stone-200'
+        active ? 'themed-primary-btn border-transparent' : 'bg-white text-stone-500 border-stone-200'
       }`;
       btn.textContent = opt.label;
       nthWrap.appendChild(btn);
@@ -2567,7 +2719,7 @@
         renderRoutineRepeatSelectors();
       };
       btn.className = `py-1.5 rounded-xl font-extrabold text-xs border transition ${
-        active ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-stone-400 border-stone-200'
+        active ? 'themed-primary-btn border-transparent' : 'bg-white text-stone-400 border-stone-200'
       }`;
       btn.textContent = name;
       nthDayWrap.appendChild(btn);
@@ -2582,7 +2734,7 @@
 
     if (tasks.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-8 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 text-xs font-bold text-stone-400">
+        <div class="text-center py-8 px-4 rounded-2xl text-xs font-bold text-stone-400" style="background-color: var(--surface-soft); border: 1px dashed var(--border-soft);">
           今日のタスクがまだありません
         </div>
       `;
@@ -2601,7 +2753,8 @@
       const act = grpStats ? grpStats.totalMin : Math.round(getTaskElapsedSeconds(t) / 60);
 
       const card = document.createElement('div');
-      card.className = 'flex items-center justify-between px-3 py-2.5 rounded-2xl bg-white border border-purple-100 shadow-2xs gap-2';
+      card.className = 'flex items-center justify-between px-3 py-2.5 rounded-2xl bg-white shadow-2xs gap-2';
+      card.style.border = '1px solid var(--border-sub)';
       card.innerHTML = `
         <div class="min-w-0 flex-1">
           <div class="text-xs font-extrabold text-stone-800 truncate">${escapeHtml(titleKey)}</div>
@@ -2610,11 +2763,11 @@
           </div>
         </div>
         ${alreadyRoutine ? `
-          <button type="button" disabled class="px-3 py-1.5 rounded-full bg-purple-100/80 text-purple-600 text-[11px] font-extrabold shrink-0 cursor-default">
+          <button type="button" disabled class="px-3 py-1.5 rounded-full themed-badge-dur text-[11px] font-extrabold shrink-0 cursor-default">
             ✓ 登録済み
           </button>
         ` : `
-          <button type="button" onclick="openTaskToRoutineModal('${t.id}')" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[11px] font-extrabold shadow-2xs shrink-0 active:scale-90 transition">
+          <button type="button" onclick="openTaskToRoutineModal('${t.id}')" class="px-3 py-1.5 rounded-full themed-primary-btn text-[11px] font-extrabold shadow-2xs shrink-0 active:scale-90 transition">
             ＋ ルーチンに追加
           </button>
         `}
@@ -2641,7 +2794,7 @@
     document.getElementById('routineListContainer').classList.remove('hidden');
     document.getElementById('routineImportSection').classList.add('hidden');
     document.getElementById('routineTabImportBtn').className =
-      'py-2 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition';
+      'py-2 px-3 rounded-2xl themed-secondary-btn font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition';
     document.getElementById('routineTabImportBtn').innerHTML = '<span>📥</span><span>今日のタスクから</span>';
   }
 
@@ -2653,7 +2806,7 @@
       document.getElementById('routineListContainer').classList.add('hidden');
       importEl.classList.remove('hidden');
       document.getElementById('routineTabImportBtn').className =
-        'py-2 px-3 rounded-2xl bg-purple-600 text-white border border-purple-600 font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition';
+        'py-2 px-3 rounded-2xl themed-primary-btn font-extrabold text-xs flex items-center justify-center gap-1 active:scale-95 transition';
       document.getElementById('routineTabImportBtn').innerHTML = '<span>←</span><span>ルーチン一覧へ</span>';
       renderTodayImportList();
     } else {
@@ -2844,8 +2997,8 @@
       const addedCard = listEl ? listEl.querySelector(`[data-routine-id="${newR.id}"]`) : null;
       if (addedCard) {
         addedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        addedCard.classList.add('ring-2', 'ring-pink-400', 'bg-pink-50');
-        setTimeout(() => addedCard.classList.remove('ring-2', 'ring-pink-400', 'bg-pink-50'), 1400);
+        addedCard.classList.add('ring-2', 'bg-white');
+        setTimeout(() => addedCard.classList.remove('ring-2', 'bg-white'), 1400);
       }
     }, 60);
   }
@@ -2879,7 +3032,7 @@
 
     if (routines.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-8 px-4 rounded-2xl bg-pink-50/40 border border-dashed border-pink-200 text-xs font-bold text-stone-400">
+        <div class="text-center py-8 px-4 rounded-2xl text-xs font-bold text-stone-400" style="background-color: var(--surface-soft); border: 1px dashed var(--border-soft);">
           上の「＋ 新しいルーチンを追加」から登録してね
         </div>
       `;
@@ -2892,24 +3045,26 @@
       const isEditing = r.id === editingId;
       const item = document.createElement('div');
       item.dataset.routineId = r.id;
-      item.className = `routine-item-card flex items-center justify-between px-3 py-2.5 rounded-2xl border select-none transition ${
-        isEditing ? 'bg-pink-50 border-pink-400' : 'bg-white border-purple-100 shadow-2xs'
+      item.className = `routine-item-card flex items-center justify-between px-3 py-2.5 rounded-2xl select-none transition ${
+        isEditing ? 'shadow-2xs' : 'bg-white shadow-2xs'
       }`;
+      item.style.backgroundColor = isEditing ? 'var(--surface-soft)' : '#ffffff';
+      item.style.border = `1px solid ${isEditing ? 'var(--accent-1)' : 'var(--border-sub)'}`;
       item.innerHTML = `
         <div class="flex items-center gap-2.5 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-5 shrink-0 text-purple-300 cursor-grab">
+          <div class="flex items-center justify-center w-5 shrink-0 cursor-grab" style="color: var(--accent-2);">
             <i data-lucide="grip-vertical" class="w-4 h-4"></i>
           </div>
           <div onclick="startEditRoutine('${r.id}')" class="min-w-0 flex-1 cursor-pointer">
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="text-xs font-extrabold text-stone-800 truncate">${escapeHtml(r.title)}</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 shrink-0">${r.duration}分</span>
-              ${r.deadline ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 shrink-0">🎯${r.deadline}</span>` : ''}
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full themed-badge-dur shrink-0">${r.duration}分</span>
+              ${r.deadline ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full themed-badge-act shrink-0">🎯${r.deadline}</span>` : ''}
             </div>
             <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
               <span class="text-[10px] font-bold text-stone-400 truncate">${escapeHtml(schedLabel)}</span>
               ${stats.count > 0 ? `
-                <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-pink-50/90 text-pink-600 border border-pink-100 shrink-0">
+                <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full themed-badge-act shrink-0">
                   実績 ${stats.count}回・平均 ${stats.avgMin}分
                 </span>
               ` : ''}
@@ -2917,7 +3072,7 @@
           </div>
         </div>
         <div class="flex items-center gap-1 shrink-0 ml-2">
-          <button type="button" onclick="startEditRoutine('${r.id}')" aria-label="編集" class="w-8 h-8 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-extrabold flex items-center justify-center active:scale-90 transition">✏️</button>
+          <button type="button" onclick="startEditRoutine('${r.id}')" aria-label="編集" class="w-8 h-8 rounded-xl themed-secondary-btn text-xs font-extrabold flex items-center justify-center active:scale-90 transition">✏️</button>
           <button type="button" onclick="deleteRoutine('${r.id}')" aria-label="削除" class="w-8 h-8 rounded-xl bg-rose-50/70 hover:bg-rose-100 text-stone-400 hover:text-rose-600 flex items-center justify-center active:scale-90 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
       `;
@@ -3106,13 +3261,13 @@
       endCol.classList.remove('hidden');
     } else if (t.status === 'running') {
       statusBadge.textContent = '▶ 実行中';
-      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500 text-white';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full themed-primary-btn';
       startInput.value = t.actualStart ? formatHHMM(t.actualStart) : formatHHMM(new Date());
       endInput.value = '';
       endCol.classList.add('hidden');
     } else {
       statusBadge.textContent = '未開始';
-      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700';
+      statusBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full themed-badge-dur';
       startInput.value = '';
       endInput.value = '';
       endCol.classList.add('hidden');
@@ -3493,21 +3648,21 @@
       btn.type = 'button';
       btn.onclick = () => selectCalendarDate(dateStr);
 
-      let cellStyle = 'bg-white hover:bg-pink-50 text-stone-700 border border-transparent';
+      let cellStyle = 'bg-white text-stone-700 border border-transparent';
       if (isSelected) {
-        cellStyle = 'bg-gradient-to-br from-pink-500 to-purple-500 text-white font-black shadow-xs';
+        cellStyle = 'themed-primary-btn font-black shadow-xs';
       } else if (isToday) {
-        cellStyle = 'bg-pink-50 text-pink-700 border border-pink-300 font-black';
+        cellStyle = 'themed-type-single-btn font-black';
       } else if (dow === 0) {
-        cellStyle = 'bg-white hover:bg-pink-50 text-rose-500 font-bold';
+        cellStyle = 'bg-white text-rose-500 font-bold';
       } else if (dow === 6) {
-        cellStyle = 'bg-white hover:bg-purple-50 text-purple-600 font-bold';
+        cellStyle = 'bg-white text-indigo-600 font-bold';
       }
 
       btn.className = `h-10 rounded-2xl flex flex-col items-center justify-center text-xs transition active:scale-90 ${cellStyle}`;
       btn.innerHTML = `
         <span class="leading-none">${day}</span>
-        <span class="w-1 h-1 rounded-full mt-1 ${hasSavedTasks ? (isSelected ? 'bg-white' : 'bg-pink-400') : 'opacity-0'}"></span>
+        <span class="w-1 h-1 rounded-full mt-1 ${hasSavedTasks ? (isSelected ? 'bg-white' : '') : 'opacity-0'}" style="${hasSavedTasks && !isSelected ? 'background-color: var(--accent-1);' : ''}"></span>
       `;
       grid.appendChild(btn);
     }
