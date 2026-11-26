@@ -376,14 +376,19 @@
 <div class="app-shell" id="app">
   <header class="sticky top-0 z-30 themed-header backdrop-blur-md px-3 pt-3 pb-2.5 shadow-2xs">
     <div class="flex items-center justify-between mb-2 gap-1">
-      <div class="flex items-center gap-1.5 min-w-0">
+      <button
+        type="button"
+        onclick="jumpToActiveOrNextTask()"
+        title="タップで実行中または次のタスクへジャンプ"
+        class="flex items-center gap-1.5 min-w-0 rounded-2xl py-0.5 pr-1.5 hover:bg-white/70 active:scale-95 transition text-left"
+      >
         <span id="headerLogoBadge" class="inline-flex items-center justify-center w-8 h-8 rounded-full themed-primary-btn shadow-xs text-base shrink-0">
           🌸
         </span>
         <h1 id="headerAppTitle" class="text-xs sm:text-sm font-extrabold tracking-tight truncate" style="color: var(--accent-text-strong);">
           たすくしゅーと
         </h1>
-      </div>
+      </button>
 
       <div class="flex items-center gap-1 shrink-0">
         <button type="button" onclick="openCommentLogModal()" aria-label="コメント一覧" class="w-8 h-8 rounded-2xl themed-icon-btn flex items-center justify-center active:scale-90 transition">
@@ -411,7 +416,7 @@
         type="button"
         id="dateHeaderTapTarget"
         onclick="handleDateAreaTap(event)"
-        title="タップでカレンダー・ダブルタップで今日に戻る"
+        title="タップでカレンダー・ダブルタップで進捗サマリー"
         class="flex-1 mx-1.5 py-1 px-2.5 rounded-xl hover:bg-white/70 active:bg-white transition flex items-center justify-center gap-1.5 select-none"
       >
         <i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0" style="color: var(--accent-1);"></i>
@@ -504,7 +509,106 @@
     </div>
   </div>
 
-  <!-- コメント・写真ログモーダル（キーワード検索・月絞り込み・月見出し・写真拡大対応） -->
+  <!-- 進捗サマリーモーダル（日付ダブルタップで表示） -->
+  <div id="progressSummaryModal" onclick="if(event.target===this) closeProgressSummaryModal()" class="hidden fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="themed-modal-card w-full max-w-[390px] rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+      <div class="px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between shrink-0">
+        <h2 id="summaryModalTitle" class="text-sm font-black text-stone-800">11月26日(木)の進捗</h2>
+        <button type="button" onclick="closeProgressSummaryModal()" class="w-8 h-8 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-3" style="background-color: var(--shell-bg);">
+        <!-- 今日のタスク -->
+        <div class="space-y-1.5">
+          <div class="text-xs font-extrabold text-stone-700 px-0.5">今日のタスク</div>
+          <div class="bg-white rounded-2xl p-4 shadow-2xs flex items-center gap-4" style="border: 1px solid var(--border-soft);">
+            <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+              <svg id="summaryRingSvg" class="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e7eb" stroke-width="8" />
+                <circle
+                  id="summaryRingProgress"
+                  cx="48"
+                  cy="48"
+                  r="38"
+                  fill="none"
+                  stroke="var(--accent-1)"
+                  stroke-width="8"
+                  stroke-linecap="round"
+                  stroke-dasharray="238.76"
+                  stroke-dashoffset="238.76"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span id="summaryCompletionRate" class="text-lg font-black text-stone-800 leading-none tabular-nums">0%</span>
+                <span class="text-[10px] font-bold text-stone-400 mt-1">完了</span>
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-0 divide-y divide-stone-100 text-xs">
+              <div class="py-1.5 flex items-center justify-between">
+                <span class="font-bold text-stone-400">合計</span>
+                <span id="summaryTotalCount" class="text-sm font-black text-stone-800 tabular-nums">0</span>
+              </div>
+              <div class="py-1.5 flex items-center justify-between">
+                <span class="font-bold text-stone-400">完了</span>
+                <span id="summaryCompletedCount" class="text-sm font-black tabular-nums" style="color: var(--accent-text);">0</span>
+              </div>
+              <div class="py-1.5 flex items-center justify-between">
+                <span class="font-bold text-stone-400">残り</span>
+                <span id="summaryRemainingCount" class="text-sm font-black text-amber-600 tabular-nums">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 今日の時間 -->
+        <div class="space-y-1.5">
+          <div class="text-xs font-extrabold text-stone-700 px-0.5">今日の時間</div>
+          <div class="bg-white rounded-2xl p-3.5 shadow-2xs space-y-2.5" style="border: 1px solid var(--border-sub);">
+            <div class="w-full h-2 rounded-full bg-stone-100 overflow-hidden">
+              <div id="summaryTimeBarFill" class="h-full rounded-full themed-primary-btn transition-all duration-300" style="width: 0%;"></div>
+            </div>
+            <div class="flex items-center justify-between gap-2 text-xs font-extrabold flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: var(--accent-1);"></span>
+                <span class="text-stone-600">実績</span>
+                <span id="summaryActualTime" class="font-black text-stone-800 tabular-nums">00:00</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-stone-300 shrink-0"></span>
+                <span class="text-stone-600">残り見積</span>
+                <span id="summaryRemainingEstTime" class="font-black text-stone-800 tabular-nums">00:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 終了予定時刻 -->
+        <div class="bg-white rounded-2xl px-4 py-3 shadow-2xs flex items-center justify-between gap-2" style="border: 1px solid var(--border-soft);">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-full themed-icon-btn flex items-center justify-center shrink-0">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+            </span>
+            <span class="text-xs font-extrabold text-stone-700">終了予定時刻</span>
+          </div>
+          <span id="summaryEndTimeLabel" class="text-sm font-black tabular-nums" style="color: var(--accent-text-strong);">--:--</span>
+        </div>
+
+        <div class="pt-1 flex items-center justify-between gap-2">
+          <button type="button" onclick="closeProgressSummaryModal(); jumpToToday(true);" class="px-3.5 py-2 rounded-xl themed-secondary-btn text-xs font-extrabold active:scale-95 transition">
+            今日へ戻る
+          </button>
+          <button type="button" onclick="closeProgressSummaryModal()" class="flex-1 py-2 rounded-xl themed-primary-btn text-xs font-extrabold shadow-2xs active:scale-95 transition">
+            とじる
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- コメント・写真ログモーダル -->
   <div id="commentLogModal" onclick="if(event.target===this) closeCommentLogModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[88dvh] flex flex-col">
       <div class="flex items-center justify-between mb-2 shrink-0">
@@ -518,7 +622,6 @@
         </button>
       </div>
 
-      <!-- キーワード検索バー -->
       <div class="relative mb-2 shrink-0">
         <i data-lucide="search" class="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
         <input
@@ -539,7 +642,6 @@
         </button>
       </div>
 
-      <!-- 月ごとの絞り込みチップ -->
       <div id="commentLogMonthChips" class="flex items-center gap-1.5 overflow-x-auto pb-1.5 mb-1.5 shrink-0"></div>
 
       <div class="text-[10px] font-bold text-stone-400 mb-2 shrink-0">
@@ -605,7 +707,7 @@
         <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1"></div>
 
         <div class="pt-1 flex items-center justify-between gap-2">
-          <span id="calendarHintText" class="text-[10px] font-bold text-stone-400">💡 日付をダブルタップでも今日に戻るよ</span>
+          <span id="calendarHintText" class="text-[10px] font-bold text-stone-400">💡 日付をダブルタップで進捗サマリーだよ</span>
           <button type="button" onclick="selectCalendarDate(getTodayStr())" class="px-3.5 py-1.5 rounded-full themed-primary-btn text-xs font-extrabold shadow-2xs active:scale-95 transition shrink-0">
             今日へ移動
           </button>
@@ -1124,7 +1226,6 @@
   let isSavingRoutineLock = false;
   let lastRenderedMinuteKey = '';
 
-  // コメントログ検索・月絞り込み用ステート
   let commentLogKeyword = '';
   let commentLogSelectedMonth = 'all';
 
@@ -1179,6 +1280,26 @@
     const m = mins % 60;
     if (h === 0) return `${m}分`;
     return `${h}時間${m}分`;
+  }
+
+  function formatClockDuration(totalMinutes) {
+    const mins = Math.max(0, Math.round(Number(totalMinutes) || 0));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function formatEndTimeWithDay(baseDateStr, endMs) {
+    if (!endMs) return '--:--';
+    const endDt = new Date(endMs);
+    const endDateStr = `${endDt.getFullYear()}-${String(endDt.getMonth() + 1).padStart(2, '0')}-${String(endDt.getDate()).padStart(2, '0')}`;
+    const baseMs = combineDateAndHHMM(baseDateStr, '00:00');
+    const endDayStartMs = combineDateAndHHMM(endDateStr, '00:00');
+    const dayDiff = baseMs && endDayStartMs ? Math.round((endDayStartMs - baseMs) / 86400000) : 0;
+    const hhmm = formatHHMM(endDt);
+    if (dayDiff === 1) return `翌 ${hhmm}`;
+    if (dayDiff > 1) return `+${dayDiff}日 ${hhmm}`;
+    return hhmm;
   }
 
   function generateAppIconAndManifest() {
@@ -1336,6 +1457,11 @@
   function formatDateWithDow(dateStr) {
     const dt = parseDateKey(dateStr);
     return `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 (${DAY_NAMES[dt.getDay()]})`;
+  }
+
+  function formatShortDateWithDow(dateStr) {
+    const dt = parseDateKey(dateStr);
+    return `${dt.getMonth() + 1}月${dt.getDate()}日(${DAY_NAMES[dt.getDay()]})`;
   }
 
   function addDays(dateStr, diff) {
@@ -1828,14 +1954,12 @@
     return continuation;
   }
 
-  // 現在時刻と1日のスタート時間を踏まえたスケジュール基準時刻を返す
   function getScheduleBaseMs(nowMs = Date.now()) {
     const todayStr = getTodayStr();
     const dayStartHHMM = getStartTimeForDate(currentDate);
     const dayStartMs = combineDateAndHHMM(currentDate, dayStartHHMM);
 
     if (currentDate === todayStr) {
-      // まだ1つも開始しておらず、現在時刻が1日のスタート時間より前ならスタート時間から並べる
       const anyStarted = (tasksByDate[currentDate] || []).some(t => t.status === 'completed' || t.status === 'running');
       if (!anyStarted && dayStartMs && nowMs < dayStartMs) {
         return dayStartMs;
@@ -1861,7 +1985,6 @@
         const end = task.actualEnd || (start + getTaskElapsedSeconds(task, nowMs) * 1000);
         displayStart = start;
         displayEnd = end;
-        // 完了済みの終了時刻が現在時刻より先（手動入力など）の場合は、その終了時刻を基準に維持
         if (isToday) {
           cursorMs = Math.max(cursorMs, end, nowMs);
         } else {
@@ -1873,11 +1996,9 @@
         const estSec = (task.duration || 0) * 60;
         const remSec = Math.max(0, estSec - elapsedSec);
         displayStart = start;
-        // 残り時間が0になっても、現在時刻より前に終了予定が戻らないように押し出す
         displayEnd = Math.max(nowMs, nowMs + remSec * 1000);
         cursorMs = displayEnd;
       } else {
-        // 未完了タスク: 今日であれば必ず max(現在時刻, 直前の終了予定時刻) で現在時刻以降に押し出す
         if (isToday) {
           cursorMs = Math.max(nowMs, cursorMs);
         }
@@ -1886,7 +2007,6 @@
         cursorMs = displayEnd;
       }
 
-      // 予想開始時刻（または現在時刻）がターゲット時刻を過ぎていたら赤く警告する
       let isOverdue = false;
       if (task.deadline && task.status !== 'completed') {
         const dlMs = combineDateAndHHMM(currentDate, task.deadline);
@@ -1901,6 +2021,110 @@
 
       return { task, displayStart, displayEnd, isOverdue };
     });
+  }
+
+  // ===== ヘッダーロゴタップで実行中または次のタスクへジャンプ =====
+  function jumpToActiveOrNextTask() {
+    const todayStr = getTodayStr();
+    if (currentDate !== todayStr) {
+      currentDate = todayStr;
+      ensureTasksForDate(currentDate);
+      renderAll();
+    }
+
+    const tasks = ensureTasksForDate(currentDate);
+    if (!tasks || tasks.length === 0) {
+      showToast('今日のタスクはありません');
+      return;
+    }
+
+    const runningTask = tasks.find(t => t.status === 'running');
+    const nextPendingTask = tasks.find(t => t.status === 'pending');
+    const targetTask = runningTask || nextPendingTask || tasks[tasks.length - 1];
+
+    if (!targetTask) return;
+
+    const targetWrapper = document.querySelector(`.swipe-wrapper[data-task-id="${targetTask.id}"]`);
+    if (targetWrapper) {
+      targetWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetWrapper.classList.add('jump-highlight');
+      setTimeout(() => targetWrapper.classList.remove('jump-highlight'), 1800);
+    }
+
+    if (runningTask) {
+      showToast(`実行中「${targetTask.title || '無題'}」へジャンプ▶`);
+    } else if (nextPendingTask) {
+      showToast(`次の予定「${targetTask.title || '無題'}」へジャンプ⏭`);
+    } else {
+      showToast('今日のタスクはすべて完了してるよ✨');
+    }
+  }
+
+  // ===== 進捗サマリーモーダル =====
+  function openProgressSummaryModal(targetDateStr = currentDate) {
+    const tasks = ensureTasksForDate(targetDateStr);
+    const nowMs = Date.now();
+
+    document.getElementById('summaryModalTitle').textContent = `${formatShortDateWithDow(targetDateStr)}の進捗`;
+
+    const totalCount = tasks.length;
+    const completedCount = tasks.filter(t => t.status === 'completed').length;
+    const remainingCount = Math.max(0, totalCount - completedCount);
+    const rate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    document.getElementById('summaryCompletionRate').textContent = `${rate}%`;
+    document.getElementById('summaryTotalCount').textContent = `${totalCount}`;
+    document.getElementById('summaryCompletedCount').textContent = `${completedCount}`;
+    document.getElementById('summaryRemainingCount').textContent = `${remainingCount}`;
+
+    const ringCircle = document.getElementById('summaryRingProgress');
+    const circumference = 2 * Math.PI * 38; // 238.76
+    const offset = circumference * (1 - rate / 100);
+    if (ringCircle) {
+      ringCircle.style.strokeDasharray = `${circumference}`;
+      ringCircle.style.strokeDashoffset = `${offset}`;
+    }
+
+    let actualMinTotal = 0;
+    let remainingEstMinTotal = 0;
+    let lastEndMs = null;
+
+    // 対象日のスケジュール計算（一時的に表示日基準で算出）
+    const savedDate = currentDate;
+    currentDate = targetDateStr;
+    const scheduled = calculateSchedule(tasks);
+    currentDate = savedDate;
+
+    scheduled.forEach(({ task, displayEnd }) => {
+      if (task.status === 'completed') {
+        actualMinTotal += Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
+      } else if (task.status === 'running') {
+        const elMin = Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
+        actualMinTotal += elMin;
+        remainingEstMinTotal += Math.max(0, (task.duration || 0) - elMin);
+        lastEndMs = displayEnd;
+      } else {
+        remainingEstMinTotal += (task.duration || 0);
+        lastEndMs = displayEnd;
+      }
+    });
+
+    const totalTimeMin = actualMinTotal + remainingEstMinTotal;
+    const timePct = totalTimeMin > 0 ? Math.min(100, Math.round((actualMinTotal / totalTimeMin) * 100)) : 0;
+    const barFill = document.getElementById('summaryTimeBarFill');
+    if (barFill) barFill.style.width = `${timePct}%`;
+
+    document.getElementById('summaryActualTime').textContent = formatClockDuration(actualMinTotal);
+    document.getElementById('summaryRemainingEstTime').textContent = formatClockDuration(remainingEstMinTotal);
+    document.getElementById('summaryEndTimeLabel').textContent =
+      lastEndMs !== null ? formatEndTimeWithDay(targetDateStr, lastEndMs) : '完了✨';
+
+    document.getElementById('progressSummaryModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeProgressSummaryModal() {
+    document.getElementById('progressSummaryModal').classList.add('hidden');
   }
 
   function updateQuickDurationDisplay() {
@@ -2460,7 +2684,6 @@
     renderAll();
   }
 
-  // ===== コメント・写真ログ（検索・月絞り込み・月見出し・写真拡大） =====
   function openCommentLogModal() {
     commentLogKeyword = '';
     commentLogSelectedMonth = 'all';
@@ -2516,7 +2739,7 @@
       .reverse()
       .forEach(dateStr => {
         const list = tasksByDate[dateStr] || [];
-        const monthKey = dateStr.slice(0, 7); // YYYY-MM
+        const monthKey = dateStr.slice(0, 7);
         for (let i = list.length - 1; i >= 0; i--) {
           const t = list[i];
           if ((t.comment && t.comment.trim()) || t.image) {
@@ -2530,7 +2753,6 @@
       commentLogSelectedMonth = 'all';
     }
 
-    // 月ごとの絞り込みチップ描画
     const sortedMonths = Array.from(monthCounts.keys()).sort().reverse();
     if (sortedMonths.length > 0) {
       const allBtn = document.createElement('button');
@@ -2555,7 +2777,6 @@
       });
     }
 
-    // 月＆キーワードでフィルタリング
     const kw = commentLogKeyword.toLowerCase();
     const filtered = allEntries.filter(({ dateStr, monthKey, task }) => {
       if (commentLogSelectedMonth !== 'all' && monthKey !== commentLogSelectedMonth) {
@@ -2583,7 +2804,6 @@
 
     let lastRenderedMonth = '';
     filtered.forEach(({ dateStr, monthKey, task }) => {
-      // 月ごとの見出し表示
       if (monthKey !== lastRenderedMonth) {
         lastRenderedMonth = monthKey;
         const headerEl = document.createElement('div');
@@ -3766,7 +3986,7 @@
       dateTapTimer = null;
       lastDateTapMs = 0;
       closeCalendarModal();
-      jumpToToday(true);
+      openProgressSummaryModal(currentDate);
       return;
     }
     lastDateTapMs = now;
@@ -3783,7 +4003,7 @@
     calendarViewYear = dt.getFullYear();
     calendarViewMonth = dt.getMonth();
     document.getElementById('calendarModalTitle').textContent = '日付を選ぶ';
-    document.getElementById('calendarHintText').textContent = '💡 日付をダブルタップでも今日に戻るよ';
+    document.getElementById('calendarHintText').textContent = '💡 日付をダブルタップで進捗サマリーだよ';
     renderCalendarGrid();
     document.getElementById('calendarModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -4037,7 +4257,6 @@
     const minuteKey = `${todayStr}_${now.getHours()}:${now.getMinutes()}`;
     const tasks = tasksByDate[currentDate] || [];
 
-    // 実行中タスクがある場合は毎秒、それ以外でも分が変わった瞬間に予定・終了予定を再計算
     if (tasks.some(t => t.status === 'running') || minuteKey !== lastRenderedMinuteKey) {
       renderAll();
     } else {
@@ -4052,7 +4271,6 @@
     setInterval(tickRealtimeSchedule, 1000);
   });
 
-  // アプリを再度開いたとき・タブに戻ったときにも即座に現在時刻で再計算する
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       renderAll();
