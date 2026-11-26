@@ -504,22 +504,69 @@
     </div>
   </div>
 
+  <!-- コメント・写真ログモーダル（キーワード検索・月絞り込み・月見出し・写真拡大対応） -->
   <div id="commentLogModal" onclick="if(event.target===this) closeCommentLogModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[85dvh] flex flex-col">
+    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[88dvh] flex flex-col">
       <div class="flex items-center justify-between mb-2 shrink-0">
         <div class="flex items-center gap-1.5">
           <span class="text-base">💬</span>
           <h2 class="text-sm font-extrabold text-stone-800">コメント・写真ログ一覧</h2>
+          <span id="commentLogCountBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full themed-badge-dur">0件</span>
         </div>
         <button type="button" onclick="closeCommentLogModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-      <div class="text-[11px] font-bold text-stone-400 mb-2.5 shrink-0">
-        タップするとその日のタスク詳細画面へジャンプするよ
+
+      <!-- キーワード検索バー -->
+      <div class="relative mb-2 shrink-0">
+        <i data-lucide="search" class="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+        <input
+          type="text"
+          id="commentLogSearchInput"
+          placeholder="🔍 コメント・タスク名・日付で検索..."
+          oninput="handleCommentLogSearchInput()"
+          class="w-full pl-8 pr-8 py-1.5 rounded-2xl themed-input outline-none font-bold placeholder:text-stone-400 placeholder:font-normal text-sm"
+        />
+        <button
+          type="button"
+          id="commentLogSearchClearBtn"
+          onclick="clearCommentLogSearch()"
+          aria-label="検索クリア"
+          class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-stone-200/80 text-stone-600 text-xs font-extrabold flex items-center justify-center active:scale-90"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- 月ごとの絞り込みチップ -->
+      <div id="commentLogMonthChips" class="flex items-center gap-1.5 overflow-x-auto pb-1.5 mb-1.5 shrink-0"></div>
+
+      <div class="text-[10px] font-bold text-stone-400 mb-2 shrink-0">
+        カードタップでその日の詳細へ ／ 写真タップで拡大 🖼️
       </div>
       <div id="commentLogListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 pb-2"></div>
     </div>
+  </div>
+
+  <!-- 写真拡大ライトボックス -->
+  <div id="photoLightboxModal" onclick="closePhotoLightbox()" class="hidden fixed inset-0 z-[70] bg-black/85 backdrop-blur-xs flex flex-col items-center justify-center p-4">
+    <button
+      type="button"
+      onclick="event.stopPropagation(); closePhotoLightbox();"
+      aria-label="閉じる"
+      class="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center active:scale-90 transition"
+    >
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+    <img
+      id="photoLightboxImg"
+      src=""
+      alt="拡大写真"
+      onclick="event.stopPropagation()"
+      class="max-w-full max-h-[80dvh] object-contain rounded-2xl shadow-2xl border border-white/20"
+    />
+    <div id="photoLightboxCaption" class="mt-3 text-xs font-bold text-white/90 text-center max-w-md px-3"></div>
   </div>
 
   <div id="calendarModal" onclick="if(event.target===this) closeCalendarModal()" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-center justify-center p-4">
@@ -708,7 +755,7 @@
             <button type="button" id="removeModalImageBtn" onclick="clearModalImage()" class="hidden px-2 py-2 text-[10px] text-rose-500 font-bold shrink-0">削除</button>
           </div>
           <div id="modalImagePreviewWrap" class="hidden pt-0.5">
-            <img id="modalImagePreview" src="" alt="プレビュー" class="h-20 w-auto max-w-full object-contain rounded-xl bg-white/80" style="border: 1px solid var(--border-soft);" />
+            <img id="modalImagePreview" src="" alt="プレビュー" onclick="openPhotoLightbox(this.src, document.getElementById('taskTitleInput').value)" class="h-20 w-auto max-w-full object-contain rounded-xl bg-white/80 cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
           </div>
         </div>
 
@@ -933,7 +980,6 @@
         </button>
       </div>
 
-      <!-- テーマカラー切替 -->
       <div class="p-3 rounded-2xl space-y-2" style="background-color: var(--surface-soft); border: 1px solid var(--border-soft);">
         <div class="text-[11px] font-extrabold text-stone-700">🎨 テーマカラー</div>
         <div class="grid grid-cols-2 gap-2">
@@ -956,7 +1002,6 @@
         </div>
       </div>
 
-      <!-- 曜日ごとの1日のスタート時間 -->
       <div class="p-3 rounded-2xl space-y-2" style="background-color: var(--surface-sub); border: 1px solid var(--border-sub);">
         <div class="flex items-center justify-between gap-1 flex-wrap">
           <span class="text-[11px] font-extrabold text-stone-700">🌅 1日のスタート時間</span>
@@ -1025,7 +1070,7 @@
           <button type="button" id="quickNoteRemoveImgBtn" onclick="removeQuickNoteImage()" class="hidden text-xs text-rose-500 font-bold">削除</button>
         </div>
         <div id="quickNoteImgPreviewWrap" class="hidden pt-0.5">
-          <img id="quickNoteImgPreview" src="" alt="プレビュー" class="h-28 w-auto max-w-full object-contain rounded-2xl" style="border: 1px solid var(--border-soft); background-color: var(--surface-soft);" />
+          <img id="quickNoteImgPreview" src="" alt="プレビュー" onclick="openPhotoLightbox(this.src, document.getElementById('quickNoteTitle').textContent)" class="h-28 w-auto max-w-full object-contain rounded-2xl cursor-zoom-in" style="border: 1px solid var(--border-soft); background-color: var(--surface-soft);" />
         </div>
         <button type="button" onclick="saveQuickNote()" class="w-full py-3 rounded-2xl themed-primary-btn font-extrabold text-sm shadow-sm">
           保存する
@@ -1077,6 +1122,11 @@
   let currentEditingRoutineAvgMin = null;
   let modalPrevEndTimeMs = null;
   let isSavingRoutineLock = false;
+  let lastRenderedMinuteKey = '';
+
+  // コメントログ検索・月絞り込み用ステート
+  let commentLogKeyword = '';
+  let commentLogSelectedMonth = 'all';
 
   let calendarViewYear = new Date().getFullYear();
   let calendarViewMonth = new Date().getMonth();
@@ -1778,12 +1828,14 @@
     return continuation;
   }
 
+  // 現在時刻と1日のスタート時間を踏まえたスケジュール基準時刻を返す
   function getScheduleBaseMs(nowMs = Date.now()) {
     const todayStr = getTodayStr();
     const dayStartHHMM = getStartTimeForDate(currentDate);
     const dayStartMs = combineDateAndHHMM(currentDate, dayStartHHMM);
 
     if (currentDate === todayStr) {
+      // まだ1つも開始しておらず、現在時刻が1日のスタート時間より前ならスタート時間から並べる
       const anyStarted = (tasksByDate[currentDate] || []).some(t => t.status === 'completed' || t.status === 'running');
       if (!anyStarted && dayStartMs && nowMs < dayStartMs) {
         return dayStartMs;
@@ -1796,6 +1848,8 @@
 
   function calculateSchedule(tasks) {
     const nowMs = Date.now();
+    const todayStr = getTodayStr();
+    const isToday = currentDate === todayStr;
     let cursorMs = getScheduleBaseMs(nowMs);
 
     return tasks.map(task => {
@@ -1807,28 +1861,39 @@
         const end = task.actualEnd || (start + getTaskElapsedSeconds(task, nowMs) * 1000);
         displayStart = start;
         displayEnd = end;
+        // 完了済みの終了時刻が現在時刻より先（手動入力など）の場合は、その終了時刻を基準に維持
+        if (isToday) {
+          cursorMs = Math.max(cursorMs, end, nowMs);
+        } else {
+          cursorMs = Math.max(cursorMs, end);
+        }
       } else if (task.status === 'running') {
         const start = task.actualStart || nowMs;
         const elapsedSec = getTaskElapsedSeconds(task, nowMs);
         const estSec = (task.duration || 0) * 60;
         const remSec = Math.max(0, estSec - elapsedSec);
         displayStart = start;
-        displayEnd = nowMs + remSec * 1000;
+        // 残り時間が0になっても、現在時刻より前に終了予定が戻らないように押し出す
+        displayEnd = Math.max(nowMs, nowMs + remSec * 1000);
         cursorMs = displayEnd;
       } else {
+        // 未完了タスク: 今日であれば必ず max(現在時刻, 直前の終了予定時刻) で現在時刻以降に押し出す
+        if (isToday) {
+          cursorMs = Math.max(nowMs, cursorMs);
+        }
         displayStart = cursorMs;
         displayEnd = cursorMs + (task.duration || 0) * 60000;
         cursorMs = displayEnd;
       }
 
-      // 予想開始時刻（または現在時刻）がターゲット時刻を過ぎていたら警告表示にする
+      // 予想開始時刻（または現在時刻）がターゲット時刻を過ぎていたら赤く警告する
       let isOverdue = false;
       if (task.deadline && task.status !== 'completed') {
         const dlMs = combineDateAndHHMM(currentDate, task.deadline);
         if (dlMs !== null) {
           if (displayStart > dlMs) {
             isOverdue = true;
-          } else if (currentDate === getTodayStr() && nowMs > dlMs) {
+          } else if (isToday && nowMs > dlMs) {
             isOverdue = true;
           }
         }
@@ -2107,6 +2172,8 @@
     const todayStr = getTodayStr();
     const isBlue = prefs.theme === 'blue';
 
+    lastRenderedMinuteKey = `${todayStr}_${now.getHours()}:${now.getMinutes()}`;
+
     const dateLabelEl = document.getElementById('currentDateLabel');
     dateLabelEl.textContent = formatDateWithDow(currentDate);
     dateLabelEl.className = currentDate === todayStr
@@ -2119,7 +2186,7 @@
 
     let remainingEstMin = 0;
     let completedActualMin = 0;
-    let lastEndMs = getScheduleBaseMs(nowMs);
+    let lastIncompleteEndMs = null;
 
     scheduled.forEach(({ task, displayEnd }) => {
       if (task.status === 'completed') {
@@ -2128,17 +2195,17 @@
         const elapsedMin = Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
         completedActualMin += elapsedMin;
         remainingEstMin += Math.max(0, (task.duration || 0) - elapsedMin);
-        lastEndMs = displayEnd;
+        lastIncompleteEndMs = displayEnd;
       } else {
         remainingEstMin += (task.duration || 0);
-        lastEndMs = displayEnd;
+        lastIncompleteEndMs = displayEnd;
       }
     });
 
     document.getElementById('totalEstLabel').textContent = formatHoursMinutes(remainingEstMin);
     document.getElementById('totalActualLabel').textContent = formatHoursMinutes(completedActualMin);
     document.getElementById('finalEndTime').textContent =
-      tasks.some(t => t.status !== 'completed') ? formatHHMM(lastEndMs) : '完了✨';
+      lastIncompleteEndMs !== null ? formatHHMM(lastIncompleteEndMs) : '完了✨';
 
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '';
@@ -2222,6 +2289,7 @@
       }
 
       const showPromoteBtn = isCompleted && (task.taskType === 'single' || task.taskType === 'carryover');
+      const safeTitle = escapeHtml(task.title || '（無題のタスク）');
 
       const wrapper = document.createElement('div');
       wrapper.className = 'swipe-wrapper';
@@ -2242,7 +2310,7 @@
             </div>
 
             <div class="text-sm font-extrabold text-stone-800 mt-1 truncate ${isCompleted ? 'line-through text-stone-500' : ''}">
-              ${escapeHtml(task.title || '（無題のタスク）')}
+              ${safeTitle}
             </div>
 
             ${runningPillsHtml}
@@ -2251,7 +2319,7 @@
             ${(task.comment || task.image) ? `
               <div class="mt-1.5 flex items-center gap-2">
                 ${task.image ? `
-                  <img src="${task.image}" alt="" class="h-14 w-auto max-w-[110px] object-contain rounded-xl bg-white/90 shrink-0 shadow-2xs" style="border: 1px solid var(--border-soft);" />
+                  <img src="${task.image}" alt="" onclick="event.stopPropagation(); openPhotoLightbox(this.src, '${safeTitle.replace(/'/g, '&#39;')}');" class="h-14 w-auto max-w-[110px] object-contain rounded-xl bg-white/90 shrink-0 shadow-2xs cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
                 ` : ''}
                 ${task.comment ? `
                   <div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/85 rounded-xl px-2.5 py-1.5 line-clamp-2" style="border: 1px solid var(--border-soft);">
@@ -2299,7 +2367,7 @@
     };
 
     wrapper.addEventListener('touchstart', e => {
-      if (e.target.closest('button')) return;
+      if (e.target.closest('button') || e.target.closest('img')) return;
       const touch = e.touches[0];
       startX = touch.clientX;
       startY = touch.clientY;
@@ -2392,7 +2460,13 @@
     renderAll();
   }
 
+  // ===== コメント・写真ログ（検索・月絞り込み・月見出し・写真拡大） =====
   function openCommentLogModal() {
+    commentLogKeyword = '';
+    commentLogSelectedMonth = 'all';
+    const searchInput = document.getElementById('commentLogSearchInput');
+    if (searchInput) searchInput.value = '';
+    document.getElementById('commentLogSearchClearBtn').classList.add('hidden');
     renderCommentLogList();
     document.getElementById('commentLogModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -2402,42 +2476,134 @@
     document.getElementById('commentLogModal').classList.add('hidden');
   }
 
+  function handleCommentLogSearchInput() {
+    const input = document.getElementById('commentLogSearchInput');
+    commentLogKeyword = (input ? input.value : '').trim();
+    document.getElementById('commentLogSearchClearBtn').classList.toggle('hidden', !commentLogKeyword);
+    renderCommentLogList();
+  }
+
+  function clearCommentLogSearch() {
+    commentLogKeyword = '';
+    const input = document.getElementById('commentLogSearchInput');
+    if (input) input.value = '';
+    document.getElementById('commentLogSearchClearBtn').classList.add('hidden');
+    renderCommentLogList();
+  }
+
+  function selectCommentLogMonth(monthKey) {
+    commentLogSelectedMonth = monthKey;
+    renderCommentLogList();
+  }
+
+  function formatMonthKeyLabel(monthKey) {
+    const [y, m] = monthKey.split('-');
+    return `${y}年${Number(m)}月`;
+  }
+
   function renderCommentLogList() {
     const container = document.getElementById('commentLogListContainer');
+    const chipsContainer = document.getElementById('commentLogMonthChips');
+    const countBadge = document.getElementById('commentLogCountBadge');
     container.innerHTML = '';
+    chipsContainer.innerHTML = '';
 
-    const entries = [];
+    const allEntries = [];
+    const monthCounts = new Map();
+
     Object.keys(tasksByDate)
       .sort()
       .reverse()
       .forEach(dateStr => {
         const list = tasksByDate[dateStr] || [];
+        const monthKey = dateStr.slice(0, 7); // YYYY-MM
         for (let i = list.length - 1; i >= 0; i--) {
           const t = list[i];
           if ((t.comment && t.comment.trim()) || t.image) {
-            entries.push({ dateStr, task: t });
+            allEntries.push({ dateStr, monthKey, task: t });
+            monthCounts.set(monthKey, (monthCounts.get(monthKey) || 0) + 1);
           }
         }
       });
 
-    if (entries.length === 0) {
+    if (commentLogSelectedMonth !== 'all' && !monthCounts.has(commentLogSelectedMonth)) {
+      commentLogSelectedMonth = 'all';
+    }
+
+    // 月ごとの絞り込みチップ描画
+    const sortedMonths = Array.from(monthCounts.keys()).sort().reverse();
+    if (sortedMonths.length > 0) {
+      const allBtn = document.createElement('button');
+      allBtn.type = 'button';
+      allBtn.onclick = () => selectCommentLogMonth('all');
+      allBtn.className = `px-2.5 py-1 rounded-full text-[11px] font-extrabold shrink-0 transition active:scale-95 ${
+        commentLogSelectedMonth === 'all' ? 'themed-primary-btn shadow-2xs' : 'themed-chip-btn'
+      }`;
+      allBtn.textContent = `すべて (${allEntries.length})`;
+      chipsContainer.appendChild(allBtn);
+
+      sortedMonths.forEach(mKey => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => selectCommentLogMonth(mKey);
+        const isActive = commentLogSelectedMonth === mKey;
+        btn.className = `px-2.5 py-1 rounded-full text-[11px] font-extrabold shrink-0 transition active:scale-95 ${
+          isActive ? 'themed-primary-btn shadow-2xs' : 'themed-chip-btn'
+        }`;
+        btn.textContent = `${formatMonthKeyLabel(mKey)} (${monthCounts.get(mKey)})`;
+        chipsContainer.appendChild(btn);
+      });
+    }
+
+    // 月＆キーワードでフィルタリング
+    const kw = commentLogKeyword.toLowerCase();
+    const filtered = allEntries.filter(({ dateStr, monthKey, task }) => {
+      if (commentLogSelectedMonth !== 'all' && monthKey !== commentLogSelectedMonth) {
+        return false;
+      }
+      if (!kw) return true;
+      const dt = parseDateKey(dateStr);
+      const dateSearchText = `${dateStr} ${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 ${dt.getMonth() + 1}/${dt.getDate()}`;
+      const targetText = `${task.title || ''} ${task.comment || ''} ${dateSearchText}`.toLowerCase();
+      return targetText.includes(kw);
+    });
+
+    if (countBadge) countBadge.textContent = `${filtered.length}件`;
+
+    if (filtered.length === 0) {
       container.innerHTML = `
         <div class="text-center py-10 px-4 rounded-2xl space-y-1" style="background-color: var(--surface-soft); border: 1px dashed var(--border-soft);">
           <div class="text-2xl">💬</div>
-          <div class="text-xs font-extrabold text-stone-500">まだメモや写真がありません</div>
-          <div class="text-[11px] text-stone-400">タスク右側のカメラアイコンから残せるよ</div>
+          <div class="text-xs font-extrabold text-stone-500">${allEntries.length === 0 ? 'まだメモや写真がありません' : '条件に合うログが見つかりませんでした'}</div>
+          <div class="text-[11px] text-stone-400">${allEntries.length === 0 ? 'タスク右側のカメラアイコンから残せるよ' : '検索キーワードや月の選択を変えてみてね'}</div>
         </div>
       `;
       return;
     }
 
-    entries.forEach(({ dateStr, task }) => {
+    let lastRenderedMonth = '';
+    filtered.forEach(({ dateStr, monthKey, task }) => {
+      // 月ごとの見出し表示
+      if (monthKey !== lastRenderedMonth) {
+        lastRenderedMonth = monthKey;
+        const headerEl = document.createElement('div');
+        headerEl.className = 'sticky top-0 z-10 flex items-center justify-between px-3 py-1 rounded-xl bg-white/95 backdrop-blur-xs text-[11px] font-extrabold shadow-2xs';
+        headerEl.style.border = '1px solid var(--border-sub)';
+        headerEl.style.color = 'var(--accent-sub-text)';
+        headerEl.innerHTML = `
+          <span>📅 ${formatMonthKeyLabel(monthKey)}</span>
+          <span class="text-[10px] font-bold text-stone-400">${monthCounts.get(monthKey)}件の記録</span>
+        `;
+        container.appendChild(headerEl);
+      }
+
       const dt = parseDateKey(dateStr);
       const dateLabel = `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()} (${DAY_NAMES[dt.getDay()]})`;
       const timeRange = task.actualStart
         ? `${formatHHMM(task.actualStart)}〜${task.actualEnd ? formatHHMM(task.actualEnd) : '実行中'}`
         : `見積 ${task.duration}分`;
       const actualMin = Math.round(getTaskElapsedSeconds(task) / 60);
+      const captionText = `${dateLabel} ・ ${task.title || '（無題のタスク）'}`;
 
       const card = document.createElement('div');
       card.onclick = () => jumpToTaskFromCommentLog(dateStr, task.id);
@@ -2456,10 +2622,13 @@
         </div>
         <div class="flex items-start gap-2">
           ${task.image ? `
-            <img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl bg-white shrink-0" style="border: 1px solid var(--border-soft);" />
+            <div class="relative shrink-0 group" onclick="event.stopPropagation(); openPhotoLightbox('${task.image}', '${escapeHtml(captionText).replace(/'/g, '&#39;')}');">
+              <img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl bg-white cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
+              <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/55 text-white text-[9px] font-bold pointer-events-none">🔍</span>
+            </div>
           ` : ''}
           ${task.comment ? `
-            <div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 leading-relaxed" style="border: 1px solid var(--border-soft);">
+            <div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 leading-relaxed whitespace-pre-wrap break-words" style="border: 1px solid var(--border-soft);">
               💬 ${escapeHtml(task.comment)}
             </div>
           ` : ''}
@@ -2467,6 +2636,22 @@
       `;
       container.appendChild(card);
     });
+  }
+
+  function openPhotoLightbox(imgSrc, caption = '') {
+    if (!imgSrc) return;
+    const modal = document.getElementById('photoLightboxModal');
+    const imgEl = document.getElementById('photoLightboxImg');
+    const capEl = document.getElementById('photoLightboxCaption');
+    imgEl.src = imgSrc;
+    capEl.textContent = caption || '';
+    modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closePhotoLightbox() {
+    document.getElementById('photoLightboxModal').classList.add('hidden');
+    document.getElementById('photoLightboxImg').src = '';
   }
 
   function jumpToTaskFromCommentLog(dateStr, taskId) {
@@ -3845,19 +4030,36 @@
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function tickRealtimeSchedule() {
+    if (document.querySelector('input:focus, textarea:focus')) return;
+    const now = new Date();
+    const todayStr = getTodayStr();
+    const minuteKey = `${todayStr}_${now.getHours()}:${now.getMinutes()}`;
+    const tasks = tasksByDate[currentDate] || [];
+
+    // 実行中タスクがある場合は毎秒、それ以外でも分が変わった瞬間に予定・終了予定を再計算
+    if (tasks.some(t => t.status === 'running') || minuteKey !== lastRenderedMinuteKey) {
+      renderAll();
+    } else {
+      document.getElementById('liveClock').textContent = formatHHMM(now);
+    }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     initData();
     updateQuickDurationDisplay();
     renderAll();
-    setInterval(() => {
-      if (document.querySelector('input:focus, textarea:focus')) return;
-      const tasks = tasksByDate[currentDate] || [];
-      if (tasks.some(t => t.status === 'running')) {
-        renderAll();
-      } else {
-        document.getElementById('liveClock').textContent = formatHHMM(new Date());
-      }
-    }, 1000);
+    setInterval(tickRealtimeSchedule, 1000);
+  });
+
+  // アプリを再度開いたとき・タブに戻ったときにも即座に現在時刻で再計算する
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      renderAll();
+    }
+  });
+  window.addEventListener('focus', () => {
+    renderAll();
   });
 </script>
 </body>
