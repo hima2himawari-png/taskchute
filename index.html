@@ -1797,7 +1797,6 @@
   function calculateSchedule(tasks) {
     const nowMs = Date.now();
     let cursorMs = getScheduleBaseMs(nowMs);
-    const todayStr = getTodayStr();
 
     return tasks.map(task => {
       let displayStart = cursorMs;
@@ -1822,13 +1821,16 @@
         cursorMs = displayEnd;
       }
 
+      // 予想開始時刻（または現在時刻）がターゲット時刻を過ぎていたら警告表示にする
       let isOverdue = false;
-      if (task.deadline && task.status === 'pending' && currentDate === todayStr) {
-        const [dh, dm] = task.deadline.split(':').map(Number);
-        const dlDate = new Date();
-        dlDate.setHours(dh, dm, 0, 0);
-        if (nowMs > dlDate.getTime()) {
-          isOverdue = true;
+      if (task.deadline && task.status !== 'completed') {
+        const dlMs = combineDateAndHHMM(currentDate, task.deadline);
+        if (dlMs !== null) {
+          if (displayStart > dlMs) {
+            isOverdue = true;
+          } else if (currentDate === getTodayStr() && nowMs > dlMs) {
+            isOverdue = true;
+          }
         }
       }
 
@@ -2233,7 +2235,7 @@
           ${leftBtnHtml}
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap text-[11px] font-extrabold">
-              <span class="tabular-nums" style="color: ${isRunning ? 'var(--accent-text)' : '#9ca3af'};">${formatHHMM(displayStart)}〜${formatHHMM(displayEnd)}</span>
+              <span class="tabular-nums" style="color: ${isOverdue ? '#e11d48' : isRunning ? 'var(--accent-text)' : '#9ca3af'};">${formatHHMM(displayStart)}〜${formatHHMM(displayEnd)}</span>
               <span class="px-2 py-0.5 rounded-full themed-badge-dur text-[10px]">${task.duration}分</span>
               ${(isCompleted || isRunning) ? `<span class="px-2 py-0.5 rounded-full themed-badge-act text-[10px]">${elapsedMin}m</span>` : ''}
               ${task.deadline ? `<span class="px-2 py-0.5 rounded-full ${isOverdue ? 'bg-rose-600 text-white' : 'themed-badge-dl'} text-[10px]">🎯${task.deadline}</span>` : ''}
