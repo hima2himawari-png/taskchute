@@ -509,7 +509,7 @@
     </div>
   </div>
 
-  <!-- 進捗サマリーモーダル（日付ダブルタップで表示） -->
+  <!-- 進捗サマリーモーダル -->
   <div id="progressSummaryModal" onclick="if(event.target===this) closeProgressSummaryModal()" class="hidden fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="themed-modal-card w-full max-w-[390px] rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
       <div class="px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between shrink-0">
@@ -520,7 +520,6 @@
       </div>
 
       <div class="p-4 overflow-y-auto space-y-3" style="background-color: var(--shell-bg);">
-        <!-- 今日のタスク -->
         <div class="space-y-1.5">
           <div class="text-xs font-extrabold text-stone-700 px-0.5">今日のタスク</div>
           <div class="bg-white rounded-2xl p-4 shadow-2xs flex items-center gap-4" style="border: 1px solid var(--border-soft);">
@@ -563,7 +562,6 @@
           </div>
         </div>
 
-        <!-- 今日の時間 -->
         <div class="space-y-1.5">
           <div class="text-xs font-extrabold text-stone-700 px-0.5">今日の時間</div>
           <div class="bg-white rounded-2xl p-3.5 shadow-2xs space-y-2.5" style="border: 1px solid var(--border-sub);">
@@ -585,7 +583,6 @@
           </div>
         </div>
 
-        <!-- 終了予定時刻 -->
         <div class="bg-white rounded-2xl px-4 py-3 shadow-2xs flex items-center justify-between gap-2" style="border: 1px solid var(--border-soft);">
           <div class="flex items-center gap-2.5">
             <span class="w-8 h-8 rounded-full themed-icon-btn flex items-center justify-center shrink-0">
@@ -613,7 +610,6 @@
     <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[88dvh] flex flex-col">
       <div class="flex items-center justify-between mb-2 shrink-0">
         <div class="flex items-center gap-1.5">
-          <span class="text-base">💬</span>
           <h2 class="text-sm font-extrabold text-stone-800">コメント・写真ログ一覧</h2>
           <span id="commentLogCountBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full themed-badge-dur">0件</span>
         </div>
@@ -627,7 +623,7 @@
         <input
           type="text"
           id="commentLogSearchInput"
-          placeholder="🔍 コメント・タスク名・日付で検索..."
+          placeholder="コメント・タスク名・日付で検索..."
           oninput="handleCommentLogSearchInput()"
           class="w-full pl-8 pr-8 py-1.5 rounded-2xl themed-input outline-none font-bold placeholder:text-stone-400 placeholder:font-normal text-sm"
         />
@@ -848,7 +844,7 @@
 
         <div class="space-y-1.5">
           <div class="flex items-start gap-1.5">
-            <textarea id="taskCommentInput" rows="1" placeholder="💬 ひとことメモ..." class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input outline-none resize-none"></textarea>
+            <textarea id="taskCommentInput" rows="1" placeholder="ひとことメモ..." class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input outline-none resize-none"></textarea>
             <label class="px-2.5 py-2 rounded-xl themed-icon-btn text-[11px] font-bold cursor-pointer flex items-center gap-1 shrink-0">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
               <span>写真</span>
@@ -1156,7 +1152,7 @@
   <div id="quickNoteModal" onclick="if(event.target===this) closeQuickNoteModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] flex flex-col overflow-hidden">
       <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-xs px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between shrink-0">
-        <h3 id="quickNoteTitle" class="text-sm font-extrabold text-stone-800 truncate pr-2">💬 メモ・写真</h3>
+        <h3 id="quickNoteTitle" class="text-sm font-extrabold text-stone-800 truncate pr-2">メモ・写真</h3>
         <button type="button" onclick="closeQuickNoteModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
@@ -1954,13 +1950,13 @@
     return continuation;
   }
 
-  function getScheduleBaseMs(nowMs = Date.now()) {
+  function getScheduleBaseMs(nowMs = Date.now(), targetDateStr = currentDate) {
     const todayStr = getTodayStr();
-    const dayStartHHMM = getStartTimeForDate(currentDate);
-    const dayStartMs = combineDateAndHHMM(currentDate, dayStartHHMM);
+    const dayStartHHMM = getStartTimeForDate(targetDateStr);
+    const dayStartMs = combineDateAndHHMM(targetDateStr, dayStartHHMM);
 
-    if (currentDate === todayStr) {
-      const anyStarted = (tasksByDate[currentDate] || []).some(t => t.status === 'completed' || t.status === 'running');
+    if (targetDateStr === todayStr) {
+      const anyStarted = (tasksByDate[targetDateStr] || []).some(t => t.status === 'completed' || t.status === 'running');
       if (!anyStarted && dayStartMs && nowMs < dayStartMs) {
         return dayStartMs;
       }
@@ -1970,11 +1966,12 @@
     return dayStartMs || nowMs;
   }
 
-  function calculateSchedule(tasks) {
-    const nowMs = Date.now();
+  function calculateSchedule(tasks, nowMs = Date.now(), targetDateStr = currentDate) {
     const todayStr = getTodayStr();
-    const isToday = currentDate === todayStr;
-    let cursorMs = getScheduleBaseMs(nowMs);
+    const isToday = targetDateStr === todayStr;
+    // 分単位で揃えて計算の1分ズレを防ぐ
+    const minuteAlignedNowMs = Math.floor(nowMs / 60000) * 60000;
+    let cursorMs = getScheduleBaseMs(minuteAlignedNowMs, targetDateStr);
 
     return tasks.map(task => {
       let displayStart = cursorMs;
@@ -1986,21 +1983,21 @@
         displayStart = start;
         displayEnd = end;
         if (isToday) {
-          cursorMs = Math.max(cursorMs, end, nowMs);
+          cursorMs = Math.max(cursorMs, end, minuteAlignedNowMs);
         } else {
           cursorMs = Math.max(cursorMs, end);
         }
       } else if (task.status === 'running') {
-        const start = task.actualStart || nowMs;
+        const start = task.actualStart || minuteAlignedNowMs;
         const elapsedSec = getTaskElapsedSeconds(task, nowMs);
         const estSec = (task.duration || 0) * 60;
         const remSec = Math.max(0, estSec - elapsedSec);
         displayStart = start;
-        displayEnd = Math.max(nowMs, nowMs + remSec * 1000);
+        displayEnd = Math.max(minuteAlignedNowMs, nowMs + remSec * 1000);
         cursorMs = displayEnd;
       } else {
         if (isToday) {
-          cursorMs = Math.max(nowMs, cursorMs);
+          cursorMs = Math.max(minuteAlignedNowMs, cursorMs);
         }
         displayStart = cursorMs;
         displayEnd = cursorMs + (task.duration || 0) * 60000;
@@ -2009,7 +2006,7 @@
 
       let isOverdue = false;
       if (task.deadline && task.status !== 'completed') {
-        const dlMs = combineDateAndHHMM(currentDate, task.deadline);
+        const dlMs = combineDateAndHHMM(targetDateStr, task.deadline);
         if (dlMs !== null) {
           if (displayStart > dlMs) {
             isOverdue = true;
@@ -2023,7 +2020,6 @@
     });
   }
 
-  // ===== ヘッダーロゴタップで実行中または次のタスクへジャンプ =====
   function jumpToActiveOrNextTask() {
     const todayStr = getTodayStr();
     if (currentDate !== todayStr) {
@@ -2060,7 +2056,6 @@
     }
   }
 
-  // ===== 進捗サマリーモーダル =====
   function openProgressSummaryModal(targetDateStr = currentDate) {
     const tasks = ensureTasksForDate(targetDateStr);
     const nowMs = Date.now();
@@ -2078,7 +2073,7 @@
     document.getElementById('summaryRemainingCount').textContent = `${remainingCount}`;
 
     const ringCircle = document.getElementById('summaryRingProgress');
-    const circumference = 2 * Math.PI * 38; // 238.76
+    const circumference = 2 * Math.PI * 38;
     const offset = circumference * (1 - rate / 100);
     if (ringCircle) {
       ringCircle.style.strokeDasharray = `${circumference}`;
@@ -2089,11 +2084,7 @@
     let remainingEstMinTotal = 0;
     let lastEndMs = null;
 
-    // 対象日のスケジュール計算（一時的に表示日基準で算出）
-    const savedDate = currentDate;
-    currentDate = targetDateStr;
-    const scheduled = calculateSchedule(tasks);
-    currentDate = savedDate;
+    const scheduled = calculateSchedule(tasks, nowMs, targetDateStr);
 
     scheduled.forEach(({ task, displayEnd }) => {
       if (task.status === 'completed') {
@@ -2405,7 +2396,7 @@
       : 'text-xs sm:text-sm font-extrabold text-stone-700 tracking-tight';
     dateLabelEl.style.color = currentDate === todayStr ? 'var(--accent-text-strong)' : '';
 
-    const scheduled = calculateSchedule(tasks);
+    const scheduled = calculateSchedule(tasks, nowMs, currentDate);
     document.getElementById('liveClock').textContent = formatHHMM(now);
 
     let remainingEstMin = 0;
@@ -2514,6 +2505,7 @@
 
       const showPromoteBtn = isCompleted && (task.taskType === 'single' || task.taskType === 'carryover');
       const safeTitle = escapeHtml(task.title || '（無題のタスク）');
+      const cleanComment = (task.comment || '').trim();
 
       const wrapper = document.createElement('div');
       wrapper.className = 'swipe-wrapper';
@@ -2540,16 +2532,12 @@
             ${runningPillsHtml}
             ${groupPillHtml}
 
-            ${(task.comment || task.image) ? `
+            ${(cleanComment || task.image) ? `
               <div class="mt-1.5 flex items-center gap-2">
                 ${task.image ? `
                   <img src="${task.image}" alt="" onclick="event.stopPropagation(); openPhotoLightbox(this.src, '${safeTitle.replace(/'/g, '&#39;')}');" class="h-14 w-auto max-w-[110px] object-contain rounded-xl bg-white/90 shrink-0 shadow-2xs cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
                 ` : ''}
-                ${task.comment ? `
-                  <div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/85 rounded-xl px-2.5 py-1.5 line-clamp-2" style="border: 1px solid var(--border-soft);">
-                    💬 ${escapeHtml(task.comment)}
-                  </div>
-                ` : ''}
+                ${cleanComment ? `<div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/85 rounded-xl px-2.5 py-1.5 line-clamp-2 text-left" style="border: 1px solid var(--border-soft);">${escapeHtml(cleanComment)}</div>` : ''}
               </div>
             ` : ''}
           </div>
@@ -2794,7 +2782,6 @@
     if (filtered.length === 0) {
       container.innerHTML = `
         <div class="text-center py-10 px-4 rounded-2xl space-y-1" style="background-color: var(--surface-soft); border: 1px dashed var(--border-soft);">
-          <div class="text-2xl">💬</div>
           <div class="text-xs font-extrabold text-stone-500">${allEntries.length === 0 ? 'まだメモや写真がありません' : '条件に合うログが見つかりませんでした'}</div>
           <div class="text-[11px] text-stone-400">${allEntries.length === 0 ? 'タスク右側のカメラアイコンから残せるよ' : '検索キーワードや月の選択を変えてみてね'}</div>
         </div>
@@ -2824,10 +2811,21 @@
         : `見積 ${task.duration}分`;
       const actualMin = Math.round(getTaskElapsedSeconds(task) / 60);
       const captionText = `${dateLabel} ・ ${task.title || '（無題のタスク）'}`;
+      const cleanComment = (task.comment || '').trim();
 
       const card = document.createElement('div');
       card.onclick = () => jumpToTaskFromCommentLog(dateStr, task.id);
-      card.className = 'p-3 rounded-2xl themed-date-pill cursor-pointer active:scale-[0.98] transition space-y-1.5';
+      card.className = 'p-3 rounded-2xl themed-date-pill cursor-pointer active:scale-[0.98] transition space-y-1.5 text-left';
+
+      const imgHtml = task.image
+        ? `<div class="relative shrink-0 group" onclick="event.stopPropagation(); openPhotoLightbox('${task.image}', '${escapeHtml(captionText).replace(/'/g, '&#39;')}');"><img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl bg-white cursor-zoom-in" style="border: 1px solid var(--border-soft);" /><span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/55 text-white text-[9px] font-bold pointer-events-none">🔍</span></div>`
+        : '';
+
+      // whitespace-pre-wrap を使うため、タグとテキストの間にインデント空白を一切入れない
+      const commentHtml = cleanComment
+        ? `<div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 leading-relaxed whitespace-pre-wrap break-words text-left" style="border: 1px solid var(--border-soft);">${escapeHtml(cleanComment)}</div>`
+        : '';
+
       card.innerHTML = `
         <div class="flex items-center justify-between gap-2 text-[10px] font-extrabold">
           <div class="flex items-center gap-1.5" style="color: var(--accent-text-strong);">
@@ -2840,19 +2838,7 @@
         <div class="text-xs font-extrabold text-stone-800 truncate">
           ${escapeHtml(task.title || '（無題のタスク）')}
         </div>
-        <div class="flex items-start gap-2">
-          ${task.image ? `
-            <div class="relative shrink-0 group" onclick="event.stopPropagation(); openPhotoLightbox('${task.image}', '${escapeHtml(captionText).replace(/'/g, '&#39;')}');">
-              <img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl bg-white cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
-              <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/55 text-white text-[9px] font-bold pointer-events-none">🔍</span>
-            </div>
-          ` : ''}
-          ${task.comment ? `
-            <div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 leading-relaxed whitespace-pre-wrap break-words" style="border: 1px solid var(--border-soft);">
-              💬 ${escapeHtml(task.comment)}
-            </div>
-          ` : ''}
-        </div>
+        <div class="flex items-start gap-2">${imgHtml}${commentHtml}</div>
       `;
       container.appendChild(card);
     });
@@ -3897,7 +3883,7 @@
     const t = tasks.find(x => x.id === taskId);
     if (!t) return;
     quickNoteTargetId = taskId;
-    document.getElementById('quickNoteTitle').textContent = `💬 ${t.title || 'メモ・写真'}`;
+    document.getElementById('quickNoteTitle').textContent = `${t.title || 'メモ・写真'}`;
     document.getElementById('quickNoteTextarea').value = t.comment || '';
     quickNoteImgBase64 = t.image || '';
     if (quickNoteImgBase64) {
