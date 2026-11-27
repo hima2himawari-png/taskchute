@@ -108,14 +108,14 @@
       --summary-act-text: #7dd3fc;
     }
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
 
     input, textarea, select {
       font-size: 16px !important;
-      line-height: 1.35;
+      line-height: 1.4;
       user-select: text !important;
       -webkit-user-select: text !important;
       -webkit-touch-callout: default !important;
@@ -257,6 +257,14 @@
     .summary-est-text { color: var(--summary-est-text); }
     .summary-act-text { color: var(--summary-act-text); }
 
+    .auto-expand-textarea {
+      overflow-y: hidden;
+      transition: height 0.12s ease;
+    }
+    .auto-expand-textarea.is-max-height {
+      overflow-y: auto;
+    }
+
     .swipe-wrapper {
       position: relative;
       overflow: hidden;
@@ -373,8 +381,8 @@
 </head>
 <body>
 
-<div class="app-shell" id="app">
-  <header class="sticky top-0 z-30 themed-header backdrop-blur-md px-3 pt-3 pb-2.5 shadow-2xs">
+<div class="app-shell" id="app"> 
+<header class="sticky top-0 z-30 themed-header backdrop-blur-md px-3 pt-3 pb-2.5 shadow-2xs">
     <div class="flex items-center justify-between mb-2 gap-1">
       <button
         type="button"
@@ -448,7 +456,7 @@
     </div>
   </header>
 
-  <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-36 space-y-2.5 overflow-y-auto"></main>
+  <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-40 space-y-2.5 overflow-y-auto"></main>
 
   <div class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
     <div class="max-w-[480px] mx-auto px-3 pt-2.5 pb-4 themed-bottom-bar backdrop-blur-md rounded-t-3xl pointer-events-auto space-y-2">
@@ -480,24 +488,34 @@
         </button>
       </div>
 
-      <div class="flex items-center justify-between gap-1 overflow-x-auto">
+      <div class="flex items-center justify-between gap-1.5 overflow-x-auto">
         <div class="flex items-center gap-1 shrink-0">
-          <span id="quickDurationDisplay" class="text-xs font-black themed-duration-box px-2.5 py-1 rounded-xl tabular-nums">0分</span>
+          <span id="quickDurationDisplay" class="text-xs font-black themed-duration-box px-2 py-1 rounded-xl tabular-nums">0分</span>
           <button type="button" onclick="addQuickDuration(5)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+5</button>
           <button type="button" onclick="addQuickDuration(10)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+10</button>
           <button type="button" onclick="addQuickDuration(30)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+30</button>
           <button type="button" onclick="addQuickDuration(60)" class="px-2 py-1 themed-chip-btn rounded-xl text-[11px] font-extrabold active:scale-90">+1h</button>
-          <button type="button" onclick="resetQuickDuration()" aria-label="クリア" class="px-2 py-1 bg-rose-100 rounded-xl text-[11px] font-extrabold text-rose-700 active:scale-90">↺</button>
+          <button type="button" onclick="resetQuickDuration()" aria-label="クリア" class="px-1.5 py-1 bg-rose-100 rounded-xl text-[11px] font-extrabold text-rose-700 active:scale-90">↺</button>
         </div>
 
-        <button
-          type="button"
-          id="quickTaskTypeToggle"
-          onclick="cycleQuickTaskType()"
-          class="px-2.5 py-1 rounded-xl themed-type-single-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition"
-        >
-          🌸 単発
-        </button>
+        <div class="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onclick="openAddFromRoutineModal()"
+            class="px-2 py-1 rounded-xl themed-routine-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition flex items-center gap-0.5"
+          >
+            <span>✨</span>
+            <span>ルーチンから追加</span>
+          </button>
+          <button
+            type="button"
+            id="quickTaskTypeToggle"
+            onclick="cycleQuickTaskType()"
+            class="px-2 py-1 rounded-xl themed-type-single-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition"
+          >
+            🌸 単発
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -509,7 +527,32 @@
     </div>
   </div>
 
-  <!-- 進捗サマリーモーダル -->
+  <div id="addFromRoutineModal" onclick="if(event.target===this) closeAddFromRoutineModal()" class="hidden fixed inset-0 z-50 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[86dvh] flex flex-col">
+      <div class="flex items-center justify-between mb-2.5 shrink-0">
+        <div class="flex items-center gap-1.5">
+          <h2 class="text-sm font-extrabold text-stone-800">✨ ルーチンからタスクを追加</h2>
+        </div>
+        <button type="button" onclick="closeAddFromRoutineModal()" class="w-9 h-9 rounded-full themed-icon-btn flex items-center justify-center shrink-0 active:scale-90 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="relative mb-2.5 shrink-0">
+        <i data-lucide="search" class="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+        <input
+          type="text"
+          id="addFromRoutineSearchInput"
+          placeholder="ルーチン名で絞り込み..."
+          oninput="renderAddFromRoutineList()"
+          class="w-full pl-8 pr-3 py-1.5 rounded-2xl themed-input outline-none font-bold placeholder:text-stone-400 placeholder:font-normal text-sm"
+        />
+      </div>
+
+      <div id="addFromRoutineListContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 pb-2"></div>
+    </div>
+  </div>
+
   <div id="progressSummaryModal" onclick="if(event.target===this) closeProgressSummaryModal()" class="hidden fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="themed-modal-card w-full max-w-[390px] rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
       <div class="px-5 pt-4 pb-3 border-b border-stone-100 flex items-center justify-between shrink-0">
@@ -593,9 +636,13 @@
           <span id="summaryEndTimeLabel" class="text-sm font-black tabular-nums" style="color: var(--accent-text-strong);">--:--</span>
         </div>
 
-        <div class="pt-1 flex items-center justify-between gap-2">
-          <button type="button" onclick="closeProgressSummaryModal(); jumpToToday(true);" class="px-3.5 py-2 rounded-xl themed-secondary-btn text-xs font-extrabold active:scale-95 transition">
-            今日へ戻る
+        <div class="pt-1 flex items-center gap-2">
+          <button type="button" onclick="shareProgressSummaryImage()" class="px-3 py-2 rounded-xl themed-secondary-btn text-xs font-extrabold flex items-center gap-1 active:scale-95 transition shrink-0">
+            <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+            <span>画像で共有</span>
+          </button>
+          <button type="button" onclick="closeProgressSummaryModal(); jumpToToday(true);" class="px-3 py-2 rounded-xl themed-chip-btn text-xs font-extrabold active:scale-95 transition shrink-0">
+            今日へ
           </button>
           <button type="button" onclick="closeProgressSummaryModal()" class="flex-1 py-2 rounded-xl themed-primary-btn text-xs font-extrabold shadow-2xs active:scale-95 transition">
             とじる
@@ -605,7 +652,6 @@
     </div>
   </div>
 
-  <!-- コメント・写真ログモーダル -->
   <div id="commentLogModal" onclick="if(event.target===this) closeCommentLogModal()" class="hidden fixed inset-0 z-40 bg-stone-900/45 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="themed-modal-card w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl max-h-[88dvh] flex flex-col">
       <div class="flex items-center justify-between mb-2 shrink-0">
@@ -623,7 +669,7 @@
         <input
           type="text"
           id="commentLogSearchInput"
-          placeholder="コメント・タスク名・日付で検索..."
+          placeholder="コメント・チェック項目・タスク名で検索..."
           oninput="handleCommentLogSearchInput()"
           class="w-full pl-8 pr-8 py-1.5 rounded-2xl themed-input outline-none font-bold placeholder:text-stone-400 placeholder:font-normal text-sm"
         />
@@ -647,7 +693,6 @@
     </div>
   </div>
 
-  <!-- 写真拡大ライトボックス -->
   <div id="photoLightboxModal" onclick="closePhotoLightbox()" class="hidden fixed inset-0 z-[70] bg-black/85 backdrop-blur-xs flex flex-col items-center justify-center p-4">
     <button
       type="button"
@@ -842,9 +887,45 @@
           </label>
         </div>
 
+        <div id="modalChecklistSection" class="hidden rounded-2xl p-2.5 space-y-1.5" style="background-color: var(--surface-sub); border: 1px solid var(--border-sub);">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[10px] font-extrabold" style="color: var(--accent-sub-text);">☑ チェックリスト（ダブルタップで編集）</span>
+            <span id="modalChecklistProgress" class="text-[10px] font-black tabular-nums" style="color: var(--accent-text);">0/0</span>
+          </div>
+
+          <div id="modalChecklistView" ondblclick="enterChecklistEditMode()" class="space-y-1 cursor-pointer"></div>
+
+          <div id="modalChecklistEditBox" class="hidden space-y-1.5">
+            <div class="text-[10px] font-bold text-stone-500">1行＝1項目（空行・前後空白は自動除外）</div>
+            <textarea
+              id="modalChecklistTextarea"
+              rows="4"
+              oninput="autoResizeTextarea(this, 180, 76)"
+              placeholder="牛乳&#10;鶏むね肉&#10;トマト"
+              class="w-full px-2.5 py-1.5 rounded-xl bg-white text-stone-800 outline-none auto-expand-textarea"
+              style="border: 1px solid var(--border-sub);"
+            ></textarea>
+            <div class="flex items-center justify-end gap-1.5">
+              <button type="button" onclick="cancelChecklistEditMode()" class="px-2.5 py-1 rounded-lg bg-white text-stone-500 text-[10px] font-extrabold" style="border: 1px solid var(--border-sub);">
+                キャンセル
+              </button>
+              <button type="button" onclick="applyChecklistEditFromModal()" class="px-3 py-1 rounded-lg themed-primary-btn text-[10px] font-extrabold shadow-2xs">
+                リストに反映
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="space-y-1.5">
           <div class="flex items-start gap-1.5">
-            <textarea id="taskCommentInput" rows="1" placeholder="ひとことメモ..." class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input outline-none resize-none"></textarea>
+            <textarea
+              id="taskCommentInput"
+              rows="1"
+              ondblclick="enterChecklistEditMode()"
+              oninput="autoResizeTextarea(this, 140, 36)"
+              placeholder="ひとことメモ（ダブルタップでチェックリスト作成）..."
+              class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input outline-none resize-none auto-expand-textarea"
+            ></textarea>
             <label class="px-2.5 py-2 rounded-xl themed-icon-btn text-[11px] font-bold cursor-pointer flex items-center gap-1 shrink-0">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
               <span>写真</span>
@@ -919,12 +1000,17 @@
 
           <div>
             <span class="block text-[11px] font-extrabold text-stone-500 mb-1.5">繰り返しパターン</span>
-            <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl" style="border: 1px solid var(--border-sub);" id="t2rRepeatTypeTabs">
+            <div class="grid grid-cols-5 gap-1 bg-white p-1 rounded-xl" style="border: 1px solid var(--border-sub);" id="t2rRepeatTypeTabs">
+              <button type="button" data-rtype="irregular" onclick="setT2RRepeatType('irregular')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">不定期</button>
               <button type="button" data-rtype="weekly" onclick="setT2RRepeatType('weekly')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">曜日指定</button>
               <button type="button" data-rtype="nthWeekday" onclick="setT2RRepeatType('nthWeekday')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">第〇曜日</button>
               <button type="button" data-rtype="monthlyDate" onclick="setT2RRepeatType('monthlyDate')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">毎月〇日</button>
               <button type="button" data-rtype="afterDays" onclick="setT2RRepeatType('afterDays')" class="py-1.5 rounded-lg text-[10px] font-extrabold transition">完了後〇日</button>
             </div>
+          </div>
+
+          <div id="t2rPanelIrregular" class="hidden bg-white px-3 py-2 rounded-xl text-[11px] font-bold text-stone-500" style="border: 1px solid var(--border-sub);">
+            🌟 不定期枠に保存され、好きなときに「ルーチンから追加」から呼び出せるよ
           </div>
 
           <div id="t2rPanelWeekly" class="space-y-1.5">
@@ -1004,15 +1090,15 @@
           </button>
         </div>
 
-        <div id="routineEditStatsBanner" class="hidden flex items-center justify-between bg-white/90 rounded-xl px-3 py-1.5 text-[11px]" style="border: 1px solid var(--border-sub);">
+        <div id="routineEditStatsBanner" class="hidden flex items-center justify-between bg-white/90 rounded-xl px-3 py-1.5 text-[11px] gap-2" style="border: 1px solid var(--border-sub);">
           <span id="routineEditStatsText" class="font-extrabold" style="color: var(--accent-sub-text);">📊 これまで 0回 実施</span>
-          <button type="button" id="applyAvgDurationBtn" onclick="applyAverageDurationToRoutine()" class="px-2 py-0.5 rounded-lg themed-chip-btn font-extrabold text-[10px] active:scale-90 transition">
+          <button type="button" id="applyAvgDurationBtn" onclick="applyAverageDurationToRoutine()" class="px-2 py-0.5 rounded-lg themed-chip-btn font-extrabold text-[10px] active:scale-90 transition shrink-0">
             平均を反映
           </button>
         </div>
 
         <div class="flex gap-1.5">
-          <input type="text" id="routineTitleInput" required placeholder="ルーチン名（例：資源ごみ出し）" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input font-bold outline-none" />
+          <input type="text" id="routineTitleInput" required placeholder="ルーチン名（例：シーツ交換）" class="flex-1 min-w-0 px-3 py-1.5 rounded-xl themed-input font-bold outline-none" />
           <div class="flex items-center gap-1 bg-white rounded-xl px-2 shrink-0" style="border: 1px solid var(--border-soft);">
             <input type="number" id="routineDurationInput" value="20" min="1" max="480" required class="w-12 py-1 font-black text-center outline-none" style="color: var(--accent-sub-text);" />
             <span class="text-[11px] font-bold text-stone-400">分</span>
@@ -1027,11 +1113,16 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-1 bg-white p-1 rounded-xl" style="border: 1px solid var(--border-soft);" id="routineRepeatTypeTabs">
+        <div class="grid grid-cols-5 gap-1 bg-white p-1 rounded-xl" style="border: 1px solid var(--border-soft);" id="routineRepeatTypeTabs">
+          <button type="button" data-rtype="irregular" onclick="setRoutineRepeatType('irregular')" class="py-1 rounded-lg text-[10px] font-extrabold transition">不定期</button>
           <button type="button" data-rtype="weekly" onclick="setRoutineRepeatType('weekly')" class="py-1 rounded-lg text-[10px] font-extrabold transition">曜日指定</button>
           <button type="button" data-rtype="nthWeekday" onclick="setRoutineRepeatType('nthWeekday')" class="py-1 rounded-lg text-[10px] font-extrabold transition">第〇曜日</button>
           <button type="button" data-rtype="monthlyDate" onclick="setRoutineRepeatType('monthlyDate')" class="py-1 rounded-lg text-[10px] font-extrabold transition">毎月〇日</button>
           <button type="button" data-rtype="afterDays" onclick="setRoutineRepeatType('afterDays')" class="py-1 rounded-lg text-[10px] font-extrabold transition">完了後〇日</button>
+        </div>
+
+        <div id="routinePanelIrregular" class="hidden bg-white px-3 py-1.5 rounded-xl text-[10px] font-bold text-stone-500" style="border: 1px solid var(--border-soft);">
+          🌟 不定期枠に配置され、必要なときに「ルーチンから追加」から呼び出せるよ
         </div>
 
         <div id="routinePanelWeekly" class="space-y-1.5">
@@ -1049,13 +1140,13 @@
 
         <div id="routinePanelMonthlyDate" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl" style="border: 1px solid var(--border-soft);">
           <span class="text-xs font-extrabold text-stone-600">毎月</span>
-          <input type="number" id="routineMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-soft); color: var(--accent-sub-text);" />
+          <input type="number" id="routineMonthDayInput" min="1" max="31" value="1" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-sub); color: var(--accent-sub-text);" />
           <span class="text-xs font-extrabold text-stone-600">日に実行</span>
         </div>
 
         <div id="routinePanelAfterDays" class="hidden flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl" style="border: 1px solid var(--border-soft);">
           <span class="text-xs font-extrabold text-stone-600">完了してから</span>
-          <input type="number" id="routineIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-soft); color: var(--accent-text);" />
+          <input type="number" id="routineIntervalDaysInput" min="1" max="365" value="45" class="w-16 px-2 py-1 rounded-lg font-black text-center" style="border: 1px solid var(--border-sub); color: var(--accent-text);" />
           <span class="text-xs font-extrabold text-stone-600">日後に自動出現</span>
         </div>
 
@@ -1064,7 +1155,7 @@
         </button>
       </form>
 
-      <div id="routineListContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-2"></div>
+      <div id="routineListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 pb-2"></div>
       <div id="routineImportSection" class="hidden flex-1 overflow-y-auto space-y-2 pr-1 pb-2"></div>
     </div>
   </div>
@@ -1158,7 +1249,13 @@
         </button>
       </div>
       <div class="p-5 pt-3.5 overflow-y-auto space-y-3">
-        <textarea id="quickNoteTextarea" rows="3" placeholder="メモを入力..." class="w-full px-3.5 py-2.5 rounded-2xl themed-input outline-none"></textarea>
+        <textarea
+          id="quickNoteTextarea"
+          rows="2"
+          oninput="autoResizeTextarea(this, 160, 56)"
+          placeholder="メモを入力..."
+          class="w-full px-3.5 py-2.5 rounded-2xl themed-input outline-none resize-none auto-expand-textarea"
+        ></textarea>
         <div class="flex items-center justify-between">
           <label class="px-3.5 py-2 rounded-xl themed-icon-btn text-xs font-bold cursor-pointer flex items-center gap-1.5">
             <i data-lucide="image-plus" class="w-4 h-4"></i>
@@ -1215,6 +1312,8 @@
   let quickDurationValue = 0;
   let quickTaskType = 'single';
   let modalImageBase64 = '';
+  let modalChecklistItems = [];
+  let isEditingChecklistInModal = false;
   let quickNoteTargetId = null;
   let quickNoteImgBase64 = '';
   let currentEditingRoutineAvgMin = null;
@@ -1236,12 +1335,78 @@
   let selectedRoutineNths = [2, 4];
   let selectedRoutineNthDays = [3];
 
-  let t2rRepeatType = 'weekly';
+  let t2rRepeatType = 'irregular';
   let selectedT2RDays = [0, 1, 2, 3, 4, 5, 6];
   let selectedT2RNths = [2, 4];
   let selectedT2RNthDays = [3];
   let t2rEstMinutes = 15;
   let t2rActualMinutes = 15;
+
+  function autoResizeTextarea(el, maxHeight = 140, minHeight = 36) {
+    if (!el) return;
+    el.style.height = 'auto';
+    const scrollH = el.scrollHeight;
+    const targetH = Math.max(minHeight, Math.min(maxHeight, scrollH));
+    el.style.height = `${targetH}px`;
+    el.classList.toggle('is-max-height', scrollH > maxHeight);
+  }
+
+  function normalizeChecklist(rawList) {
+    if (!Array.isArray(rawList)) return [];
+    return rawList
+      .map((item, idx) => {
+        if (typeof item === 'string') {
+          const text = item.trim();
+          return text ? { id: `chk_${idx}_${Math.random().toString(36).slice(2, 6)}`, text, checked: false } : null;
+        }
+        if (item && typeof item === 'object') {
+          const text = String(item.text || '').trim();
+          if (!text) return null;
+          return {
+            id: item.id || `chk_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+            text,
+            checked: !!item.checked
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  function parseLinesToChecklist(rawText, existingItems = []) {
+    const existingMap = new Map();
+    existingItems.forEach(it => {
+      if (it && it.text && !existingMap.has(it.text)) {
+        existingMap.set(it.text, !!it.checked);
+      }
+    });
+
+    return String(rawText || '')
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map((text, idx) => ({
+        id: `chk_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 5)}`,
+        text,
+        checked: existingMap.has(text) ? existingMap.get(text) : false
+      }));
+  }
+
+  function checklistToLinesText(items) {
+    return (items || []).map(it => it.text).join('\n');
+  }
+
+  function getTaskChecklistTextForSearch(task) {
+    const items = normalizeChecklist(task.checklist);
+    return items.map(it => it.text).join(' ');
+  }
+
+  function hasTaskNotesOrMedia(task) {
+    const hasComment = !!(task.comment && task.comment.trim());
+    const hasChecklist = normalizeChecklist(task.checklist).length > 0;
+    const hasImage = !!task.image;
+    return hasComment || hasChecklist || hasImage;
+  }
 
   function savePrefs() {
     try {
@@ -1500,6 +1665,7 @@
 
   function getDefaultRoutines() {
     return [
+      { id: 'r_irr_1', title: 'シーツ・枕カバー交換', duration: 20, deadline: '', alarm: false, repeatType: 'irregular', days: [] },
       { id: 'r_1', title: '起床・白湯＆身支度', duration: 20, deadline: '07:00', alarm: false, repeatType: 'weekly', days: [0, 1, 2, 3, 4, 5, 6] },
       { id: 'r_2', title: '朝食＆コーヒータイム', duration: 25, deadline: '08:00', alarm: false, repeatType: 'weekly', days: [0, 1, 2, 3, 4, 5, 6] },
       { id: 'r_3', title: '資源ごみ出し', duration: 10, deadline: '08:30', alarm: false, repeatType: 'nthWeekday', nthWeeks: [2, 4], nthDays: [3] },
@@ -1529,6 +1695,7 @@
           actualEnd: now - 172800 * 1000 + 1320 * 1000,
           elapsedSeconds: 1320,
           comment: 'お気に入りのハーブティーを飲んだらスッキリ起きた🌿',
+          checklist: [],
           image: ''
         },
         {
@@ -1546,6 +1713,7 @@
           actualEnd: now - 172800 * 1000 + 3180 * 1000,
           elapsedSeconds: 1680,
           comment: '',
+          checklist: [],
           image: ''
         }
       ],
@@ -1565,6 +1733,7 @@
           actualEnd: now - 86400 * 1000 + 1140 * 1000,
           elapsedSeconds: 1140,
           comment: '',
+          checklist: [],
           image: ''
         },
         {
@@ -1582,6 +1751,7 @@
           actualEnd: now - 86400 * 1000 + 3200 * 1000,
           elapsedSeconds: 1800,
           comment: '豆を挽くところからやると30分くらいかかるな〜☕',
+          checklist: [],
           image: ''
         }
       ],
@@ -1601,6 +1771,7 @@
           actualEnd: now - 6000 * 1000,
           elapsedSeconds: 1200,
           comment: '',
+          checklist: [],
           image: ''
         },
         {
@@ -1618,6 +1789,7 @@
           actualEnd: now - 4500 * 1000,
           elapsedSeconds: 900,
           comment: 'モンステラの新芽が出てた！🌱',
+          checklist: [],
           image: ''
         },
         {
@@ -1634,7 +1806,12 @@
           actualStart: now - 480 * 1000,
           actualEnd: null,
           elapsedSeconds: 0,
-          comment: '',
+          comment: '夕飯の材料を忘れずに！',
+          checklist: [
+            { id: 'c_1', text: '牛乳', checked: true },
+            { id: 'c_2', text: '鶏むね肉', checked: false },
+            { id: 'c_3', text: 'トマト', checked: false }
+          ],
           image: ''
         },
         {
@@ -1652,6 +1829,7 @@
           actualEnd: null,
           elapsedSeconds: 0,
           comment: '卵とブロッコリー茹でる🥦',
+          checklist: [],
           image: ''
         },
         {
@@ -1669,6 +1847,7 @@
           actualEnd: null,
           elapsedSeconds: 0,
           comment: '',
+          checklist: [],
           image: ''
         }
       ]
@@ -1700,29 +1879,70 @@
   function getRoutineHistoryStats(routine) {
     let count = 0;
     let totalSeconds = 0;
+    let lastCompletedDateStr = null;
+    let lastCompletedMs = 0;
 
-    Object.values(tasksByDate).forEach(dayList => {
+    Object.entries(tasksByDate).forEach(([dateStr, dayList]) => {
       if (!Array.isArray(dayList)) return;
       dayList.forEach(t => {
-        if (t.status === 'completed' && (t.routineId === routine.id || t.title === routine.title)) {
+        if (t.status === 'completed' && (t.routineId === routine.id || (routine.title && t.title === routine.title))) {
           const sec = getTaskElapsedSeconds(t);
           if (sec > 0) {
             count += 1;
             totalSeconds += sec;
+          }
+          const candidateMs = t.actualEnd || t.actualStart || combineDateAndHHMM(dateStr, '12:00') || 0;
+          if (candidateMs >= lastCompletedMs) {
+            lastCompletedMs = candidateMs;
+            lastCompletedDateStr = dateStr;
+          } else if (!lastCompletedDateStr && dateStr > '') {
+            lastCompletedDateStr = dateStr;
           }
         }
       });
     });
 
     const avgMin = count > 0 ? Math.max(1, Math.round(totalSeconds / count / 60)) : null;
-    return { count, avgMin };
+
+    let lastRunLabel = '前回: 記録なし';
+    if (lastCompletedDateStr) {
+      const baseMs = combineDateAndHHMM(getTodayStr(), '00:00');
+      const lastDayMs = combineDateAndHHMM(lastCompletedDateStr, '00:00');
+      const diffDays = baseMs && lastDayMs ? Math.round((baseMs - lastDayMs) / 86400000) : null;
+      const dt = parseDateKey(lastCompletedDateStr);
+      const md = `${dt.getMonth() + 1}/${dt.getDate()}`;
+
+      if (diffDays === 0) {
+        lastRunLabel = `前回: 今日 (${md})`;
+      } else if (diffDays !== null && diffDays > 0) {
+        lastRunLabel = `前回: ${md} (${diffDays}日前)`;
+      } else {
+        lastRunLabel = `前回: ${md}`;
+      }
+    }
+
+    return { count, avgMin, lastCompletedDateStr, lastRunLabel };
+  }
+
+  function isIrregularRoutine(routine) {
+    return (routine.repeatType || 'weekly') === 'irregular';
+  }
+
+  function getOrderedRoutinesIrregularFirst() {
+    const irr = routines.filter(r => isIrregularRoutine(r));
+    const reg = routines.filter(r => !isIrregularRoutine(r));
+    return [...irr, ...reg];
   }
 
   function doesRoutineMatchDate(routine, dateStr) {
+    const rType = routine.repeatType || 'weekly';
+    if (rType === 'irregular') {
+      return false;
+    }
+
     const dt = parseDateKey(dateStr);
     const dow = dt.getDay();
     const dayOfMonth = dt.getDate();
-    const rType = routine.repeatType || 'weekly';
 
     if (rType === 'weekly') {
       return (routine.days || []).includes(dow);
@@ -1755,6 +1975,9 @@
 
   function formatRoutineScheduleLabel(routine) {
     const rType = routine.repeatType || 'weekly';
+    if (rType === 'irregular') {
+      return '不定期（手動追加）';
+    }
     if (rType === 'weekly') {
       const days = routine.days || [];
       if (days.length === 7) return '毎日';
@@ -1821,6 +2044,7 @@
         actualEnd: null,
         elapsedSeconds: 0,
         comment: '',
+        checklist: [],
         image: ''
       });
     });
@@ -1942,6 +2166,7 @@
       actualEnd: null,
       elapsedSeconds: 0,
       comment: '',
+      checklist: [],
       image: ''
     };
 
@@ -1969,7 +2194,6 @@
   function calculateSchedule(tasks, nowMs = Date.now(), targetDateStr = currentDate) {
     const todayStr = getTodayStr();
     const isToday = targetDateStr === todayStr;
-    // 分単位で揃えて計算の1分ズレを防ぐ
     const minuteAlignedNowMs = Math.floor(nowMs / 60000) * 60000;
     let cursorMs = getScheduleBaseMs(minuteAlignedNowMs, targetDateStr);
 
@@ -2118,6 +2342,394 @@
     document.getElementById('progressSummaryModal').classList.add('hidden');
   }
 
+  function drawRoundedRect(ctx, x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+
+  async function buildProgressSummaryPngBlob(targetDateStr = currentDate) {
+    const tasks = ensureTasksForDate(targetDateStr);
+    const nowMs = Date.now();
+    const isBlue = prefs.theme === 'blue';
+
+    const accent1 = isBlue ? '#0ea5e9' : '#ec4899';
+    const accent2 = isBlue ? '#4f46e5' : '#a855f7';
+    const bgStart = isBlue ? '#eff8ff' : '#fff5f8';
+    const bgEnd = isBlue ? '#eef4ff' : '#f6f0ff';
+    const borderSoft = isBlue ? '#bae6fd' : '#fbcfe8';
+    const borderSub = isBlue ? '#c7d2fe' : '#e9d5ff';
+    const textAccent = isBlue ? '#0369a1' : '#be185d';
+    const textStrong = isBlue ? '#075985' : '#9d174d';
+    const emoji = isBlue ? '💙' : '🌸';
+
+    const totalCount = tasks.length;
+    const completedCount = tasks.filter(t => t.status === 'completed').length;
+    const remainingCount = Math.max(0, totalCount - completedCount);
+    const rate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    let actualMinTotal = 0;
+    let remainingEstMinTotal = 0;
+    let lastEndMs = null;
+
+    const scheduled = calculateSchedule(tasks, nowMs, targetDateStr);
+    scheduled.forEach(({ task, displayEnd }) => {
+      if (task.status === 'completed') {
+        actualMinTotal += Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
+      } else if (task.status === 'running') {
+        const elMin = Math.round(getTaskElapsedSeconds(task, nowMs) / 60);
+        actualMinTotal += elMin;
+        remainingEstMinTotal += Math.max(0, (task.duration || 0) - elMin);
+        lastEndMs = displayEnd;
+      } else {
+        remainingEstMinTotal += (task.duration || 0);
+        lastEndMs = displayEnd;
+      }
+    });
+
+    const totalTimeMin = actualMinTotal + remainingEstMinTotal;
+    const timePct = totalTimeMin > 0 ? Math.min(1, actualMinTotal / totalTimeMin) : 0;
+    const endLabel = lastEndMs !== null ? formatEndTimeWithDay(targetDateStr, lastEndMs) : '完了✨';
+
+    const scale = 2;
+    const width = 440;
+    const height = 540;
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, bgStart);
+    bgGrad.addColorStop(1, bgEnd);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#ffffff';
+    drawRoundedRect(ctx, 20, 20, width - 40, height - 40, 28);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = borderSoft;
+    ctx.stroke();
+
+    const barGrad = ctx.createLinearGradient(20, 20, width - 20, 20);
+    barGrad.addColorStop(0, accent1);
+    barGrad.addColorStop(1, accent2);
+    ctx.fillStyle = barGrad;
+    drawRoundedRect(ctx, 20, 20, width - 40, 10, 10);
+    ctx.fill();
+
+    ctx.font = '800 18px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#2b2638';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${formatShortDateWithDow(targetDateStr)}の進捗`, 40, 62);
+
+    ctx.font = '800 13px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = textAccent;
+    ctx.textAlign = 'right';
+    ctx.fillText(`${emoji} たすくしゅーと`, width - 40, 62);
+
+    ctx.font = '800 13px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#44403c';
+    ctx.textAlign = 'left';
+    ctx.fillText('今日のタスク', 40, 94);
+
+    ctx.fillStyle = '#fff9fb';
+    drawRoundedRect(ctx, 40, 104, width - 80, 148, 22);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = borderSoft;
+    ctx.stroke();
+
+    const cx = 104;
+    const cy = 178;
+    const radius = 44;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 10;
+    ctx.stroke();
+
+    if (rate > 0) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * rate) / 100);
+      ctx.strokeStyle = accent1;
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    ctx.font = '900 20px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#2b2638';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${rate}%`, cx, cy + 4);
+    ctx.font = '700 11px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#78716c';
+    ctx.fillText('完了', cx, cy + 20);
+
+    const rows = [
+      { label: '合計', val: `${totalCount}`, color: '#2b2638' },
+      { label: '完了', val: `${completedCount}`, color: textAccent },
+      { label: '残り', val: `${remainingCount}`, color: '#d97706' }
+    ];
+    rows.forEach((r, idx) => {
+      const yPos = 148 + idx * 32;
+      ctx.font = '700 13px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+      ctx.fillStyle = '#78716c';
+      ctx.textAlign = 'left';
+      ctx.fillText(r.label, 176, yPos);
+
+      ctx.font = '900 16px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+      ctx.fillStyle = r.color;
+      ctx.textAlign = 'right';
+      ctx.fillText(r.val, width - 60, yPos);
+
+      if (idx < rows.length - 1) {
+        ctx.beginPath();
+        ctx.moveTo(176, yPos + 11);
+        ctx.lineTo(width - 60, yPos + 11);
+        ctx.strokeStyle = '#f5f5f4';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    });
+
+    ctx.font = '800 13px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#44403c';
+    ctx.textAlign = 'left';
+    ctx.fillText('今日の時間', 40, 282);
+
+    ctx.fillStyle = '#faf8ff';
+    drawRoundedRect(ctx, 40, 292, width - 80, 96, 22);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = borderSub;
+    ctx.stroke();
+
+    const barX = 60;
+    const barY = 318;
+    const barW = width - 120;
+    const barH = 10;
+    ctx.fillStyle = '#e7e5e4';
+    drawRoundedRect(ctx, barX, barY, barW, barH, 5);
+    ctx.fill();
+
+    if (timePct > 0) {
+      ctx.fillStyle = barGrad;
+      drawRoundedRect(ctx, barX, barY, Math.max(10, barW * timePct), barH, 5);
+      ctx.fill();
+    }
+
+    ctx.font = '800 13px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#57534e';
+    ctx.textAlign = 'left';
+    ctx.fillText(`実績  ${formatClockDuration(actualMinTotal)}`, 60, 362);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(`残り見積  ${formatClockDuration(remainingEstMinTotal)}`, width - 60, 362);
+
+    ctx.fillStyle = '#ffffff';
+    drawRoundedRect(ctx, 40, 408, width - 80, 64, 22);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = borderSoft;
+    ctx.stroke();
+
+    ctx.font = '800 14px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#44403c';
+    ctx.textAlign = 'left';
+    ctx.fillText('⏰ 終了予定時刻', 60, 446);
+
+    ctx.font = '900 18px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = textStrong;
+    ctx.textAlign = 'right';
+    ctx.fillText(endLabel, width - 60, 447);
+
+    ctx.font = '700 11px "M PLUS Rounded 1c", "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#a8a29e';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${formatDateWithDow(targetDateStr)}`, width / 2, 502);
+
+    return new Promise(resolve => {
+      canvas.toBlob(blob => resolve(blob), 'image/png');
+    });
+  }
+
+  async function shareProgressSummaryImage() {
+    try {
+      const blob = await buildProgressSummaryPngBlob(currentDate);
+      if (!blob) {
+        showToast('画像の作成に失敗しました');
+        return;
+      }
+      const fileName = `taskchute_summary_${currentDate}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+        await navigator.share({
+          files: [file],
+          title: `${formatShortDateWithDow(currentDate)}の進捗`,
+          text: `${formatShortDateWithDow(currentDate)}の進捗サマリー`
+        });
+        showToast('サマリー画像を共有したよ📸');
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('サマリー画像を保存したよ📸');
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      showToast('共有または保存がキャンセルされたよ');
+    }
+  }
+
+  function openAddFromRoutineModal() {
+    const input = document.getElementById('addFromRoutineSearchInput');
+    if (input) input.value = '';
+    renderAddFromRoutineList();
+    document.getElementById('addFromRoutineModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeAddFromRoutineModal() {
+    document.getElementById('addFromRoutineModal').classList.add('hidden');
+  }
+
+  function renderAddFromRoutineList() {
+    const container = document.getElementById('addFromRoutineListContainer');
+    if (!container) return;
+    const kw = (document.getElementById('addFromRoutineSearchInput')?.value || '').trim().toLowerCase();
+    container.innerHTML = '';
+
+    const ordered = getOrderedRoutinesIrregularFirst().filter(r => {
+      if (!kw) return true;
+      return (r.title || '').toLowerCase().includes(kw) || formatRoutineScheduleLabel(r).toLowerCase().includes(kw);
+    });
+
+    const irregularList = ordered.filter(r => isIrregularRoutine(r));
+    const regularList = ordered.filter(r => !isIrregularRoutine(r));
+
+    const buildSection = (titleText, badgeText, list, isIrr) => {
+      const sec = document.createElement('div');
+      sec.className = 'space-y-1.5';
+
+      const header = document.createElement('div');
+      header.className = 'flex items-center justify-between px-2.5 py-1 rounded-xl text-[11px] font-extrabold';
+      header.style.backgroundColor = isIrr ? 'var(--surface-soft)' : 'var(--surface-sub)';
+      header.style.border = `1px solid ${isIrr ? 'var(--border-soft)' : 'var(--border-sub)'}`;
+      header.style.color = isIrr ? 'var(--accent-text-strong)' : 'var(--accent-sub-text)';
+      header.innerHTML = `
+        <span>${titleText}</span>
+        <span class="text-[10px] font-bold opacity-80">${badgeText}</span>
+      `;
+      sec.appendChild(header);
+
+      if (list.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'text-center py-4 px-3 rounded-2xl text-[11px] font-bold text-stone-400 bg-white/75';
+        empty.style.border = '1px dashed var(--border-soft)';
+        empty.textContent = isIrr
+          ? '不定期ルーチンはまだありません（ルーチン管理の「不定期」タブから追加できるよ）'
+          : '該当するルーチンがありません';
+        sec.appendChild(empty);
+        return sec;
+      }
+
+      list.forEach(r => {
+        const stats = getRoutineHistoryStats(r);
+        const sched = formatRoutineScheduleLabel(r);
+        const card = document.createElement('div');
+        card.className = 'flex items-center justify-between gap-2 px-3 py-2.5 rounded-2xl bg-white shadow-2xs';
+        card.style.border = `1px solid ${isIrr ? 'var(--border-soft)' : 'var(--border-sub)'}`;
+        card.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs font-extrabold text-stone-800 truncate">${escapeHtml(r.title)}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full themed-badge-dur shrink-0">${r.duration}分</span>
+              ${r.deadline ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full themed-badge-act shrink-0">🎯${r.deadline}</span>` : ''}
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mt-1 text-[10px] font-bold">
+              <span class="text-stone-400">${escapeHtml(sched)}</span>
+              <span style="color: ${isIrr ? 'var(--accent-text)' : 'var(--accent-sub-text)'};">🗓 ${escapeHtml(stats.lastRunLabel)}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" onclick="addTaskFromRoutine('${r.id}', true)" class="px-2.5 py-1.5 rounded-xl themed-primary-btn text-[10px] font-extrabold shadow-2xs active:scale-90 transition">
+              ▶ 開始
+            </button>
+            <button type="button" onclick="addTaskFromRoutine('${r.id}', false)" class="px-2.5 py-1.5 rounded-xl themed-secondary-btn text-[10px] font-extrabold active:scale-90 transition">
+              ＋ 追加
+            </button>
+          </div>
+        `;
+        sec.appendChild(card);
+      });
+
+      return sec;
+    };
+
+    container.appendChild(buildSection('🌟 不定期ルーチン', `${irregularList.length}件`, irregularList, true));
+    container.appendChild(buildSection('🔄 定期ルーチン', `${regularList.length}件`, regularList, false));
+  }
+
+  function addTaskFromRoutine(routineId, startNow = false) {
+    const r = routines.find(x => x.id === routineId);
+    if (!r) return;
+
+    const tasks = ensureTasksForDate(currentDate);
+    const now = Date.now();
+    const est = r.duration || 15;
+
+    const newTask = {
+      id: `t_${currentDate}_${now}`,
+      taskType: 'routine',
+      routineId: r.id,
+      groupId: null,
+      originalEst: est,
+      title: r.title,
+      duration: est,
+      deadline: r.deadline || '',
+      alarm: !!r.alarm,
+      status: startNow ? 'running' : 'pending',
+      actualStart: startNow ? now : null,
+      actualEnd: null,
+      elapsedSeconds: 0,
+      comment: '',
+      checklist: [],
+      image: ''
+    };
+
+    if (startNow) {
+      const running = tasks.find(t => t.status === 'running');
+      if (running) {
+        const rIdx = tasks.findIndex(t => t.id === running.id);
+        tasks.splice(rIdx + 1, 0, newTask);
+        splitAndPauseRunningTask(running, newTask.id);
+      } else {
+        insertTaskAfterCurrentAnchor(tasks, newTask);
+      }
+      moveTaskToChronologicalActiveSlot(tasks, newTask.id);
+    } else {
+      insertTaskAfterCurrentAnchor(tasks, newTask);
+    }
+
+    saveTasks();
+    closeAddFromRoutineModal();
+    renderAll();
+    showToast(startNow ? `「${r.title}」を開始したよ▶` : `「${r.title}」を追加したよ✨`);
+  }
+
   function updateQuickDurationDisplay() {
     const el = document.getElementById('quickDurationDisplay');
     if (el) el.textContent = `${quickDurationValue}分`;
@@ -2139,11 +2751,11 @@
     if (quickTaskType === 'single') {
       quickTaskType = 'carryover';
       btn.textContent = '💜 持ち越し';
-      btn.className = 'px-2.5 py-1 rounded-xl themed-secondary-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition';
+      btn.className = 'px-2 py-1 rounded-xl themed-secondary-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition';
     } else {
       quickTaskType = 'single';
       btn.textContent = `${emoji} 単発`;
-      btn.className = 'px-2.5 py-1 rounded-xl themed-type-single-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition';
+      btn.className = 'px-2 py-1 rounded-xl themed-type-single-btn text-[10px] font-extrabold shrink-0 active:scale-95 transition';
     }
   }
 
@@ -2191,6 +2803,7 @@
               actualEnd: null,
               elapsedSeconds: 0,
               comment: '',
+              checklist: [],
               image: ''
             });
           }
@@ -2264,6 +2877,7 @@
       actualEnd: null,
       elapsedSeconds: 0,
       comment: '',
+      checklist: [],
       image: ''
     };
 
@@ -2326,6 +2940,7 @@
       actualEnd: null,
       elapsedSeconds: 0,
       comment: '',
+      checklist: [],
       image: ''
     };
 
@@ -2367,6 +2982,7 @@
       actualEnd: null,
       elapsedSeconds: 0,
       comment: '',
+      checklist: [],
       image: ''
     };
 
@@ -2378,6 +2994,40 @@
     saveTasks();
     renderAll();
     showToast('すぐ下に追加したよ');
+  }
+
+  function toggleTaskChecklistItemInList(taskId, itemId) {
+    const tasks = ensureTasksForDate(currentDate);
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const items = normalizeChecklist(task.checklist);
+    const target = items.find(it => it.id === itemId);
+    if (!target) return;
+    target.checked = !target.checked;
+    task.checklist = items;
+    saveTasks();
+    renderAll();
+  }
+
+  function renderChecklistItemsHtml(items, interactiveTaskId = null) {
+    const list = normalizeChecklist(items);
+    if (list.length === 0) return '';
+    return list
+      .map(it => {
+        const clickAttr = interactiveTaskId
+          ? `onclick="event.stopPropagation(); toggleTaskChecklistItemInList('${interactiveTaskId}', '${it.id}')"`
+          : `onclick="event.stopPropagation(); toggleModalChecklistItem('${it.id}')"`;
+        const boxChar = it.checked ? '☑' : '☐';
+        const boxColor = it.checked ? 'color: var(--accent-1);' : 'color: #78716c;';
+        const textStyle = it.checked ? 'line-through text-stone-400' : 'text-stone-700 font-bold';
+        return `
+          <div ${clickAttr} class="flex items-start gap-1.5 py-0.5 px-1.5 rounded-lg hover:bg-white/70 active:scale-[0.99] transition cursor-pointer text-left">
+            <span class="text-xs font-black leading-snug shrink-0" style="${boxColor}">${boxChar}</span>
+            <span class="text-xs leading-snug break-words flex-1 min-w-0 ${textStyle}">${escapeHtml(it.text)}</span>
+          </div>
+        `;
+      })
+      .join('');
   }
 
   function renderAll() {
@@ -2431,7 +3081,7 @@
         <div class="text-center py-12 px-4 rounded-3xl bg-white/75 space-y-1.5" style="border: 1px dashed var(--border-soft);">
           <div class="text-2xl">${emptyEmoji}</div>
           <div class="text-xs font-extrabold text-stone-500">タスクがありません</div>
-          <div class="text-[11px] text-stone-400">下の入力欄または「✨ ルーチン」から追加してね</div>
+          <div class="text-[11px] text-stone-400">下の入力欄または「✨ ルーチンから追加」から追加してね</div>
         </div>
       `;
       if (window.lucide) lucide.createIcons();
@@ -2506,6 +3156,28 @@
       const showPromoteBtn = isCompleted && (task.taskType === 'single' || task.taskType === 'carryover');
       const safeTitle = escapeHtml(task.title || '（無題のタスク）');
       const cleanComment = (task.comment || '').trim();
+      const checklistItems = normalizeChecklist(task.checklist);
+      const hasNotesBlock = cleanComment || checklistItems.length > 0 || task.image;
+
+      const notesBlockHtml = hasNotesBlock
+        ? `
+          <div class="mt-1.5 space-y-1.5">
+            ${checklistItems.length > 0 ? `
+              <div class="bg-white/90 rounded-xl px-2 py-1.5 space-y-0.5" style="border: 1px solid var(--border-sub);">
+                ${renderChecklistItemsHtml(checklistItems, task.id)}
+              </div>
+            ` : ''}
+            ${(cleanComment || task.image) ? `
+              <div class="flex items-center gap-2">
+                ${task.image ? `
+                  <img src="${task.image}" alt="" onclick="event.stopPropagation(); openPhotoLightbox(this.src, '${safeTitle.replace(/'/g, '&#39;')}');" class="h-14 w-auto max-w-[110px] object-contain rounded-xl bg-white/90 shrink-0 shadow-2xs cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
+                ` : ''}
+                ${cleanComment ? `<div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/85 rounded-xl px-2.5 py-1.5 line-clamp-2 text-left" style="border: 1px solid var(--border-soft);">${escapeHtml(cleanComment)}</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+        `
+        : '';
 
       const wrapper = document.createElement('div');
       wrapper.className = 'swipe-wrapper';
@@ -2531,15 +3203,7 @@
 
             ${runningPillsHtml}
             ${groupPillHtml}
-
-            ${(cleanComment || task.image) ? `
-              <div class="mt-1.5 flex items-center gap-2">
-                ${task.image ? `
-                  <img src="${task.image}" alt="" onclick="event.stopPropagation(); openPhotoLightbox(this.src, '${safeTitle.replace(/'/g, '&#39;')}');" class="h-14 w-auto max-w-[110px] object-contain rounded-xl bg-white/90 shrink-0 shadow-2xs cursor-zoom-in" style="border: 1px solid var(--border-soft);" />
-                ` : ''}
-                ${cleanComment ? `<div class="flex-1 min-w-0 text-[11px] font-medium text-stone-600 bg-white/85 rounded-xl px-2.5 py-1.5 line-clamp-2 text-left" style="border: 1px solid var(--border-soft);">${escapeHtml(cleanComment)}</div>` : ''}
-              </div>
-            ` : ''}
+            ${notesBlockHtml}
           </div>
 
           <div class="flex flex-col items-end gap-1.5 shrink-0">
@@ -2730,7 +3394,7 @@
         const monthKey = dateStr.slice(0, 7);
         for (let i = list.length - 1; i >= 0; i--) {
           const t = list[i];
-          if ((t.comment && t.comment.trim()) || t.image) {
+          if (hasTaskNotesOrMedia(t)) {
             allEntries.push({ dateStr, monthKey, task: t });
             monthCounts.set(monthKey, (monthCounts.get(monthKey) || 0) + 1);
           }
@@ -2773,7 +3437,8 @@
       if (!kw) return true;
       const dt = parseDateKey(dateStr);
       const dateSearchText = `${dateStr} ${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 ${dt.getMonth() + 1}/${dt.getDate()}`;
-      const targetText = `${task.title || ''} ${task.comment || ''} ${dateSearchText}`.toLowerCase();
+      const checklistText = getTaskChecklistTextForSearch(task);
+      const targetText = `${task.title || ''} ${task.comment || ''} ${checklistText} ${dateSearchText}`.toLowerCase();
       return targetText.includes(kw);
     });
 
@@ -2812,6 +3477,7 @@
       const actualMin = Math.round(getTaskElapsedSeconds(task) / 60);
       const captionText = `${dateLabel} ・ ${task.title || '（無題のタスク）'}`;
       const cleanComment = (task.comment || '').trim();
+      const checklistItems = normalizeChecklist(task.checklist);
 
       const card = document.createElement('div');
       card.onclick = () => jumpToTaskFromCommentLog(dateStr, task.id);
@@ -2821,7 +3487,10 @@
         ? `<div class="relative shrink-0 group" onclick="event.stopPropagation(); openPhotoLightbox('${task.image}', '${escapeHtml(captionText).replace(/'/g, '&#39;')}');"><img src="${task.image}" alt="" class="h-16 w-auto max-w-[120px] object-contain rounded-xl bg-white cursor-zoom-in" style="border: 1px solid var(--border-soft);" /><span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/55 text-white text-[9px] font-bold pointer-events-none">🔍</span></div>`
         : '';
 
-      // whitespace-pre-wrap を使うため、タグとテキストの間にインデント空白を一切入れない
+      const checklistHtml = checklistItems.length > 0
+        ? `<div class="bg-white/90 rounded-xl px-2.5 py-1.5 space-y-0.5" style="border: 1px solid var(--border-sub);">${checklistItems.map(it => `<div class="text-[11px] flex items-center gap-1.5 ${it.checked ? 'line-through text-stone-400' : 'text-stone-700 font-bold'}"><span>${it.checked ? '☑' : '☐'}</span><span class="truncate">${escapeHtml(it.text)}</span></div>`).join('')}</div>`
+        : '';
+
       const commentHtml = cleanComment
         ? `<div class="flex-1 min-w-0 text-xs text-stone-700 bg-white/90 rounded-xl px-2.5 py-1.5 leading-relaxed whitespace-pre-wrap break-words text-left" style="border: 1px solid var(--border-soft);">${escapeHtml(cleanComment)}</div>`
         : '';
@@ -2838,7 +3507,8 @@
         <div class="text-xs font-extrabold text-stone-800 truncate">
           ${escapeHtml(task.title || '（無題のタスク）')}
         </div>
-        <div class="flex items-start gap-2">${imgHtml}${commentHtml}</div>
+        ${checklistHtml}
+        ${(imgHtml || commentHtml) ? `<div class="flex items-start gap-2">${imgHtml}${commentHtml}</div>` : ''}
       `;
       container.appendChild(card);
     });
@@ -2900,7 +3570,7 @@
     selectedT2RNthDays = [parseDateKey(currentDate).getDay()];
     document.getElementById('t2rMonthDayInput').value = parseDateKey(currentDate).getDate();
     document.getElementById('t2rIntervalDaysInput').value = 45;
-    setT2RRepeatType('weekly');
+    setT2RRepeatType('irregular');
 
     document.getElementById('taskToRoutineModal').classList.remove('hidden');
   }
@@ -2921,6 +3591,7 @@
         active ? 'themed-primary-btn shadow-2xs' : 'text-stone-500 hover:text-stone-700'
       }`;
     });
+    document.getElementById('t2rPanelIrregular').classList.toggle('hidden', type !== 'irregular');
     document.getElementById('t2rPanelWeekly').classList.toggle('hidden', type !== 'weekly');
     document.getElementById('t2rPanelNthWeekday').classList.toggle('hidden', type !== 'nthWeekday');
     document.getElementById('t2rPanelMonthlyDate').classList.toggle('hidden', type !== 'monthlyDate');
@@ -3022,7 +3693,7 @@
       deadline,
       alarm: false,
       repeatType: t2rRepeatType,
-      days: selectedT2RDays.length > 0 ? [...selectedT2RDays] : [0, 1, 2, 3, 4, 5, 6],
+      days: t2rRepeatType === 'irregular' ? [] : (selectedT2RDays.length > 0 ? [...selectedT2RDays] : [0, 1, 2, 3, 4, 5, 6]),
       nthWeeks: selectedT2RNths.length > 0 ? [...selectedT2RNths] : [1],
       nthDays: selectedT2RNthDays.length > 0 ? [...selectedT2RNthDays] : [3],
       monthDay: Math.min(31, Math.max(1, Number(document.getElementById('t2rMonthDayInput').value) || 1)),
@@ -3053,6 +3724,7 @@
         active ? 'themed-primary-btn shadow-2xs' : 'text-stone-500 hover:text-stone-700'
       }`;
     });
+    document.getElementById('routinePanelIrregular').classList.toggle('hidden', type !== 'irregular');
     document.getElementById('routinePanelWeekly').classList.toggle('hidden', type !== 'weekly');
     document.getElementById('routinePanelNthWeekday').classList.toggle('hidden', type !== 'nthWeekday');
     document.getElementById('routinePanelMonthlyDate').classList.toggle('hidden', type !== 'monthlyDate');
@@ -3244,10 +3916,13 @@
 
     const stats = getRoutineHistoryStats(r);
     const statsBanner = document.getElementById('routineEditStatsBanner');
-    if (stats.count > 0) {
+    if (stats.count > 0 || stats.lastCompletedDateStr) {
       currentEditingRoutineAvgMin = stats.avgMin;
-      document.getElementById('routineEditStatsText').textContent = `📊 これまで ${stats.count}回 実施 ／ 平均 ${stats.avgMin}分`;
-      document.getElementById('applyAvgDurationBtn').classList.toggle('hidden', stats.avgMin === r.duration);
+      const parts = [];
+      if (stats.count > 0) parts.push(`${stats.count}回実施・平均${stats.avgMin}分`);
+      parts.push(stats.lastRunLabel);
+      document.getElementById('routineEditStatsText').textContent = `📊 ${parts.join(' ／ ')}`;
+      document.getElementById('applyAvgDurationBtn').classList.toggle('hidden', !stats.avgMin || stats.avgMin === r.duration);
       statsBanner.classList.remove('hidden');
     } else {
       currentEditingRoutineAvgMin = null;
@@ -3296,7 +3971,9 @@
     const duration = Math.max(1, Number(document.getElementById('routineDurationInput').value) || 15);
     const deadline = document.getElementById('routineDeadlineInput').value || '';
 
-    const days = selectedRoutineDays.length > 0 ? [...selectedRoutineDays] : [0, 1, 2, 3, 4, 5, 6];
+    const days = routineRepeatType === 'irregular'
+      ? []
+      : (selectedRoutineDays.length > 0 ? [...selectedRoutineDays] : [0, 1, 2, 3, 4, 5, 6]);
     const nthWeeks = selectedRoutineNths.length > 0 ? [...selectedRoutineNths] : [1];
     const nthDays = selectedRoutineNthDays.length > 0 ? [...selectedRoutineNthDays] : [3];
     const monthDay = Math.min(31, Math.max(1, Number(document.getElementById('routineMonthDayInput').value) || 1));
@@ -3375,6 +4052,7 @@
           actualEnd: null,
           elapsedSeconds: 0,
           comment: '',
+          checklist: [],
           image: ''
         });
         saveTasks();
@@ -3432,7 +4110,20 @@
       return;
     }
 
-    routines.forEach(r => {
+    const irregulars = routines.filter(r => isIrregularRoutine(r));
+    const regulars = routines.filter(r => !isIrregularRoutine(r));
+
+    const appendSectionHeader = (label, isIrr) => {
+      const h = document.createElement('div');
+      h.className = 'flex items-center justify-between px-2.5 py-1 rounded-xl text-[10px] font-extrabold';
+      h.style.backgroundColor = isIrr ? 'var(--surface-soft)' : 'var(--surface-sub)';
+      h.style.border = `1px solid ${isIrr ? 'var(--border-soft)' : 'var(--border-sub)'}`;
+      h.style.color = isIrr ? 'var(--accent-text-strong)' : 'var(--accent-sub-text)';
+      h.textContent = label;
+      container.appendChild(h);
+    };
+
+    const renderRoutineItemCard = r => {
       const schedLabel = formatRoutineScheduleLabel(r);
       const stats = getRoutineHistoryStats(r);
       const isEditing = r.id === editingId;
@@ -3456,9 +4147,12 @@
             </div>
             <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
               <span class="text-[10px] font-bold text-stone-400 truncate">${escapeHtml(schedLabel)}</span>
+              <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full themed-badge-act shrink-0">
+                ${escapeHtml(stats.lastRunLabel)}
+              </span>
               ${stats.count > 0 ? `
-                <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full themed-badge-act shrink-0">
-                  実績 ${stats.count}回・平均 ${stats.avgMin}分
+                <span class="text-[10px] font-extrabold px-2 py-0.2 rounded-full themed-badge-dur shrink-0">
+                  ${stats.count}回・平均${stats.avgMin}分
                 </span>
               ` : ''}
             </div>
@@ -3471,7 +4165,30 @@
       `;
       attachRoutineLongPressDrag(item, r.id);
       container.appendChild(item);
-    });
+    };
+
+    appendSectionHeader(`🌟 不定期ルーチン (${irregulars.length})`, true);
+    if (irregulars.length === 0) {
+      const emptyIrr = document.createElement('div');
+      emptyIrr.className = 'text-center py-3 px-3 rounded-2xl text-[10px] font-bold text-stone-400 bg-white/75';
+      emptyIrr.style.border = '1px dashed var(--border-soft)';
+      emptyIrr.textContent = '「＋ 新しいルーチンを追加」で「不定期」を選ぶとここに並ぶよ';
+      container.appendChild(emptyIrr);
+    } else {
+      irregulars.forEach(renderRoutineItemCard);
+    }
+
+    appendSectionHeader(`🔄 定期ルーチン (${regulars.length})`, false);
+    if (regulars.length === 0) {
+      const emptyReg = document.createElement('div');
+      emptyReg.className = 'text-center py-3 px-3 rounded-2xl text-[10px] font-bold text-stone-400 bg-white/75';
+      emptyReg.style.border = '1px dashed var(--border-sub)';
+      emptyReg.textContent = '定期ルーチンはありません';
+      container.appendChild(emptyReg);
+    } else {
+      regulars.forEach(renderRoutineItemCard);
+    }
+
     if (window.lucide) lucide.createIcons();
   }
 
@@ -3620,6 +4337,64 @@
     if (window.lucide) lucide.createIcons();
   }
 
+  function renderModalChecklistSection() {
+    const sec = document.getElementById('modalChecklistSection');
+    const viewEl = document.getElementById('modalChecklistView');
+    const editBox = document.getElementById('modalChecklistEditBox');
+    const progEl = document.getElementById('modalChecklistProgress');
+    if (!sec) return;
+
+    const hasItems = modalChecklistItems.length > 0;
+    sec.classList.toggle('hidden', !hasItems && !isEditingChecklistInModal);
+
+    const checkedCount = modalChecklistItems.filter(it => it.checked).length;
+    if (progEl) progEl.textContent = `${checkedCount}/${modalChecklistItems.length}`;
+
+    if (viewEl) {
+      viewEl.innerHTML = renderChecklistItemsHtml(modalChecklistItems, null);
+      viewEl.classList.toggle('hidden', isEditingChecklistInModal || !hasItems);
+    }
+    if (editBox) {
+      editBox.classList.toggle('hidden', !isEditingChecklistInModal);
+    }
+  }
+
+  function enterChecklistEditMode() {
+    isEditingChecklistInModal = true;
+    const ta = document.getElementById('modalChecklistTextarea');
+    if (ta) {
+      ta.value = checklistToLinesText(modalChecklistItems);
+    }
+    renderModalChecklistSection();
+    setTimeout(() => {
+      if (ta) {
+        autoResizeTextarea(ta, 180, 76);
+        ta.focus();
+      }
+    }, 30);
+  }
+
+  function cancelChecklistEditMode() {
+    isEditingChecklistInModal = false;
+    renderModalChecklistSection();
+  }
+
+  function applyChecklistEditFromModal() {
+    const ta = document.getElementById('modalChecklistTextarea');
+    const rawText = ta ? ta.value : '';
+    modalChecklistItems = parseLinesToChecklist(rawText, modalChecklistItems);
+    isEditingChecklistInModal = false;
+    renderModalChecklistSection();
+    showToast(modalChecklistItems.length > 0 ? 'チェックリストを更新したよ☑' : 'チェックリストをクリアしたよ');
+  }
+
+  function toggleModalChecklistItem(itemId) {
+    const target = modalChecklistItems.find(it => it.id === itemId);
+    if (!target) return;
+    target.checked = !target.checked;
+    renderModalChecklistSection();
+  }
+
   function openEditTaskModal(taskId) {
     const tasks = ensureTasksForDate(currentDate);
     const t = tasks.find(x => x.id === taskId);
@@ -3632,7 +4407,13 @@
     document.getElementById('taskActualInput').value = Math.round(getTaskElapsedSeconds(t) / 60);
     document.getElementById('taskDeadlineInput').value = t.deadline || '';
     document.getElementById('taskAlarmInput').checked = !!t.alarm;
-    document.getElementById('taskCommentInput').value = t.comment || '';
+
+    modalChecklistItems = normalizeChecklist(t.checklist);
+    isEditingChecklistInModal = false;
+    renderModalChecklistSection();
+
+    const commentEl = document.getElementById('taskCommentInput');
+    commentEl.value = t.comment || '';
 
     const timeSection = document.getElementById('editTimeRangeSection');
     const statusBadge = document.getElementById('editTaskStatusBadge');
@@ -3689,6 +4470,10 @@
     document.getElementById('modalEditButtons').classList.remove('hidden');
     document.getElementById('taskModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
+
+    setTimeout(() => {
+      autoResizeTextarea(commentEl, 140, 36);
+    }, 20);
   }
 
   function handleStartOrEndTimeChange() {
@@ -3730,10 +4515,17 @@
   }
 
   function closeTaskModal() {
+    isEditingChecklistInModal = false;
     document.getElementById('taskModal').classList.add('hidden');
   }
 
   function submitTaskModal(startImmediately) {
+    if (isEditingChecklistInModal) {
+      const ta = document.getElementById('modalChecklistTextarea');
+      modalChecklistItems = parseLinesToChecklist(ta ? ta.value : '', modalChecklistItems);
+      isEditingChecklistInModal = false;
+    }
+
     const editId = document.getElementById('editTaskId').value;
     const targetDateStr = document.getElementById('taskTargetDateInput').value || currentDate;
     const title = document.getElementById('taskTitleInput').value.trim();
@@ -3742,6 +4534,7 @@
     const deadline = document.getElementById('taskDeadlineInput').value || '';
     const alarm = document.getElementById('taskAlarmInput').checked;
     const comment = document.getElementById('taskCommentInput').value.trim();
+    const finalChecklist = normalizeChecklist(modalChecklistItems);
     const tasks = ensureTasksForDate(currentDate);
 
     if (editId) {
@@ -3798,6 +4591,7 @@
         t.deadline = deadline;
         t.alarm = alarm;
         t.comment = comment;
+        t.checklist = finalChecklist;
         t.image = modalImageBase64;
 
         if (targetDateStr !== currentDate) {
@@ -3846,6 +4640,7 @@
       actualEnd: null,
       elapsedSeconds: 0,
       comment,
+      checklist: finalChecklist,
       image: modalImageBase64
     };
 
@@ -3884,7 +4679,8 @@
     if (!t) return;
     quickNoteTargetId = taskId;
     document.getElementById('quickNoteTitle').textContent = `${t.title || 'メモ・写真'}`;
-    document.getElementById('quickNoteTextarea').value = t.comment || '';
+    const noteEl = document.getElementById('quickNoteTextarea');
+    noteEl.value = t.comment || '';
     quickNoteImgBase64 = t.image || '';
     if (quickNoteImgBase64) {
       document.getElementById('quickNoteImgPreview').src = quickNoteImgBase64;
@@ -3894,6 +4690,7 @@
       removeQuickNoteImage();
     }
     document.getElementById('quickNoteModal').classList.remove('hidden');
+    setTimeout(() => autoResizeTextarea(noteEl, 160, 56), 20);
   }
 
   function closeQuickNoteModal() {
@@ -4119,6 +4916,7 @@
           actualEnd: null,
           elapsedSeconds: 0,
           comment: '',
+          checklist: [],
           image: ''
         });
         added++;
@@ -4267,4 +5065,6 @@
   });
 </script>
 </body>
-</html>
+</html>  
+
+<div class="app-shell" id="app">
