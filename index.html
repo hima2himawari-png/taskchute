@@ -51,6 +51,8 @@
       --card-carry-border: #ddd6fe;
       --running-shadow: rgba(219, 39, 119, 0.18);
       --running-border: #ec4899;
+      --insert-target-border: #ef4444;
+      --insert-target-shadow: rgba(239, 68, 68, 0.24);
       --drag-shadow: rgba(131, 24, 67, 0.22);
       --drag-border: #c084fc;
       --drag-bg: #fdf4ff;
@@ -97,6 +99,8 @@
       --card-carry-border: #c7d2fe;
       --running-shadow: rgba(14, 165, 233, 0.22);
       --running-border: #0284c7;
+      --insert-target-border: #ef4444;
+      --insert-target-shadow: rgba(239, 68, 68, 0.24);
       --drag-shadow: rgba(3, 105, 161, 0.22);
       --drag-border: #6366f1;
       --drag-bg: #f0f9ff;
@@ -273,6 +277,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      touch-action: manipulation;
     }
 
     .swipe-delete-bg {
@@ -294,10 +299,11 @@
     .task-card {
       position: relative;
       z-index: 2;
-      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, box-shadow 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, box-shadow 0.2s ease, border-color 0.15s ease;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      touch-action: manipulation;
     }
 
     .task-card,
@@ -330,6 +336,12 @@
       box-shadow: 0 6px 20px var(--running-shadow);
       border-width: 2px;
       border-color: var(--running-border);
+    }
+
+    .task-card.is-insert-target {
+      border-width: 2.5px !important;
+      border-color: var(--insert-target-border) !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18), 0 8px 20px var(--insert-target-shadow);
     }
 
     .task-card.is-completed {
@@ -381,8 +393,8 @@
 </head>
 <body>
 
-<div class="app-shell" id="app"> 
-<header class="sticky top-0 z-30 themed-header backdrop-blur-md px-3 pt-3 pb-2.5 shadow-2xs">
+<div class="app-shell" id="app">
+  <header class="sticky top-0 z-30 themed-header backdrop-blur-md px-3 pt-3 pb-2.5 shadow-2xs">
     <div class="flex items-center justify-between mb-2 gap-1">
       <button
         type="button"
@@ -457,7 +469,9 @@
   </header>
 
   <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-40 space-y-2.5 overflow-y-auto"></main>
+  
 
+  <main id="timelineContainer" class="flex-1 px-3 pt-3 pb-40 space-y-2.5 overflow-y-auto"></main>
   <div class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
     <div class="max-w-[480px] mx-auto px-3 pt-2.5 pb-4 themed-bottom-bar backdrop-blur-md rounded-t-3xl pointer-events-auto space-y-2">
       <div class="flex items-center gap-1.5">
@@ -1311,6 +1325,7 @@
   let currentDate = getTodayStr();
   let quickDurationValue = 0;
   let quickTaskType = 'single';
+  let selectedInsertAfterTaskId = null;
   let modalImageBase64 = '';
   let modalChecklistItems = [];
   let isEditingChecklistInModal = false;
@@ -1874,6 +1889,55 @@
       tasksByDate = createSampleData(getTodayStr());
     }
     ensureTasksForDate(currentDate);
+  }
+
+  function getCarryoverRunningTasks(targetDateStr = currentDate) {
+    const dateKeys = Object.keys(tasksByDate)
+      .filter(d => d < targetDateStr)
+      .sort()
+      .reverse();
+
+    const found = [];
+    for (const dKey of dateKeys) {
+      const list = tasksByDate[dKey];
+      if (!Array.isArray(list)) continue;
+      list.forEach(t => {
+        if (t && t.status === 'running') {
+          found.push({ sourceDateStr: dKey, task: t });
+        }
+      });
+      if (found.length > 0) break;
+    }
+    return found;
+  }
+
+  function completeCarryoverRunningTask(sourceDateStr, taskId) {
+    const srcList = tasksByDate[sourceDateStr];
+    if (!Array.isArray(srcList)) return;
+    const target = srcList.find(t => t.id === taskId);
+    if (!target) return;
+
+    const now = Date.now();
+    target.elapsedSeconds = getTaskElapsedSeconds(target, now);
+    target.actualEnd = now;
+    target.status = 'completed';
+
+    syncSplitGroups(srcList);
+    saveTasks();
+    renderAll();
+    showToast(`「${target.title || 'おやすみ'}」を終了したよ🌙`);
+  }
+
+  function toggleInsertAnchorTask(taskId) {
+    if (selectedInsertAfterTaskId === taskId) {
+      selectedInsertAfterTaskId = null;
+      renderAll();
+      showToast('挿入位置の指定を解除したよ');
+    } else {
+      selectedInsertAfterTaskId = taskId;
+      renderAll();
+      showToast('このタスクの下に追加されるよ📍');
+    }
   }
 
   function getRoutineHistoryStats(routine) {
@@ -2724,6 +2788,7 @@
       insertTaskAfterCurrentAnchor(tasks, newTask);
     }
 
+    selectedInsertAfterTaskId = null;
     saveTasks();
     closeAddFromRoutineModal();
     renderAll();
@@ -2897,6 +2962,9 @@
 
   function deleteTaskById(taskId) {
     const tasks = ensureTasksForDate(currentDate);
+    if (selectedInsertAfterTaskId === taskId) {
+      selectedInsertAfterTaskId = null;
+    }
     tasksByDate[currentDate] = tasks.filter(t => t.id !== taskId);
     syncSplitGroups(tasksByDate[currentDate]);
     saveTasks();
@@ -2905,11 +2973,21 @@
   }
 
   function insertTaskAfterCurrentAnchor(tasks, newTask) {
+    if (selectedInsertAfterTaskId) {
+      const anchorIdx = tasks.findIndex(t => t.id === selectedInsertAfterTaskId);
+      if (anchorIdx !== -1) {
+        tasks.splice(anchorIdx + 1, 0, newTask);
+        return;
+      }
+      selectedInsertAfterTaskId = null;
+    }
+
     const runningIdx = tasks.findIndex(t => t.status === 'running');
     if (runningIdx !== -1) {
       tasks.splice(runningIdx + 1, 0, newTask);
       return;
     }
+
     let lastDoneIdx = -1;
     tasks.forEach((t, i) => {
       if (t.status === 'completed') lastDoneIdx = i;
@@ -2953,6 +3031,7 @@
     }
 
     moveTaskToChronologicalActiveSlot(tasks, newTask.id);
+    selectedInsertAfterTaskId = null;
 
     input.value = '';
     quickDurationValue = 0;
@@ -2987,6 +3066,7 @@
     };
 
     insertTaskAfterCurrentAnchor(tasks, newTask);
+    selectedInsertAfterTaskId = null;
 
     input.value = '';
     quickDurationValue = 0;
@@ -3037,6 +3117,10 @@
     const todayStr = getTodayStr();
     const isBlue = prefs.theme === 'blue';
 
+    if (selectedInsertAfterTaskId && !tasks.some(t => t.id === selectedInsertAfterTaskId)) {
+      selectedInsertAfterTaskId = null;
+    }
+
     lastRenderedMinuteKey = `${todayStr}_${now.getHours()}:${now.getMinutes()}`;
 
     const dateLabelEl = document.getElementById('currentDateLabel');
@@ -3075,15 +3159,43 @@
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '';
 
-    if (scheduled.length === 0) {
-      const emptyEmoji = isBlue ? '💙' : '🌸';
-      container.innerHTML = `
-        <div class="text-center py-12 px-4 rounded-3xl bg-white/75 space-y-1.5" style="border: 1px dashed var(--border-soft);">
-          <div class="text-2xl">${emptyEmoji}</div>
-          <div class="text-xs font-extrabold text-stone-500">タスクがありません</div>
-          <div class="text-[11px] text-stone-400">下の入力欄または「✨ ルーチンから追加」から追加してね</div>
+    const carryoverRunning = getCarryoverRunningTasks(currentDate);
+    carryoverRunning.forEach(({ sourceDateStr, task }) => {
+      const elapsedSec = getTaskElapsedSeconds(task, nowMs);
+      const elapsedMin = Math.round(elapsedSec / 60);
+      const startLabel = task.actualStart ? formatHHMM(task.actualStart) : '--:--';
+      const safeCarryTitle = escapeHtml(task.title || 'おやすみ');
+
+      const carryCard = document.createElement('div');
+      carryCard.className = 'task-card card-type-carryover is-running rounded-3xl p-3 flex items-center gap-3';
+      carryCard.innerHTML = `
+        <button type="button" onclick="event.stopPropagation(); completeCarryoverRunningTask('${sourceDateStr}', '${task.id}')" aria-label="終了" class="w-11 h-11 rounded-full summary-bar text-white flex items-center justify-center shadow-md active:scale-90 transition shrink-0">
+          <span class="w-3.5 h-3.5 rounded-xs bg-white block"></span>
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap text-[11px] font-extrabold">
+            <span class="tabular-nums" style="color: var(--accent-text);">${startLabel}〜</span>
+            <span class="px-2 py-0.5 rounded-full themed-badge-act text-[10px] tabular-nums">${elapsedMin}m</span>
+          </div>
+          <div class="text-sm font-extrabold text-stone-800 mt-1 truncate">
+            ${safeCarryTitle}
+          </div>
         </div>
       `;
+      container.appendChild(carryCard);
+    });
+
+    if (scheduled.length === 0) {
+      if (carryoverRunning.length === 0) {
+        const emptyEmoji = isBlue ? '💙' : '🌸';
+        container.innerHTML = `
+          <div class="text-center py-12 px-4 rounded-3xl bg-white/75 space-y-1.5" style="border: 1px dashed var(--border-soft);">
+            <div class="text-2xl">${emptyEmoji}</div>
+            <div class="text-xs font-extrabold text-stone-500">タスクがありません</div>
+            <div class="text-[11px] text-stone-400">下の入力欄または「✨ ルーチンから追加」から追加してね</div>
+          </div>
+        `;
+      }
       if (window.lucide) lucide.createIcons();
       return;
     }
@@ -3091,6 +3203,7 @@
     scheduled.forEach(({ task, displayStart, displayEnd, isOverdue }) => {
       const isCompleted = task.status === 'completed';
       const isRunning = task.status === 'running';
+      const isInsertTarget = selectedInsertAfterTaskId === task.id;
       const typeClass =
         task.taskType === 'carryover'
           ? 'card-type-carryover'
@@ -3187,7 +3300,7 @@
         <div class="swipe-delete-bg">
           <i data-lucide="trash-2" class="w-5 h-5 text-white"></i>
         </div>
-        <div onclick="openEditTaskModal('${task.id}')" class="task-card ${typeClass} ${isRunning ? 'is-running' : ''} ${isCompleted ? 'is-completed' : ''} rounded-3xl p-3 flex items-center gap-3 cursor-pointer">
+        <div class="task-card ${typeClass} ${isRunning ? 'is-running' : ''} ${isCompleted ? 'is-completed' : ''} ${isInsertTarget ? 'is-insert-target' : ''} rounded-3xl p-3 flex items-center gap-3 cursor-pointer">
           ${leftBtnHtml}
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap text-[11px] font-extrabold">
@@ -3234,6 +3347,8 @@
     let isSwiping = false;
     let isDragging = false;
     let longPressTimer = null;
+    let lastTapMs = 0;
+    let singleTapTimer = null;
 
     const clearTimer = () => {
       if (longPressTimer) {
@@ -3241,6 +3356,29 @@
         longPressTimer = null;
       }
     };
+
+    const handleCardTapAction = () => {
+      const now = Date.now();
+      if (now - lastTapMs < 300) {
+        clearTimeout(singleTapTimer);
+        singleTapTimer = null;
+        lastTapMs = 0;
+        openEditTaskModal(taskId);
+      } else {
+        lastTapMs = now;
+        clearTimeout(singleTapTimer);
+        singleTapTimer = setTimeout(() => {
+          singleTapTimer = null;
+          toggleInsertAnchorTask(taskId);
+        }, 280);
+      }
+    };
+
+    card.addEventListener('click', e => {
+      if (e.target.closest('button') || e.target.closest('img')) return;
+      if (isSwiping || isDragging) return;
+      handleCardTapAction();
+    });
 
     wrapper.addEventListener('touchstart', e => {
       if (e.target.closest('button') || e.target.closest('img')) return;
@@ -4660,6 +4798,7 @@
       destTasks.push(newTask);
     }
 
+    selectedInsertAfterTaskId = null;
     saveTasks();
     closeTaskModal();
     renderAll();
@@ -4864,6 +5003,7 @@
       closeCalendarModal();
       return;
     }
+    selectedInsertAfterTaskId = null;
     currentDate = dateStr;
     ensureTasksForDate(currentDate);
     closeCalendarModal();
@@ -4871,6 +5011,7 @@
   }
 
   function changeDate(diff) {
+    selectedInsertAfterTaskId = null;
     currentDate = addDays(currentDate, diff);
     ensureTasksForDate(currentDate);
     renderAll();
@@ -4879,6 +5020,7 @@
   function jumpToToday(withToast = false) {
     const today = getTodayStr();
     const alreadyToday = currentDate === today;
+    selectedInsertAfterTaskId = null;
     currentDate = today;
     ensureTasksForDate(currentDate);
     renderAll();
@@ -4986,6 +5128,7 @@
     localStorage.removeItem(STORAGE_KEY_TASKS);
     localStorage.removeItem(STORAGE_KEY_ROUTINES);
     localStorage.removeItem(STORAGE_KEY_PREFS);
+    selectedInsertAfterTaskId = null;
     currentDate = getTodayStr();
     initData();
     closeSettingsModal();
@@ -5065,6 +5208,4 @@
   });
 </script>
 </body>
-</html>  
-
-<div class="app-shell" id="app">
+</html>
